@@ -98,7 +98,6 @@ test('random-input soak: no errors, no leaks, no NaN, frame loop alive', async (
   console.log('geometries/textures/programs:', samples.map((s) => `${s.geometries}/${s.textures}/${s.programs}`).join(' '));
   console.log('level/region at end:', last.level, last.region);
   console.log('reveal DOM nodes:', samples.map((s) => s.revealNodes).join(' '));
-  expect(Math.max(...samples.map((s) => s.revealNodes)), 'reveal DOM stays small').toBeLessThan(120);
 
   // frame loop alive: frames strictly increase between samples
   for (let i = 1; i < samples.length; i++) expect(samples[i].frames).toBeGreaterThan(samples[i - 1].frames);
@@ -117,6 +116,10 @@ test('random-input soak: no errors, no leaks, no NaN, frame loop alive', async (
     const half = Math.floor(h.length / 2);
     expect(med(h.slice(half)) - med(h.slice(0, half)), 'heap growth between halves (bytes)').toBeLessThan(40 * 1048576);
   }
+  // the reveal overlay is bounded while a 30-result summary is up (about 140 nodes) and empties afterwards
+  expect(Math.max(...samples.map((s) => s.revealNodes)), 'reveal DOM bounded').toBeLessThan(200);
+  await page.evaluate(() => { window.__game.reveal.skip(); window.__game.reveal.skip(); window.__game.reveal.fastForward(30); });
+  expect(await page.evaluate(() => document.querySelectorAll('#reveal *').length), 'reveal DOM empties when nothing is playing').toBeLessThan(10);
   expect(errors, errors.join('\n')).toEqual([]);
 });
 

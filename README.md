@@ -266,8 +266,8 @@ an entry, layer *k* ≥ 3 is generated automatically. Quests, shop upgrades, lev
 
 ```bash
 npm run lint
-npm test                 # unit tests (pure logic: bignum, rng, save, tiers, items, production, rebirth, combat, offline, ...)
-npm run test:e2e         # Playwright, ~55 tests (rolling, backpack limit, sell/fuse, placement, level-up, rebirth, rewards once, shop, waves, bosses, offline, persistence, settings, a11y, touch)
+npm test                 # 304 unit tests (pure logic: bignum, rng, save, tiers, items, production, rebirth, combat, offline, ...)
+npm run test:e2e         # Playwright, 114 tests incl. the UI-only new-player run to the first rebirth (e2e/f9-new-player.spec.js), design/contrast checks, the staged sub-path site, tutorial, index, reveals
 npm run test:soak        # 5-minute random-input soak + long-numbers soak
 npm run sim:economy -- --quick   # ~45 s: scripted bot plays 1 simulated day with the real sim
 npm run sim:economy -- --days 5  # the full proof (~40 s per simulated day)
@@ -293,7 +293,7 @@ The game exposes `window.__game` (state, debug hooks such as `game.debug.grantMo
 3. `smoke-live` then opens the **live URL** in a real browser (`e2e/live/smoke.spec.js`): HTTP 200, the 3D view renders (not blank), no console error and no failed request, the version the page runs equals the published `version.json`, a roll works through the UI, the save is written, and the 404 page exists. A failure turns the run red.
 4. `.github/workflows/smoke-daily.yml` runs the same smoke test every day (05:17 UTC) and opens an issue if the live site is broken. Run it by hand: `LIVE_URL=https://<user>.github.io/<repo>/ npm run smoke:live`.
 
-**One-time setup:** repository **Settings -> Pages -> Build and deployment -> Source: GitHub Actions**. (The deploy job cannot switch Pages on by itself with the default token.)
+**One-time setup (needed, not yet done in this repository):** (1) **Settings -> Pages -> Build and deployment -> Source: GitHub Actions** (it may currently say "Deploy from a branch"); (2) **Settings -> Environments -> github-pages -> Deployment branches and tags**: allow `main` (or make `main` the default branch under Settings -> Branches). Until both are done the `deploy` job is refused before it starts. Then re-run the failed workflow run (or push to `main`). The deploy job cannot change these settings with the default token.
 
 **Versioning and stale caches.** `src/version.js` holds the version (`dev` in a checkout; the deploy stamps it). Each deploy lives in its own folder, `v/<version>/`, that is never overwritten; `index.html` (the only unversioned entry) points at it, so a browser holding an old cached `index.html` still gets a complete, consistent set of files. If those files are gone it recovers by reloading once with a fresh URL. A running game checks `version.json` (no cache) 20 s after start, every 10 minutes and whenever the tab becomes visible, and shows **"A new version is available" with a Reload button** (it saves first). The check is off in dev builds.
 
