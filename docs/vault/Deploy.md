@@ -15,7 +15,7 @@ Back to [[00 Start Here]]. Related: [[Open Issues]], [[Testing]], [[How To]]. Bu
 ## Evidence that is real
 * `e2e/subpath.spec.js`: the staged site under `/Tcyoon-RNG/` with a Pages-like server: every request 200 from the versioned folder, fonts, OG image, roll works, 404, nothing outside the base, save import across two origins, version banner. `tests/stamp.test.js`: no absolute paths, every referenced file exists.
 * The live-smoke spec was validated against a local server that mimics the hosted layout.
-* GitHub Actions on `main` (run 1, commit `9a6a6de`): the `test` job **passed** (completed, success); the e2e job passed per my earlier check.
+* GitHub Actions on `main` (run 1, commit `9a6a6de`): checked via the GitHub API: `test` **success** (lint, unit, both simulators; 22:21:29 to 22:22:54Z), `e2e` **success** (`npx playwright test`, 22:21:55 to 22:26:30Z, about 4.6 min on the runner), `deploy` **failure**, `smoke-live` **skipped** (because deploy failed). So the smoke test against the live URL has never run.
 
 ## What failed (bug #43, open)
 * `main` did not exist. With the GitHub tools I created it from the feature branch (same SHA `9a6a6de`): no PR was possible (no diff), no force-push, no history rewrite (authorised by the prompt).
