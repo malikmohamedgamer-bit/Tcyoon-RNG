@@ -37,10 +37,13 @@ test('pixel size setting changes the render target resolution', async ({ page })
   expect(sizes.c[0]).toBeGreaterThanOrEqual(sizes.a[0]);
 });
 
-test('money ticks up and the save is written to localStorage', async ({ page }) => {
+test('the save is written to localStorage with the current schema version', async ({ page }) => {
   await openGame(page);
   await page.evaluate(() => window.__game.loop.advance(3));
   await page.evaluate(() => window.__game.saveNow());
   const raw = await page.evaluate(() => localStorage.getItem('tcyoon-rng:save'));
-  expect(JSON.parse(raw).v).toBe(1);
+  const data = JSON.parse(raw);
+  expect(data.v).toBe(await page.evaluate(() => window.__game.game.save.version));
+  expect(data.v).toBeGreaterThanOrEqual(2);
+  expect(typeof data.savedAt).toBe('number');
 });

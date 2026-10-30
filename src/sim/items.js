@@ -25,8 +25,15 @@ export const HYBRID_BASE = { mult: 0.12, add: 0.25, refine: 0.2, sell: 0.1 };
 export const HYBRID_FACTOR = 0.4;
 export const HYBRID_TYPES = ['dropper', 'conveyor', 'multiplier', 'refiner', 'seller', 'upgrader'];
 
-/** Exponent of V (tier value) per stat: how strongly each stat grows with tier. */
-export const SCALE_EXP = { rate: 0.25, value: 0.75, cap: 0.3, rcap: 0.3, scap: 0.3, add: 0.9, mult: 0.5, refine: 0.5, sell: 0.6, aura: 0.4, luck: 0.4, xp: 0.4, dmg: 1 };
+/**
+ * Exponent of V (tier value) per stat: how strongly each stat grows with tier.
+ * Multiplier-type stats (mult, refine, sell, aura, luck, xp: see EXTRA_STATS) do NOT use a power of V:
+ * they grow polylogarithmically, (1 + log10(V)/2)^2, because stacking several power-law multipliers
+ * makes a single run grow super-linearly in the number of rolls and makes prestige pointless
+ * (found by scripts/simulate-economy.js; see BUGS.md #14).
+ */
+export const SCALE_EXP = { rate: 0.25, value: 0.75, cap: 0.3, rcap: 0.3, scap: 0.3, add: 0.9, dmg: 1 };
+export const polylogScale = (logV) => Math.pow(1 + Math.max(0, logV) / 2, 2);
 /** Stats stored as "1 + extra" (extra scales with tier and mutations). */
 const EXTRA_STATS = new Set(['mult', 'refine', 'sell', 'aura', 'luck', 'xp']);
 const RANGE_LOG_FACTOR = 0.03;
@@ -68,7 +75,7 @@ function computeStats(item) {
   for (const [k, b] of Object.entries(base)) {
     if (k === 'range' || k === 'rof') continue;
     const e = SCALE_EXP[k];
-    let v = e == null ? Big.fromNumber(b) : V.pow(e).mul(b);
+    let v = EXTRA_STATS.has(k) ? Big.fromNumber(b * polylogScale(logV)) : e == null ? Big.fromNumber(b) : V.pow(e).mul(b);
     if (item.vs) v = v.mul(variantFactor(item.vs, k));
     raw[k] = v;
   }

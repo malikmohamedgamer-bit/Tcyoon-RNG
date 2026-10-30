@@ -117,7 +117,7 @@ test('prices follow the documented formulas', () => {
   const s = createState(1, 0);
   assert.ok(rollCost(s).eq(10));
   s.level = 11;
-  assert.ok(Math.abs(rollCost(s).toNumber() - 10 * Math.pow(1.16, 10)) < 1e-6);
+  assert.ok(Math.abs(rollCost(s).toNumber() - 10 * Math.pow(1 + 10 / 10, 3)) < 1e-6); // 10 * (1 + (L-1)/10)^3 = 80
   assert.equal(backpackCapacity(s), 20);
   s.backpackTier = 3;
   assert.equal(backpackCapacity(s), 20 + 24 + Math.floor(Math.pow(3, 1.4)));

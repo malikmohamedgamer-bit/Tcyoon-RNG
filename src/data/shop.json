@@ -1,0 +1,23 @@
+{
+  "_doc": "Shop data. upgrades: per-run permanent-until-rebirth upgrades (levels reset on rebirth). Price = baseK * rollCost(current level) * growth^level  — prices scale with progress so they never become trivial. effect.kind: rate, value, sell, income, dmg, baseHp (x(1+per)^level), rollCost, freeInterval, autoInterval, pity (x(1-per)^level, floor 0.1), freeCap, backpack, gear (+per*level). max 0 = endless. category: roll | gear | luck. boosters: timed consumables (seconds, multiplier); price = priceRolls * rollCost. rotating: the daily rotating offers (seeded by date).",
+  "upgrades": [
+    { "id": "autoSpeed",  "category": "roll", "name": "Faster Auto-roll",     "icon": "⏩", "baseK": 20,   "growth": 2.0, "max": 8,  "kind": "autoInterval", "per": 0.1,  "desc": "Auto-roll interval -10% per level" },
+    { "id": "freeFast",   "category": "roll", "name": "Impatient Rolls",      "icon": "⏱️", "baseK": 30,   "growth": 2.2, "max": 10, "kind": "freeInterval", "per": 0.06, "desc": "Free-roll wait -6% per level" },
+    { "id": "freeBank",   "category": "roll", "name": "Free-roll Bank",       "icon": "🎟️", "baseK": 50,   "growth": 3.0, "max": 0,  "kind": "freeCap",      "per": 1,    "desc": "+1 free-roll cap per level" },
+    { "id": "pity",       "category": "roll", "name": "Merciful Fate",        "icon": "🕊️", "baseK": 80,   "growth": 2.5, "max": 10, "kind": "pity",         "per": 0.08, "desc": "Pity counters fill 8% sooner per level" },
+    { "id": "dropSpeed",  "category": "gear", "name": "Dropper Speed",        "icon": "⚙️", "baseK": 10,   "growth": 1.9, "max": 0,  "kind": "rate",         "per": 0.1,  "desc": "+10% dropper speed per level" },
+    { "id": "dropValue",  "category": "gear", "name": "Richer Output",        "icon": "💎", "baseK": 12,   "growth": 1.9, "max": 0,  "kind": "value",        "per": 0.1,  "desc": "+10% unit value per level" },
+    { "id": "sellBonus",  "category": "gear", "name": "Better Negotiators",   "icon": "🤝", "baseK": 15,   "growth": 2.0, "max": 0,  "kind": "sell",         "per": 0.08, "desc": "+8% seller bonus per level" },
+    { "id": "income",     "category": "gear", "name": "Business Empire",      "icon": "🏛️", "baseK": 40,   "growth": 2.3, "max": 0,  "kind": "income",       "per": 0.05, "desc": "+5% all income per level" },
+    { "id": "turretDmg",  "category": "gear", "name": "Hardened Barrels",     "icon": "🔫", "baseK": 25,   "growth": 2.0, "max": 0,  "kind": "dmg",          "per": 0.1,  "desc": "+10% turret and weapon damage per level" },
+    { "id": "baseHp",     "category": "gear", "name": "Reinforced Walls",     "icon": "🧱", "baseK": 25,   "growth": 2.0, "max": 0,  "kind": "baseHp",       "per": 0.1,  "desc": "+10% base HP per level" },
+    { "id": "gearSlot",   "category": "gear", "name": "Extra Gear Slot",      "icon": "🎽", "baseK": 400,  "growth": 6.0, "max": 0,  "kind": "gear",         "per": 1,    "desc": "+1 equipped-weapon slot per level" },
+    { "id": "luckCharm",  "category": "luck", "name": "Luck Charm",           "icon": "🍀", "baseK": 20,   "growth": 2.2, "max": 0,  "kind": "luck",         "per": 0.25, "desc": "Luck x1.25 per level — endless, no cap" }
+  ],
+  "boosters": [
+    { "id": "luckBrew",  "name": "Luck Brew",     "icon": "🧪", "kind": "luck", "mult": 3, "seconds": 600, "priceRolls": 40, "desc": "Luck x3 for 10 minutes" },
+    { "id": "xpTonic",   "name": "Scholar Tonic", "icon": "📖", "kind": "xp",   "mult": 2, "seconds": 900, "priceRolls": 25, "desc": "XP x2 for 15 minutes" },
+    { "id": "goldRush",  "name": "Gold Rush",     "icon": "🪙", "kind": "income", "mult": 2, "seconds": 600, "priceRolls": 60, "desc": "Income x2 for 10 minutes" }
+  ],
+  "rotating": { "offers": 6, "itemPriceRolls": 14, "itemTierPriceGrowth": 1.6, "boosterPriceRolls": 0.6, "upgradePriceFactor": 0.5 }
+}

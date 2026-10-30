@@ -1,0 +1,14 @@
+{
+  "_doc": "Boss templates. Bosses are generated endlessly by gen/bosses.js: boss n has an equivalent wave of firstWave + stepWaves*n, hp = hpMult * enemy hp at that wave, a seeded name, 2 mechanics (+1 more every 5 bosses) drawn from 'mechanics', and drops a weapon (luck tier +2), money, a free upgrade level and a unique mutation 'boss:<n>'. Add a mechanic by adding it here and handling its id in sim/bosses.js.",
+  "firstWave": 8, "stepWaves": 5, "hpMult": 30, "dpsFrac": 0.02, "timeLimit": 150, "unlockLevel": 10, "cooldown": 30,
+  "dropTierPlus": 2, "moneyRollPrices": 25, "mutationDmgBase": 3, "mutationDmgPerBoss": 0.5,
+  "mechanics": [
+    { "id": "shield",  "name": "Phase shield", "text": "Immune to damage for 5 s every 20 s", "period": 20, "duration": 5 },
+    { "id": "summon",  "name": "Summoner",     "text": "Calls 4 minions every 12 s", "period": 12, "count": 4 },
+    { "id": "enrage",  "name": "Enrage",       "text": "Hits 60% harder below 35% HP", "threshold": 0.35, "boost": 1.6 },
+    { "id": "pulse",   "name": "Shockwave",    "text": "Every 10 s hits the base for 8% of its HP", "period": 10, "frac": 0.08 },
+    { "id": "regen",   "name": "Regeneration", "text": "Regenerates 2% HP per second", "frac": 0.02 },
+    { "id": "armor",   "name": "Plated",       "text": "Takes 40% less physical damage", "res": { "physical": 0.4 } },
+    { "id": "swift",   "name": "Swift",        "text": "Moves 60% faster", "speed": 1.6 }
+  ]
+}

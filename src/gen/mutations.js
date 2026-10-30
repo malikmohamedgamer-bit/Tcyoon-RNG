@@ -2,7 +2,10 @@
 import MUT from '../data/mutations.json' with { type: 'json' };
 import { Big } from '../core/bignum.js';
 import { Rng, hash32 } from '../core/rng.js';
-import { mutationWord } from './names.js';
+import { mutationWord, bossName } from './names.js';
+import BOSSES from '../data/bosses.json' with { type: 'json' };
+
+const BOSSM = { base: BOSSES.mutationDmgBase, perBoss: BOSSES.mutationDmgPerBoss };
 
 export const RULES = MUT.rules;
 const HAND = new Map(MUT.mutations.map((m) => [m.id, m]));
@@ -31,9 +34,26 @@ export function generatedMutation(n) {
   };
 }
 
-/** Look up a mutation by id ('shiny', 'g:12', ...). Unknown ids return null. */
+/** Unique boss mutation 'boss:<n>': weapons/turrets only, damage x (3 + 0.5 n) — polynomial, so bosses never explode the economy. */
+export function bossMutation(n) {
+  return {
+    id: `boss:${n}`,
+    name: `${bossName(n).split(' ')[0]}'s Bane`,
+    icon: '👑',
+    group: 'boss',
+    unique: true,
+    applies: ['turret', 'weapon'],
+    effects: [{ stat: 'dmg', mul: Big.fromNumber(BOSSM.base + BOSSM.perBoss * n) }],
+  };
+}
+
+/** Look up a mutation by id ('shiny', 'g:12', 'boss:3', ...). Unknown ids return null. */
 export function getMutation(id) {
   if (HAND.has(id)) return normalize(HAND.get(id));
+  if (typeof id === 'string' && id.startsWith('boss:')) {
+    const n = Number(id.slice(5));
+    if (Number.isInteger(n) && n >= 0) return bossMutation(n);
+  }
   if (typeof id === 'string' && id.startsWith('g:')) {
     const n = Number(id.slice(2));
     if (Number.isInteger(n) && n >= 0) return generatedMutation(n);

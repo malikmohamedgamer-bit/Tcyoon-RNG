@@ -14,6 +14,11 @@ import { createInput, defaultBindings } from './core/input.js';
 import { createBasePanel } from './ui/base.js';
 import { createRefineryPanel } from './ui/refinery.js';
 import { createPlacement } from './ui/placement.js';
+import { createRebirthPanel } from './ui/rebirth.js';
+import { createShopPanel } from './ui/shop.js';
+import { createRewardsPanel } from './ui/rewards.js';
+import { confirmDialog, esc } from './ui/dom.js';
+import { formatDuration } from './core/time.js';
 import { isWeapon } from './sim/items.js';
 
 const canvas = document.getElementById('view');
@@ -41,6 +46,7 @@ const placement = createPlacement({
 attachPointerControls(canvas, gfx.cam, { shouldIgnore: (e) => placement.claim(e) });
 
 const ctx = {
+  refreshAll: () => { shell.update(game.income); shell.refresh(); },
   game,
   fmt,
   ui,
@@ -54,10 +60,20 @@ const ctx = {
     }
   },
 };
-const panels = [createRollPanel(ctx), createBackpackPanel(ctx), createBasePanel(ctx), createRefineryPanel(ctx)];
+const panels = [createRollPanel(ctx), createBackpackPanel(ctx), createBasePanel(ctx), createShopPanel(ctx), createRewardsPanel(ctx), createRefineryPanel(ctx), createRebirthPanel(ctx)];
 const shell = createShell({ game, fmt, panels });
 panels.forEach((p, i) => input.on(`panel${['Roll', 'Backpack', 'Base'][i] || ''}`, () => shell.toggle(p.id)));
 input.on('roll', () => { game.roll(1); shell.refresh(); });
+
+let themeRegion = gs().region;
+function syncTheme() {
+  if (gs().region !== themeRegion || gs().seed !== themeSeed) {
+    themeRegion = gs().region;
+    themeSeed = gs().seed;
+    gfx.setTheme(regionTheme(themeRegion, themeSeed));
+  }
+}
+let themeSeed = gs().seed;
 
 function handleEvents() {
   for (const e of drain(gs())) {
@@ -67,6 +83,9 @@ function handleEvents() {
     } else if (e.type === 'level') {
       toast(`Level ${e.level}!`);
       announce(`Level up! You are now level ${e.level}`);
+    } else if (e.type === 'prestige') {
+      toast(`Region ${e.region + 1} reached!`, 4000);
+      announce(`Prestige complete. Welcome to region ${e.region + 1}`, { urgent: true });
     } else if (e.type === 'levelReward') {
       toast(`Level ${e.level} reward: ${e.text}`, 5000);
     } else if (e.type === 'toast') toast(e.text);
@@ -97,6 +116,7 @@ const loop = createLoop({
     pollCameraKeys(dt);
     shell.frame();
     handleEvents();
+    syncTheme();
     uiAcc += dt;
     if (uiAcc >= 0.25) {
       uiAcc = 0;
@@ -128,4 +148,26 @@ window.__game = {
 };
 shell.open('roll');
 shell.update(game.income);
+loop.onGap = (gapSeconds) => {
+  game.catchUp(Date.now() - gapSeconds * 1000);
+  showWelcome();
+};
+
+/** Welcome-back screen: what you earned while away (closed-form offline progress). */
+async function showWelcome() {
+  const w = game.welcome;
+  game.welcome = null;
+  if (!w) return;
+  const notes = [];
+  if (w.negative) notes.push('Your clock appears to have moved backwards, so no offline progress was counted.');
+  if (w.clamped) notes.push('You were away for more than 10 years (or your clock jumped far ahead): offline progress is capped at 10 years.');
+  await confirmDialog({
+    title: 'Welcome back!',
+    html: `<p>You were away for <b>${esc(formatDuration(w.seconds))}</b>.</p>
+      <ul><li>💰 Earned <b>$${esc(fmt(w.money))}</b></li><li>🎟️ Free rolls gained: <b>${w.freeRolls}</b></li>${w.boostersExpired ? `<li>🧪 ${w.boostersExpired} booster(s) ran out</li>` : ''}${w.waves ? `<li>🛡️ ${esc(w.waves.text)}</li>` : ''}</ul>${notes.map((n) => `<p class="muted">${esc(n)}</p>`).join('')}`,
+    confirmText: 'Continue',
+    cancelText: 'Close',
+  });
+}
+if (game.welcome) showWelcome();
 loop.start();

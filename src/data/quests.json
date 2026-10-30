@@ -1,0 +1,732 @@
+{
+ "_doc": "Quests and achievements. Progress is read from lifetime stat counters (state.stats, level, playtime in minutes). Each id can be claimed once (ledger rewards.claimed). Rewards use the same spec as level rewards (rollPrices, freeRolls, items, luckPct, backpack). Beyond this list, gen quests 'q:<n>' are generated endlessly by sim/quests.js. Add a quest by appending here.",
+ "quests": [
+  {
+   "id": "roll10",
+   "name": "Warm-up",
+   "desc": "",
+   "stat": "rolls",
+   "target": 10,
+   "reward": {
+    "rollPrices": 1
+   }
+  },
+  {
+   "id": "roll50",
+   "name": "Getting the Hang of It",
+   "desc": "",
+   "stat": "rolls",
+   "target": 50,
+   "reward": {
+    "rollPrices": 1.5,
+    "freeRolls": 1
+   }
+  },
+  {
+   "id": "roll200",
+   "name": "Dice Enthusiast",
+   "desc": "",
+   "stat": "rolls",
+   "target": 200,
+   "reward": {
+    "rollPrices": 2,
+    "freeRolls": 1
+   }
+  },
+  {
+   "id": "roll1000",
+   "name": "Dice Addict",
+   "desc": "",
+   "stat": "rolls",
+   "target": 1000,
+   "reward": {
+    "rollPrices": 3,
+    "freeRolls": 2,
+    "backpack": 2
+   }
+  },
+  {
+   "id": "roll5000",
+   "name": "Roll Machine",
+   "desc": "",
+   "stat": "rolls",
+   "target": 5000,
+   "reward": {
+    "rollPrices": 4,
+    "freeRolls": 2,
+    "luckPct": 2
+   }
+  },
+  {
+   "id": "roll25000",
+   "name": "The Dice Never Sleep",
+   "desc": "",
+   "stat": "rolls",
+   "target": 25000,
+   "reward": {
+    "rollPrices": 5,
+    "freeRolls": 3,
+    "luckPct": 3,
+    "backpack": 3
+   }
+  },
+  {
+   "id": "place1",
+   "name": "Open for Business",
+   "desc": "",
+   "stat": "placed",
+   "target": 1,
+   "reward": {
+    "rollPrices": 1
+   }
+  },
+  {
+   "id": "place10",
+   "name": "Busy Base",
+   "desc": "",
+   "stat": "placed",
+   "target": 10,
+   "reward": {
+    "rollPrices": 1.5
+   }
+  },
+  {
+   "id": "place50",
+   "name": "Industrial Park",
+   "desc": "",
+   "stat": "placed",
+   "target": 50,
+   "reward": {
+    "rollPrices": 2,
+    "freeRolls": 1
+   }
+  },
+  {
+   "id": "place250",
+   "name": "Sprawl",
+   "desc": "",
+   "stat": "placed",
+   "target": 250,
+   "reward": {
+    "rollPrices": 3,
+    "freeRolls": 1,
+    "backpack": 2
+   }
+  },
+  {
+   "id": "sell10",
+   "name": "Clearance Sale",
+   "desc": "",
+   "stat": "sold",
+   "target": 10,
+   "reward": {
+    "rollPrices": 1
+   }
+  },
+  {
+   "id": "sell100",
+   "name": "Merchant",
+   "desc": "",
+   "stat": "sold",
+   "target": 100,
+   "reward": {
+    "rollPrices": 2,
+    "freeRolls": 1
+   }
+  },
+  {
+   "id": "sell1000",
+   "name": "Tycoon of Trinkets",
+   "desc": "",
+   "stat": "sold",
+   "target": 1000,
+   "reward": {
+    "rollPrices": 3,
+    "freeRolls": 1,
+    "backpack": 2
+   }
+  },
+  {
+   "id": "fuse1",
+   "name": "Spark of Fusion",
+   "desc": "",
+   "stat": "fused",
+   "target": 1,
+   "reward": {
+    "rollPrices": 1,
+    "freeRolls": 1
+   }
+  },
+  {
+   "id": "fuse10",
+   "name": "Fusion Apprentice",
+   "desc": "",
+   "stat": "fused",
+   "target": 10,
+   "reward": {
+    "rollPrices": 2,
+    "freeRolls": 1
+   }
+  },
+  {
+   "id": "fuse50",
+   "name": "Fusion Master",
+   "desc": "",
+   "stat": "fused",
+   "target": 50,
+   "reward": {
+    "rollPrices": 3,
+    "freeRolls": 2,
+    "items": [
+     {
+      "tier": 3
+     }
+    ]
+   }
+  },
+  {
+   "id": "rare",
+   "name": "Something Shiny",
+   "desc": "Roll a Rare (tier 2) or better",
+   "stat": "bestTier",
+   "target": 2,
+   "reward": {
+    "rollPrices": 1,
+    "freeRolls": 1
+   }
+  },
+  {
+   "id": "epic",
+   "name": "Epic Find",
+   "desc": "Roll an Epic (tier 3) or better",
+   "stat": "bestTier",
+   "target": 3,
+   "reward": {
+    "rollPrices": 1.5,
+    "freeRolls": 1
+   }
+  },
+  {
+   "id": "legend",
+   "name": "Legendary!",
+   "desc": "Roll a Legendary (tier 4) or better",
+   "stat": "bestTier",
+   "target": 4,
+   "reward": {
+    "rollPrices": 2,
+    "freeRolls": 2,
+    "items": [
+     {
+      "tier": 2
+     }
+    ]
+   }
+  },
+  {
+   "id": "mythic",
+   "name": "Mythic Luck",
+   "desc": "",
+   "stat": "bestTier",
+   "target": 5,
+   "reward": {
+    "rollPrices": 3,
+    "freeRolls": 2,
+    "items": [
+     {
+      "tier": 3
+     }
+    ]
+   }
+  },
+  {
+   "id": "divine",
+   "name": "Touched by the Divine",
+   "desc": "",
+   "stat": "bestTier",
+   "target": 6,
+   "reward": {
+    "rollPrices": 4,
+    "freeRolls": 2,
+    "items": [
+     {
+      "tier": 4
+     }
+    ]
+   }
+  },
+  {
+   "id": "cosmic",
+   "name": "Cosmic Fortune",
+   "desc": "",
+   "stat": "bestTier",
+   "target": 8,
+   "reward": {
+    "rollPrices": 6,
+    "freeRolls": 3,
+    "items": [
+     {
+      "tier": 5
+     }
+    ],
+    "luckPct": 3
+   }
+  },
+  {
+   "id": "omega",
+   "name": "Omega",
+   "desc": "Reach the last hand-written tier. Higher ones exist.",
+   "stat": "bestTier",
+   "target": 11,
+   "reward": {
+    "rollPrices": 10,
+    "freeRolls": 3,
+    "items": [
+     {
+      "tier": 7
+     }
+    ],
+    "luckPct": 5
+   }
+  },
+  {
+   "id": "lvl5",
+   "name": "Rookie",
+   "desc": "",
+   "stat": "level",
+   "target": 5,
+   "reward": {
+    "rollPrices": 1
+   }
+  },
+  {
+   "id": "lvl10",
+   "name": "Apprentice",
+   "desc": "",
+   "stat": "level",
+   "target": 10,
+   "reward": {
+    "rollPrices": 2,
+    "freeRolls": 1,
+    "backpack": 2
+   }
+  },
+  {
+   "id": "lvl25",
+   "name": "Journeyman",
+   "desc": "",
+   "stat": "level",
+   "target": 25,
+   "reward": {
+    "rollPrices": 4,
+    "freeRolls": 2,
+    "items": [
+     {
+      "tier": 3
+     }
+    ]
+   }
+  },
+  {
+   "id": "lvl50",
+   "name": "Expert",
+   "desc": "",
+   "stat": "level",
+   "target": 50,
+   "reward": {
+    "rollPrices": 6,
+    "freeRolls": 2,
+    "items": [
+     {
+      "tier": 5
+     }
+    ],
+    "luckPct": 3
+   }
+  },
+  {
+   "id": "lvl100",
+   "name": "Master",
+   "desc": "",
+   "stat": "level",
+   "target": 100,
+   "reward": {
+    "rollPrices": 8,
+    "freeRolls": 3,
+    "items": [
+     {
+      "tier": 8
+     }
+    ],
+    "backpack": 4
+   }
+  },
+  {
+   "id": "rebirth1",
+   "name": "Reborn",
+   "desc": "",
+   "stat": "rebirths",
+   "target": 1,
+   "reward": {
+    "rollPrices": 3,
+    "freeRolls": 2
+   }
+  },
+  {
+   "id": "rebirth5",
+   "name": "Cycle of Rebirth",
+   "desc": "",
+   "stat": "rebirths",
+   "target": 5,
+   "reward": {
+    "rollPrices": 5,
+    "freeRolls": 3,
+    "luckPct": 3
+   }
+  },
+  {
+   "id": "rebirth25",
+   "name": "Eternal Return",
+   "desc": "",
+   "stat": "rebirths",
+   "target": 25,
+   "reward": {
+    "rollPrices": 8,
+    "freeRolls": 3,
+    "luckPct": 4,
+    "backpack": 4
+   }
+  },
+  {
+   "id": "buy5",
+   "name": "Shopper",
+   "desc": "",
+   "stat": "bought",
+   "target": 5,
+   "reward": {
+    "rollPrices": 1,
+    "freeRolls": 1
+   }
+  },
+  {
+   "id": "buy50",
+   "name": "Big Spender",
+   "desc": "",
+   "stat": "bought",
+   "target": 50,
+   "reward": {
+    "rollPrices": 3,
+    "freeRolls": 2,
+    "luckPct": 2
+   }
+  },
+  {
+   "id": "refine1",
+   "name": "Alchemist",
+   "desc": "",
+   "stat": "refined",
+   "target": 1,
+   "reward": {
+    "rollPrices": 1,
+    "freeRolls": 1
+   }
+  },
+  {
+   "id": "refine20",
+   "name": "Master Alchemist",
+   "desc": "",
+   "stat": "refined",
+   "target": 20,
+   "reward": {
+    "rollPrices": 3,
+    "freeRolls": 2,
+    "luckPct": 2
+   }
+  },
+  {
+   "id": "exp5",
+   "name": "Land Baron",
+   "desc": "",
+   "stat": "expansions",
+   "target": 5,
+   "reward": {
+    "rollPrices": 2,
+    "freeRolls": 1
+   }
+  },
+  {
+   "id": "play30",
+   "name": "Regular",
+   "desc": "Play for 30 minutes",
+   "stat": "playtime",
+   "target": 30,
+   "reward": {
+    "rollPrices": 2,
+    "freeRolls": 1
+   }
+  },
+  {
+   "id": "play300",
+   "name": "Dedicated",
+   "desc": "Play for 5 hours",
+   "stat": "playtime",
+   "target": 300,
+   "reward": {
+    "rollPrices": 5,
+    "freeRolls": 2
+   }
+  },
+  {
+   "id": "wave10",
+   "name": "Defender",
+   "desc": "",
+   "stat": "waves",
+   "target": 10,
+   "reward": {
+    "rollPrices": 2,
+    "freeRolls": 1
+   }
+  },
+  {
+   "id": "wave100",
+   "name": "Fortress",
+   "desc": "",
+   "stat": "waves",
+   "target": 100,
+   "reward": {
+    "rollPrices": 5,
+    "freeRolls": 2,
+    "items": [
+     {
+      "tier": 4
+     }
+    ]
+   }
+  },
+  {
+   "id": "boss1",
+   "name": "Boss Slayer",
+   "desc": "",
+   "stat": "bosses",
+   "target": 1,
+   "reward": {
+    "rollPrices": 3,
+    "freeRolls": 2,
+    "items": [
+     {
+      "tier": 3
+     }
+    ]
+   }
+  },
+  {
+   "id": "boss10",
+   "name": "Boss Hunter",
+   "desc": "",
+   "stat": "bosses",
+   "target": 10,
+   "reward": {
+    "rollPrices": 6,
+    "freeRolls": 3,
+    "items": [
+     {
+      "tier": 6
+     }
+    ],
+    "luckPct": 3
+   }
+  }
+ ],
+ "achievements": [
+  {
+   "id": "a-first",
+   "name": "First Roll",
+   "desc": "Roll your first item",
+   "stat": "rolls",
+   "target": 1,
+   "reward": {
+    "rollPrices": 1,
+    "freeRolls": 1
+   }
+  },
+  {
+   "id": "a-hundred",
+   "name": "Hundred Rolls",
+   "desc": "Roll 100 items",
+   "stat": "rolls",
+   "target": 100,
+   "reward": {
+    "rollPrices": 1,
+    "freeRolls": 1
+   }
+  },
+  {
+   "id": "a-thousand",
+   "name": "Thousand Rolls",
+   "desc": "Roll 1,000 items",
+   "stat": "rolls",
+   "target": 1000,
+   "reward": {
+    "rollPrices": 2,
+    "freeRolls": 1
+   }
+  },
+  {
+   "id": "a-million",
+   "name": "Million Rolls",
+   "desc": "Roll 1,000,000 items",
+   "stat": "rolls",
+   "target": 1000000,
+   "reward": {
+    "rollPrices": 10,
+    "freeRolls": 1
+   }
+  },
+  {
+   "id": "a-tier7",
+   "name": "Celestial",
+   "desc": "Roll a Celestial item",
+   "stat": "bestTier",
+   "target": 7,
+   "reward": {
+    "rollPrices": 3,
+    "freeRolls": 1
+   }
+  },
+  {
+   "id": "a-tier12",
+   "name": "Beyond the Table",
+   "desc": "Roll a generated tier (past Omega)",
+   "stat": "bestTier",
+   "target": 12,
+   "reward": {
+    "rollPrices": 6,
+    "freeRolls": 1
+   }
+  },
+  {
+   "id": "a-tier30",
+   "name": "Deep Luck",
+   "desc": "Roll tier 30",
+   "stat": "bestTier",
+   "target": 30,
+   "reward": {
+    "rollPrices": 10,
+    "freeRolls": 1
+   }
+  },
+  {
+   "id": "a-lvl200",
+   "name": "Level 200",
+   "desc": "Reach level 200",
+   "stat": "level",
+   "target": 200,
+   "reward": {
+    "rollPrices": 5,
+    "freeRolls": 1
+   }
+  },
+  {
+   "id": "a-lvl1000",
+   "name": "Level 1000",
+   "desc": "Reach level 1000",
+   "stat": "level",
+   "target": 1000,
+   "reward": {
+    "rollPrices": 10,
+    "freeRolls": 1
+   }
+  },
+  {
+   "id": "a-rb3",
+   "name": "Third Time Lucky",
+   "desc": "Rebirth 3 times",
+   "stat": "rebirths",
+   "target": 3,
+   "reward": {
+    "rollPrices": 2,
+    "freeRolls": 1
+   }
+  },
+  {
+   "id": "a-rb100",
+   "name": "Centurion",
+   "desc": "Rebirth 100 times",
+   "stat": "rebirths",
+   "target": 100,
+   "reward": {
+    "rollPrices": 10,
+    "freeRolls": 1
+   }
+  },
+  {
+   "id": "a-boss5",
+   "name": "Boss Rush",
+   "desc": "Defeat 5 bosses",
+   "stat": "bosses",
+   "target": 5,
+   "reward": {
+    "rollPrices": 4,
+    "freeRolls": 1
+   }
+  },
+  {
+   "id": "a-wave500",
+   "name": "Unbreakable",
+   "desc": "Defend 500 waves",
+   "stat": "waves",
+   "target": 500,
+   "reward": {
+    "rollPrices": 8,
+    "freeRolls": 1
+   }
+  },
+  {
+   "id": "a-bought200",
+   "name": "Shopaholic",
+   "desc": "Buy 200 things",
+   "stat": "bought",
+   "target": 200,
+   "reward": {
+    "rollPrices": 4,
+    "freeRolls": 1
+   }
+  }
+ ],
+ "playtime": {
+  "thresholds": [
+   300,
+   900,
+   1800,
+   3600,
+   7200,
+   14400,
+   28800,
+   86400
+  ],
+  "everyAfter": 86400,
+  "reward": {
+   "rollPrices": 2,
+   "freeRolls": 1
+  }
+ },
+ "milestones": {
+  "levels": [
+   10,
+   25,
+   50,
+   100,
+   200
+  ]
+ },
+ "daily": {
+  "rollPrices": 5,
+  "streakBonus": 0.2,
+  "streakCap": 10,
+  "freeRolls": 1,
+  "itemEvery": 7
+ },
+ "chests": {
+  "hours": 6,
+  "slots": 3
+ }
+}

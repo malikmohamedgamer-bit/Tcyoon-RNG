@@ -76,3 +76,40 @@ export function toast(text, ms = 3200) {
   root.appendChild(d);
   setTimeout(() => d.remove(), ms);
 }
+
+/**
+ * Modal confirmation dialog (focus is moved into it, Tab is trapped, Esc cancels).
+ * Resolves true on confirm, false on cancel. `html` is trusted markup built by the caller.
+ */
+export function confirmDialog({ title, html, confirmText = 'Confirm', cancelText = 'Cancel', danger = false }) {
+  const root = document.getElementById('modal-root');
+  const prev = document.activeElement;
+  return new Promise((resolve) => {
+    root.innerHTML = `<div class="backdrop"><div class="modal" role="alertdialog" aria-modal="true" aria-labelledby="dlg-title" aria-describedby="dlg-body">
+      <h2 id="dlg-title">${esc(title)}</h2><div id="dlg-body">${html}</div>
+      <div class="row2" style="margin-top:.8rem"><button type="button" data-no>${esc(cancelText)}</button><button type="button" class="${danger ? 'danger' : 'primary'}" data-yes>${esc(confirmText)}</button></div></div></div>`;
+    const yes = root.querySelector('[data-yes]');
+    const no = root.querySelector('[data-no]');
+    const close = (v) => {
+      root.innerHTML = '';
+      document.removeEventListener('keydown', onKey, true);
+      if (prev && prev.focus) prev.focus();
+      resolve(v);
+    };
+    const onKey = (e) => {
+      if (e.key === 'Escape') {
+        e.stopPropagation();
+        close(false);
+      } else if (e.key === 'Tab') {
+        const f = [no, yes];
+        const i = f.indexOf(document.activeElement);
+        e.preventDefault();
+        f[(i + (e.shiftKey ? -1 : 1) + f.length) % f.length].focus();
+      }
+    };
+    document.addEventListener('keydown', onKey, true);
+    yes.addEventListener('click', () => close(true));
+    no.addEventListener('click', () => close(false));
+    no.focus();
+  });
+}

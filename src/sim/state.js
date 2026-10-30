@@ -12,6 +12,9 @@ import ECON from '../data/economy.json' with { type: 'json' };
 import { addToBag } from './inventory.js';
 import { TEMPLATES, isWeapon } from './items.js';
 import { refreshProduction } from './production.js';
+import { applyLayerMods } from './rebirth.js';
+import { applyShopMods } from './shop.js';
+import { createCombatState } from './combat.js';
 import { createRewardState, createBonus, installRewardHooks } from './rewards.js';
 import { START_SIDE, MAX_SIDE } from './placement.js';
 
@@ -39,6 +42,11 @@ export function createState(seed = hash32(String(Date.now())), nowMs = Date.now(
     bag: [],
     base: { side: START_SIDE, expansions: 0, mega: 0 },
     presets: [],
+    layers: [],
+    combat: createCombatState(),
+    upgrades: {},
+    boosts: [],
+    shop: { rot: {} },
     rewards: createRewardState(),
     bonus: createBonus(),
     nextUid: 1,
@@ -52,13 +60,19 @@ export function createState(seed = hash32(String(Date.now())), nowMs = Date.now(
   };
   // starter kit: one dropper and one seller so the first income needs no luck
   installRewardHooks(state);
+  installModHooks(state);
   addToBag(state, { tpl: 'pebble_drill', tier: 0, vs: 0, hy: null, mut: [] }, { force: true });
   addToBag(state, { tpl: 'stall', tier: 0, vs: 0, hy: null, mut: [] }, { force: true });
   return state;
 }
 
+/** Modifier hooks (layer tree etc.). Transient; reinstalled on create/load. */
+export function installModHooks(state) {
+  state._modFns = [(m) => applyLayerMods(state, m), (m) => applyShopMods(state, m)];
+}
+
 const slimItem = (it) => {
-  const o = { uid: it.uid, tpl: it.tpl, tier: it.tier, vs: it.vs || 0, hy: it.hy || null, mut: it.mut || [], loc: it.loc };
+  const o = { uid: it.uid, tpl: it.tpl, tier: it.tier, vs: it.vs || 0, hy: it.hy || null, mut: it.mut || [], loc: it.loc, lv: it.lv };
   if (it.loc === 'placed') Object.assign(o, { x: it.x, y: it.y, dir: it.dir || 0 });
   return o;
 };
@@ -82,6 +96,11 @@ export function serializeState(state, nowMs = Date.now()) {
       bag: state.bag,
       base: state.base,
       presets: state.presets,
+      layers: state.layers,
+      combat: { wave: state.combat.wave, bestWave: state.combat.bestWave, bossIndex: state.combat.bossIndex },
+      upgrades: state.upgrades,
+      boosts: state.boosts,
+      shop: state.shop,
       rewards: state.rewards,
       bonus: state.bonus,
       nextUid: state.nextUid,
@@ -120,14 +139,25 @@ export function deserializeState(data) {
   s.stats = { ...s.stats, ...(data.stats || {}) };
   s.settings = { ...defaultSettings(), ...(data.settings || {}) };
   s.base = { side: Math.min(MAX_SIDE, Math.max(START_SIDE, Math.floor(num(data.base?.side, START_SIDE)))), expansions: Math.max(0, Math.floor(num(data.base?.expansions))), mega: Math.max(0, Math.floor(num(data.base?.mega))) };
-  s.rewards = { levelClaimed: Math.max(1, Math.floor(num(data.rewards?.levelClaimed, Math.max(1, num(data.level, 1))))) };
-  s.bonus = { backpack: Math.max(0, Math.floor(num(data.bonus?.backpack))), luck: Big.from(data.bonus?.luck ?? 1).max(1), gear: Math.max(0, Math.floor(num(data.bonus?.gear))), freeCap: Math.max(0, Math.floor(num(data.bonus?.freeCap))) };
+  s.layers = (Array.isArray(data.layers) ? data.layers : []).slice(0, 1000).map((l) => ({
+    count: Math.max(0, Math.floor(num(l?.count))),
+    currency: Big.from(l?.currency).nonNeg(),
+    total: Big.from(l?.total).nonNeg(),
+    run: Big.from(l?.run).nonNeg(),
+    tree: Object.fromEntries(Object.entries(l?.tree || {}).filter(([, v]) => Number.isFinite(Number(v)) && Number(v) > 0).map(([k2, v]) => [k2, Math.floor(Number(v))])),
+  }));
+  s.rewards = { levelClaimed: Math.max(1, Math.floor(num(data.rewards?.levelClaimed, Math.max(1, num(data.level, 1))))), freeAcc: Math.max(0, num(data.rewards?.freeAcc)), claimed: Object.fromEntries(Object.entries(data.rewards?.claimed || {}).filter(([, v]) => v === true)), daily: { last: typeof data.rewards?.daily?.last === 'string' ? data.rewards.daily.last : null, streak: Math.max(0, Math.floor(num(data.rewards?.daily?.streak))) } };
+  s.combat = { ...createCombatState(), wave: Math.max(1, Math.floor(num(data.combat?.wave, 1))), bestWave: Math.max(1, Math.floor(num(data.combat?.bestWave, 1))), bossIndex: Math.max(0, Math.floor(num(data.combat?.bossIndex))) };
+  s.upgrades = Object.fromEntries(Object.entries(data.upgrades || {}).filter(([, v]) => Number.isFinite(Number(v)) && Number(v) > 0).map(([k2, v]) => [k2, Math.floor(Number(v))]));
+  s.boosts = (Array.isArray(data.boosts) ? data.boosts : []).filter((b) => b && typeof b.id === 'string' && Number(b.left) > 0).map((b) => ({ id: b.id, left: Number(b.left) }));
+  s.shop = { rot: Object.fromEntries(Object.entries(data.shop?.rot || {}).map(([k2, v]) => [k2, Array.isArray(v) ? v.filter(Number.isInteger) : []])) };
+  s.bonus = { backpack: Math.max(0, Math.floor(num(data.bonus?.backpack))), luckPct: Math.max(0, num(data.bonus?.luckPct)), gear: Math.max(0, Math.floor(num(data.bonus?.gear))), freeCap: Math.max(0, Math.floor(num(data.bonus?.freeCap))) };
   s.presets = Array.isArray(data.presets) ? data.presets.filter((p) => p && Array.isArray(p.layout)).slice(0, 12) : [];
   const occupied = new Set();
   for (const raw of Object.values(data.items && !Array.isArray(data.items) ? data.items : {})) {
     if (!raw || typeof raw.tpl !== 'string' || !TEMPLATES.has(raw.tpl)) continue; // unknown template: drop (data removed)
     const uid = Number.isFinite(Number(raw.uid)) ? Number(raw.uid) : s.nextUid++;
-    const item = { uid, loc: 'bag', tpl: raw.tpl, tier: Math.max(0, Math.floor(num(raw.tier))), vs: num(raw.vs), hy: raw.hy || null, mut: Array.isArray(raw.mut) ? raw.mut : [] };
+    const item = { uid, loc: 'bag', tpl: raw.tpl, tier: Math.max(0, Math.floor(num(raw.tier))), vs: num(raw.vs), hy: raw.hy || null, mut: Array.isArray(raw.mut) ? raw.mut : [], lv: Math.max(1, Math.floor(num(raw.lv, s.level))) };
     if (raw.loc === 'placed') {
       const x = Math.floor(num(raw.x, -1));
       const y = Math.floor(num(raw.y, -1));

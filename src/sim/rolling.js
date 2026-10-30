@@ -7,18 +7,18 @@ import { tierFromLog, oddsOf, tierInfo, PITY } from '../gen/tiers.js';
 import { generateItem } from '../gen/items.js';
 import { itemTitle } from './items.js';
 import { addToBag, bagFull } from './inventory.js';
-import { luckOf, rollCost, trySpend, freeRollCap, freeRollInterval } from './economy.js';
+import { luckOf, rollCost, trySpend, freeRollCap, freeRollInterval, modifiers } from './economy.js';
 import { addXp, rollXp } from './leveling.js';
 
 /** Tier draw: tier = highest t with odds_t <= luck / u, u uniform in (0,1]. So P(tier >= t) = min(1, luck/odds_t). */
-export function drawTier(rng, logLuck, pity) {
+export function drawTier(rng, logLuck, pity, pityMult = 1) {
   const u = rng.open();
   let logX = logLuck - Math.log10(u);
   let forced = null;
   if (pity) {
     for (const p of PITY) {
       const target = logLuck + Math.log10(p.x);
-      if ((pity[p.id] || 0) >= p.every && logX < target) {
+      if ((pity[p.id] || 0) >= Math.max(3, p.every * pityMult) && logX < target) {
         logX = target + rng.next() * 0.5; // guaranteed at least a "1 in x" result
         forced = p.id;
       }
@@ -55,7 +55,7 @@ export function typicalTier(luck) {
 export function rollOne(state, rng = state.rng) {
   const luck = luckOf(state);
   const logLuck = luck.log10Num();
-  const { tier, logX, forced } = drawTier(rng, logLuck, state.pity);
+  const { tier, logX, forced } = drawTier(rng, logLuck, state.pity, modifiers(state).pityMult);
   updatePity(state.pity, logLuck, logX);
   const data = generateItem(rng, { tier, level: state.level, logLuck });
   return { data, forced };
@@ -130,8 +130,9 @@ export function stepAutoRoll(state, dt) {
   if (!state.autoRoll || !autoRollUnlocked(state)) return 0;
   state._autoT = (state._autoT || 0) + dt;
   let n = 0;
-  while (state._autoT >= ECON.roll.autoInterval && n < 20) {
-    state._autoT -= ECON.roll.autoInterval;
+  const every = ECON.roll.autoInterval * modifiers(state).autoIntervalMult;
+  while (state._autoT >= every && n < 20) {
+    state._autoT -= every;
     if (bagFull(state) || (state.freeRoll.count === 0 && state.money.lt(rollCost(state)))) {
       state._autoT = 0;
       break;

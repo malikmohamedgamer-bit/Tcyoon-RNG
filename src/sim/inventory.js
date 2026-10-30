@@ -13,7 +13,7 @@ export const bagFull = (state) => state.bag.length >= backpackCapacity(state);
 /** Register a freshly generated item and put it in the backpack. Returns the item, or null if full. */
 export function addToBag(state, item, { force = false } = {}) {
   if (!force && bagFull(state)) return null;
-  const it = { uid: state.nextUid++, loc: 'bag', ...item };
+  const it = { uid: state.nextUid++, loc: 'bag', lv: state.level, ...item };
   state.items[it.uid] = it;
   state.bag.push(it.uid);
   return it;
@@ -100,7 +100,7 @@ export function fuse(state, uids, rng = state.rng) {
   const success = rng.chance(chance);
   const parent = rng.pick(items);
   const tier = items[0].tier + (success ? 1 : 0);
-  const base = { tpl: parent.tpl, tier, vs: rng.chance(0.5) ? parent.vs : 0, hy: parent.hy || null, mut: [] };
+  const base = { tpl: parent.tpl, tier, vs: rng.chance(0.5) ? parent.vs : 0, hy: parent.hy || null, mut: [], lv: Math.min(...items.map((x) => x.lv ?? state.level)) };
   const logLuck = luckOf(state).log10Num();
   if (success) {
     const pool = items.flatMap((it) => it.mut || []);

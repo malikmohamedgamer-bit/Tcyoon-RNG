@@ -1,0 +1,19 @@
+{
+  "_doc": "Enemy templates. hp/dmg are multipliers of the wave scale (enemy hp = 12 * V(wave/3) * hp). dpsFrac = fraction of the base's max HP removed per second while attacking (melee: at range, ranged: from 'range'). speed in world units/s. res: damage-type resistance (0.3 = takes 30% less, -0.3 = takes 30% more; void ignores resistance). count: units spawned per 'slot' (swarms). traits: heal (heals nearby allies), fly. Add an enemy by appending here; gen/monsters.js adds seeded prefixes and modifiers forever.",
+  "base": { "hp": 12, "spawnRadius": 36, "engageRadius": 3, "waveInterval": 60, "wavesPerTier": 3 },
+  "templates": [
+    { "id": "grunt",  "name": "Grunt",   "icon": "👹", "hp": 1,    "dpsFrac": 0.004, "speed": 2.4, "range": 1.4, "weight": 10, "minWave": 1,  "res": {},                                  "count": 1, "traits": [] },
+    { "id": "runner", "name": "Runner",  "icon": "🐺", "hp": 0.5,  "dpsFrac": 0.002, "speed": 5.0, "range": 1.2, "weight": 7,  "minWave": 2,  "res": { "ice": -0.3 },                     "count": 1, "traits": [] },
+    { "id": "archer", "name": "Archer",  "icon": "🏹", "hp": 0.7,  "dpsFrac": 0.003, "speed": 2.2, "range": 9,   "weight": 5,  "minWave": 3,  "res": { "electric": -0.2 },                "count": 1, "traits": [] },
+    { "id": "swarm",  "name": "Swarmlings","icon": "🦇", "hp": 0.25, "dpsFrac": 0.001, "speed": 3.2, "range": 1.0, "weight": 4,  "minWave": 4,  "res": { "fire": -0.3 },                    "count": 4, "traits": ["fly"] },
+    { "id": "tank",   "name": "Bulwark", "icon": "🛡️", "hp": 4,    "dpsFrac": 0.008, "speed": 1.3, "range": 1.6, "weight": 4,  "minWave": 5,  "res": { "physical": 0.35, "fire": -0.2 }, "count": 1, "traits": [] },
+    { "id": "healer", "name": "Mender",  "icon": "🧙", "hp": 1.2,  "dpsFrac": 0.001, "speed": 2.0, "range": 7,   "weight": 3,  "minWave": 8,  "res": { "void": 0 },                       "count": 1, "traits": ["heal"] },
+    { "id": "golem",  "name": "Golem",   "icon": "🗿", "hp": 7,    "dpsFrac": 0.012, "speed": 1.0, "range": 1.8, "weight": 2,  "minWave": 12, "res": { "physical": 0.5, "electric": 0.3, "ice": -0.4 }, "count": 1, "traits": [] }
+  ],
+  "modifiers": [
+    { "id": "armored",  "name": "Armored",  "hp": 1.5, "speed": 0.9,  "dpsFrac": 1.0 },
+    { "id": "frenzied", "name": "Frenzied", "hp": 1.0, "speed": 1.35, "dpsFrac": 1.25 },
+    { "id": "brutal",   "name": "Brutal",   "hp": 1.2, "speed": 1.0,  "dpsFrac": 1.6 },
+    { "id": "spry",     "name": "Spry",     "hp": 0.8, "speed": 1.5,  "dpsFrac": 1.0 }
+  ]
+}

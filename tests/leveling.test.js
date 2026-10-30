@@ -42,3 +42,47 @@ test('rolling a rarer item gives more xp', () => {
   assert.ok(rollXp(1, 5).gt(rollXp(1, 0)));
   assert.ok(rollXp(20, 0).gt(rollXp(1, 0)));
 });
+
+import { xpBetween, levelReachable } from '../src/sim/leveling.js';
+
+test('xpBetween (closed form) equals summing xpForLevel level by level', () => {
+  for (const [L, M] of [[1, 2], [1, 40], [5, 150], [100, 400], [1000, 1100], [7, 7], [9, 8]]) {
+    let sum = big(0);
+    for (let l = L; l < M; l++) sum = sum.add(xpForLevel(l));
+    const cf = xpBetween(L, M);
+    const a = sum.toNumber();
+    const b = cf.toNumber();
+    assert.ok(Math.abs(a - b) <= 1e-9 * Math.max(1, a), `${L}->${M}: loop ${a} closed ${b}`);
+  }
+});
+
+test('levelReachable agrees with a level-by-level loop (including just below/above a boundary)', () => {
+  for (const [L, xp] of [[1, 1e6], [10, 5e9], [200, 1e30], [3000, 1e200]]) {
+    const M = levelReachable(L, big(xp));
+    assert.ok(xpBetween(L, M).lte(big(xp).mul(1 + 1e-9)));
+    assert.ok(xpBetween(L, M + 1).gt(big(xp).mul(1 - 1e-9)));
+    if (xp <= 1e30) {
+      let l = L;
+      let left = big(xp);
+      while (left.gte(xpForLevel(l))) {
+        left = left.sub(xpForLevel(l));
+        l++;
+      }
+      assert.ok(Math.abs(l - M) <= 1, `${L}: loop ${l} vs closed ${M}`);
+    }
+  }
+});
+
+test('a mass level-up is closed form: 10^300 xp is instant, rewards are granted once as permanent bonuses', () => {
+  const s = createState(3, 0);
+  const t = performance.now();
+  addXp(s, big('1e300'));
+  assert.ok(performance.now() - t < 200, `${performance.now() - t} ms`);
+  assert.ok(s.level > 4000);
+  assert.equal(s.rewards.levelClaimed, s.level);
+  assert.ok(s.bonus.backpack > 1000 && s.bonus.luckPct > 1000);
+  assert.ok(s.xp.isFinite() && !s.xp.isNegative());
+  const bonus = s.bonus.backpack;
+  addXp(s, big(1)); // nothing is re-granted
+  assert.equal(s.bonus.backpack, bonus);
+});

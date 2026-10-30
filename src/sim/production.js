@@ -41,8 +41,10 @@ export function computeProduction(state) {
   const aura = new Map(); // dropper uid -> rate multiplier from adjacent dynamos
   for (const n of nodes) {
     if (n.type !== 'generator') continue;
-    if (n.stats.luck) luck = luck.mul(n.stats.luck);
-    if (n.stats.xp) xp = xp.mul(n.stats.xp);
+    // additive stacking: luck -> better tiers -> stronger shrines is a feedback loop, so N shrines must give
+    // 1 + sum(bonus) (linear in N, bounded by the grid), never a product (exponential in N)
+    if (n.stats.luck) luck = luck.add(n.stats.luck.sub(1));
+    if (n.stats.xp) xp = xp.add(n.stats.xp.sub(1));
     if (n.stats.aura) {
       for (const [dx, dy] of DIRS) {
         const nb = cells.get(key(n.x + dx, n.y + dy));

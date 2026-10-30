@@ -24,7 +24,7 @@ export function createShell({ game, fmt, panels, onOpen }) {
   hudEl.querySelectorAll('[data-bind]').forEach((n) => (refs[n.dataset.bind] = n));
 
   dock.innerHTML = panels
-    .map((p) => `<button type="button" data-panel="${p.id}" aria-pressed="false" aria-controls="panels"><span aria-hidden="true">${p.icon}</span> ${esc(p.label)}</button>`)
+    .map((p) => `<button type="button" data-panel="${p.id}" aria-pressed="false" aria-controls="panels"><span aria-hidden="true">${p.icon}</span> ${esc(p.label)}<span class="badge-n" data-badge="${p.id}" hidden></span></button>`)
     .join('');
   dock.addEventListener('click', (e) => {
     const b = e.target.closest('[data-panel]');
@@ -86,6 +86,13 @@ export function createShell({ game, fmt, panels, onOpen }) {
     },
     update(income) {
       const s = game.state;
+      for (const p of panels) {
+        if (!p.badge) continue;
+        const b = dock.querySelector(`[data-badge="${p.id}"]`);
+        const n = p.badge();
+        b.hidden = !n;
+        b.textContent = String(n);
+      }
       refs.money.textContent = '$' + fmt(s.money);
       refs.income.textContent = '$' + fmt(income || Big.fromNumber(0)) + '/s';
       refs.level.textContent = String(s.level);

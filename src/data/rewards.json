@@ -1,17 +1,106 @@
 {
-  "_doc": "Reward data. 'levels' are the hand-written level-up rewards; every other level uses the generation formula in sim/rewards.js (levelReward). Reward fields: rollPrices (money = that many roll prices at the level reached), freeRolls (bonus rolls, may exceed the cap), backpack (+slots, permanent), luckPct (permanent luck, multiplicative), expansion (free base expansion), gear (+gear slot), freeCap (+free-roll cap), items [{tier, tpl?}], unlock [ids shown as 'unlocked'], note.",
+  "_doc": "Reward data. 'levels' are the hand-written level-up rewards; every other level uses the generation formula in sim/rewards.js (levelReward). Consumable rewards (money, free rolls, items) are divided by your XP multiplier so faster levelling can never print money. Reward fields: rollPrices (money = that many roll prices at the level reached), freeRolls, backpack (+slots, permanent), luckPct, expansion, gear, freeCap, items [{tier, tpl?}], unlock [ids], note.",
   "levels": {
-    "2":  { "rollPrices": 30, "freeRolls": 1, "note": "Free roll bonus" },
-    "3":  { "rollPrices": 35, "unlock": ["Auto-roll"], "note": "Auto-roll unlocked" },
-    "4":  { "rollPrices": 40, "backpack": 2, "unlock": ["Turrets", "Weapons", "Waves"], "items": [{ "tier": 1, "tpl": "gun_turret" }], "note": "Monsters start attacking; turrets and weapons now drop" },
-    "5":  { "rollPrices": 50, "freeRolls": 1, "luckPct": 5, "unlock": ["Roll ×10"], "note": "Roll ×10 unlocked" },
-    "6":  { "rollPrices": 55, "items": [{ "tier": 2 }] },
-    "7":  { "rollPrices": 60, "luckPct": 5 },
-    "8":  { "rollPrices": 65, "expansion": 1, "note": "Free base expansion" },
-    "9":  { "rollPrices": 70, "freeRolls": 2 },
-    "10": { "rollPrices": 100, "backpack": 3, "gear": 1, "unlock": ["Arena", "Bosses"], "items": [{ "tier": 3 }, { "tier": 2 }], "note": "Arena and bosses unlocked; extra gear slot" },
-    "12": { "rollPrices": 90, "freeCap": 1, "note": "Free-roll cap +1" },
-    "15": { "rollPrices": 120, "unlock": ["Roll ×100"], "luckPct": 8, "note": "Roll ×100 unlocked" },
-    "20": { "rollPrices": 200, "backpack": 4, "gear": 1, "freeCap": 1, "items": [{ "tier": 5 }], "note": "Milestone: extra gear slot" }
+    "2": {
+      "rollPrices": 0.5,
+      "freeRolls": 1,
+      "note": "Free roll bonus"
+    },
+    "3": {
+      "rollPrices": 0.5,
+      "unlock": [
+        "Auto-roll"
+      ],
+      "note": "Auto-roll unlocked"
+    },
+    "4": {
+      "rollPrices": 0.5,
+      "backpack": 2,
+      "unlock": [
+        "Turrets",
+        "Weapons",
+        "Waves"
+      ],
+      "items": [
+        {
+          "tier": 1,
+          "tpl": "gun_turret"
+        }
+      ],
+      "note": "Monsters start attacking; turrets and weapons now drop"
+    },
+    "5": {
+      "rollPrices": 0.6,
+      "freeRolls": 1,
+      "luckPct": 5,
+      "unlock": [
+        "Roll ×10"
+      ],
+      "note": "Roll ×10 unlocked"
+    },
+    "6": {
+      "rollPrices": 0.6,
+      "items": [
+        {
+          "tier": 2
+        }
+      ]
+    },
+    "7": {
+      "rollPrices": 0.7,
+      "luckPct": 5
+    },
+    "8": {
+      "rollPrices": 0.7,
+      "expansion": 1,
+      "note": "Free base expansion"
+    },
+    "9": {
+      "rollPrices": 0.8,
+      "freeRolls": 1
+    },
+    "10": {
+      "rollPrices": 1.0,
+      "backpack": 3,
+      "gear": 1,
+      "unlock": [
+        "Arena",
+        "Bosses"
+      ],
+      "items": [
+        {
+          "tier": 3
+        },
+        {
+          "tier": 2
+        }
+      ],
+      "note": "Arena and bosses unlocked; extra gear slot"
+    },
+    "12": {
+      "rollPrices": 1.0,
+      "freeCap": 1,
+      "note": "Free-roll cap +1"
+    },
+    "15": {
+      "rollPrices": 1.2,
+      "unlock": [
+        "Roll ×100"
+      ],
+      "luckPct": 8,
+      "note": "Roll ×100 unlocked"
+    },
+    "20": {
+      "rollPrices": 1.5,
+      "backpack": 4,
+      "gear": 1,
+      "freeCap": 1,
+      "items": [
+        {
+          "tier": 5
+        }
+      ],
+      "note": "Milestone: extra gear slot"
+    }
   }
 }

@@ -26,6 +26,7 @@ export function reroll(state, uid, rng = state.rng) {
   const logLuck = luckOf(state).log10Num();
   it.mut = rollMutations(rng, { tier: it.tier, type: templateOf(it).type, logLuck, boost: REF.ops.reroll.luckBoost });
   refreshProduction(state);
+  state.stats.refined = (state.stats.refined || 0) + 1;
   emit(state, 'refine', { op: 'reroll', title: itemTitle(it) });
   return { ok: true, mut: it.mut, cost };
 }
@@ -43,6 +44,7 @@ export function transfer(state, fromUid, toUid, mutId) {
   removeMutation(a, mutId);
   addMutation(b, mutId, m[1]);
   refreshProduction(state);
+  state.stats.refined = (state.stats.refined || 0) + 1;
   emit(state, 'refine', { op: 'transfer', title: itemTitle(b) });
   return { ok: true, cost };
 }
@@ -68,6 +70,7 @@ export function combine(state, targetUid, donorUid, mutId, rng = state.rng) {
   removeMutation(d, mutId);
   if (success) tm[1] += 1;
   refreshProduction(state);
+  state.stats.refined = (state.stats.refined || 0) + 1;
   emit(state, 'refine', { op: 'combine', success, title: itemTitle(t) });
   return { ok: true, success, chance, cost };
 }

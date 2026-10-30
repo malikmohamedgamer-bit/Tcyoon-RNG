@@ -14,6 +14,8 @@ export const MAX_SIDE = 32;
 export const PRESET_LIMIT = 12;
 
 export const baseSide = (state) => state.base.side;
+/** World position (x, z) of a grid cell centre; the base is centred on the origin. */
+export const cellCenter = (x, y, side) => ({ x: x - (side - 1) / 2, z: y - (side - 1) / 2 });
 export const inBounds = (state, x, y) => Number.isInteger(x) && Number.isInteger(y) && x >= 0 && y >= 0 && x < state.base.side && y < state.base.side;
 
 /** Item uid at cell, or null. */
@@ -117,6 +119,7 @@ export const expandCost = (state) => Big.fromNumber(150).mul(Big.fromNumber(1.9)
 export function expand(state) {
   if (!trySpend(state, expandCost(state))) return { ok: false, reason: 'Not enough money' };
   state.base.expansions += 1;
+  state.stats.expansions = (state.stats.expansions || 0) + 1;
   if (state.base.side < MAX_SIDE) state.base.side += 1;
   else state.base.mega = (state.base.mega || 0) + 1;
   refreshProduction(state);
@@ -128,6 +131,16 @@ export function grantExpansion(state) {
   state.base.expansions += 1;
   if (state.base.side < MAX_SIDE) state.base.side += 1;
   else state.base.mega = (state.base.mega || 0) + 1;
+  refreshProduction(state);
+}
+
+/** n free expansions at once (closed form): grow the side up to MAX_SIDE, the rest become mega tiles. */
+export function grantExpansions(state, n) {
+  if (n <= 0) return;
+  const toSide = Math.min(n, MAX_SIDE - state.base.side);
+  state.base.expansions += n;
+  state.base.side += Math.max(0, toSide);
+  state.base.mega = (state.base.mega || 0) + (n - Math.max(0, toSide));
   refreshProduction(state);
 }
 

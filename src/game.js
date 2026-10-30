@@ -2,11 +2,10 @@
 // hook (window.__game) and Node tests all drive the game through this object, so a
 // user action and a test action take exactly the same code path.
 import { SaveManager } from './core/save.js';
-import { now } from './core/time.js';
+import { now, sanitizeElapsed } from './core/time.js';
 import { createState, serializeState, deserializeState, SAVE_VERSION, MIGRATIONS } from './sim/state.js';
 import { doRoll, stepAutoRoll, accrueFreeRolls, autoRollUnlocked } from './sim/rolling.js';
 import { sellItem, sellDuplicates, fuse as fuseItems } from './sim/inventory.js';
-import { backpackCost, trySpend } from './sim/economy.js';
 import { emit } from './core/events.js';
 import { Big } from './core/bignum.js';
 import { addToBag, bagFull } from './sim/inventory.js';
@@ -15,13 +14,23 @@ import { addXp } from './sim/leveling.js';
 import { refreshProduction, stepProduction, incomeRate } from './sim/production.js';
 import * as placement from './sim/placement.js';
 import * as refiners from './sim/refiners.js';
+import * as rebirth from './sim/rebirth.js';
+import * as shop from './sim/shop.js';
+import * as combat from './sim/combat.js';
+import * as quests from './sim/quests.js';
+import { applyOffline, WELCOME_MIN_SECONDS } from './sim/offline.js';
 
 export function createGame({ storage, seed } = {}) {
   const save = new SaveManager({ version: SAVE_VERSION, migrations: MIGRATIONS, ...(storage ? { storage } : {}) });
   const loaded = save.load();
+  const fromSave = !!loaded.data;
+  const savedAt = loaded.data ? Number(loaded.data.savedAt) : 0;
   let state = loaded.data ? deserializeState(loaded.data) : createState(seed);
   refreshProduction(state);
+  const offlineHooks = { waves: (st, sec) => combat.offlineWaves(st, sec) };
   const game = {
+    offlineHooks,
+    welcome: null,
     save,
     loadStatus: loaded.status,
     loadInfo: loaded,
@@ -38,6 +47,38 @@ export function createGame({ storage, seed } = {}) {
       accrueFreeRolls(state, dt);
       stepAutoRoll(state, dt);
       stepProduction(state, dt, addMoney);
+      shop.stepBoosters(state, dt);
+      const r = combat.stepCombat(state, dt, game.manualInput);
+      if (r) game.lastCombat = r;
+    },
+    manualInput: null,
+    lastCombat: null,
+    startBoss: () => combat.startEncounter(state, 'boss'),
+    startRush: () => combat.startEncounter(state, 'rush'),
+    startWaveNow: () => combat.startEncounter(state, 'wave'),
+    setManual(on) {
+      if (state._enc) combat.setManual(state._enc, on);
+      return !!state._enc;
+    },
+    equip: (uid) => combat.equipWeapon(state, uid),
+    unequip: (uid) => combat.unequipWeapon(state, uid),
+    leaveEncounter() {
+      if (!state._enc) return false;
+      if (state._enc.kind === 'wave') return false; // automatic waves cannot be skipped
+      state._enc.done = 'lose';
+      return true;
+    },
+
+    /**
+     * Apply progress for time spent away: from the save timestamp (page load) or a stalled frame.
+     * Negative elapsed time (clock moved back) is ignored; absurd elapsed time is clamped.
+     */
+    catchUp(fromMs, toMs = now()) {
+      const el = sanitizeElapsed(fromMs, toMs);
+      const sum = applyOffline(state, el.seconds, offlineHooks);
+      state.savedAt = toMs;
+      if (el.seconds >= WELCOME_MIN_SECONDS || el.negative || el.clamped) game.welcome = { ...sum, negative: el.negative, clamped: el.clamped };
+      return game.welcome;
     },
 
     get income() {
@@ -52,6 +93,11 @@ export function createGame({ storage, seed } = {}) {
     savePreset: (name) => placement.savePreset(state, name),
     loadPreset: (i) => placement.loadPreset(state, i),
     deletePreset: (i) => placement.deletePreset(state, i),
+    prestige(k, { confirmed = false } = {}) {
+      if (!confirmed) return { ok: false, needsConfirm: true, preview: rebirth.prestigePreview(state, k) };
+      return rebirth.prestige(state, k);
+    },
+    buyTreeNode: (k, id) => rebirth.buyNode(state, k, id),
     reroll: (uid) => refiners.reroll(state, uid),
     transferMutation: (a, b, id) => refiners.transfer(state, a, b, id),
     combineMutation: (a, b, id) => refiners.combine(state, a, b, id),
@@ -74,15 +120,19 @@ export function createGame({ storage, seed } = {}) {
       return state.autoRoll;
     },
     buyBackpack() {
-      const cost = backpackCost(state);
-      if (!trySpend(state, cost)) {
-        emit(state, 'toast', { text: 'Not enough money for a bigger backpack' });
-        return { ok: false, cost };
-      }
-      state.backpackTier += 1;
-      emit(state, 'toast', { text: `Backpack upgraded to tier ${state.backpackTier}` });
-      return { ok: true, cost };
+      const r = shop.buyBackpackTier(state);
+      emit(state, 'toast', { text: r.ok ? `Backpack upgraded to tier ${state.backpackTier}` : 'Not enough money for a bigger backpack' });
+      return r;
     },
+    buyUpgrade: (id) => shop.buyUpgrade(state, id),
+    buyBooster: (id) => shop.buyBooster(state, id),
+    rotating: () => shop.rotatingOffers(state, now()),
+    buyRotating: (idx) => shop.buyRotating(state, idx, now()),
+    claimTask: (id) => quests.claimTask(state, id),
+    claimDaily: () => quests.claimDaily(state, now()),
+    claimPlaytime: (id) => quests.claimPlaytime(state, id),
+    claimMilestone: (id) => quests.claimMilestone(state, id),
+    openChest: (slot) => quests.openChest(state, slot, now()),
 
     saveNow() {
       return save.save(serializeState(state, now()));
@@ -126,5 +176,6 @@ export function createGame({ storage, seed } = {}) {
       game.saveNow();
     },
   };
+  if (fromSave) game.catchUp(savedAt); // offline progress, closed form
   return game;
 }

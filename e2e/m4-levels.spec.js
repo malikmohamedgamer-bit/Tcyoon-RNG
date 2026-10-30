@@ -28,7 +28,7 @@ test('level-up grants the level reward once, shows it, and a reload cannot grant
 test('level 3 unlocks auto-roll in the UI and it rolls on its own', async ({ page }) => {
   await openGame(page);
   await expect(page.getByText('Auto-roll 🔒 Lv 3')).toBeVisible();
-  await page.evaluate(() => { const d = window.__game.game.debug; d.grantMoney(1e5); d.grantXp(40); });
+  await page.evaluate(() => { const d = window.__game.game.debug; d.grantMoney(1e5); d.grantXp(200); });
   expect(await page.evaluate(() => window.__game.state.level)).toBeGreaterThanOrEqual(3);
   await page.getByLabel('Auto-roll').check();
   const rolls0 = await page.evaluate(() => window.__game.state.stats.rolls);
