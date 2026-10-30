@@ -87,7 +87,7 @@ test('key remapping works and refuses conflicting keys', async ({ page }) => {
   expect(JSON.stringify(b)).toContain('KeyJ');
 });
 
-test('rolling a big result is announced to screen readers, bursts are throttled', async ({ page }) => {
+test('ARIA live announcements are throttled: a burst of 40 messages collapses into a few writes', async ({ page }) => {
   await openGame(page);
   const n = await page.evaluate(async () => {
     const live = document.getElementById('sr-live');
@@ -103,7 +103,7 @@ test('rolling a big result is announced to screen readers, bursts are throttled'
   expect(n).toBeGreaterThan(0);
 });
 
-test('sounds show captions when captions are on and nothing plays audibly-silently crashes when muted', async ({ page }) => {
+test('sounds show captions when captions are on, and playing while muted does not error', async ({ page }) => {
   const errors = await openGame(page);
   await page.evaluate(() => window.__game.set('captions', true));
   await page.evaluate(() => window.__game.audio.play('roll'));
