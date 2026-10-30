@@ -5,7 +5,7 @@ import { canPlace, itemAt } from '../sim/placement.js';
 import { itemTitle } from '../sim/items.js';
 import { DIR_NAMES } from '../sim/production.js';
 
-export function createPlacement({ canvas, gfx, game, input, toast, announce, fmt, onChange }) {
+export function createPlacement({ canvas, gfx, game, input, toast, announce, fmt, play, onChange }) {
   const label = document.createElement('div');
   label.id = 'ghost-label';
   label.setAttribute('aria-hidden', 'true');
@@ -79,6 +79,7 @@ export function createPlacement({ canvas, gfx, game, input, toast, announce, fmt
     if (!r.ok) {
       toast(r.reason);
       announce(r.reason);
+      play && play('error');
       return false;
     }
     if (r.swapped) announce('Swapped items');
@@ -174,7 +175,6 @@ export function createPlacement({ canvas, gfx, game, input, toast, announce, fmt
       select(null);
     }
   });
-  input.on('cancel', () => cancel());
 
   return {
     start,

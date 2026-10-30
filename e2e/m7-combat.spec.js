@@ -126,7 +126,8 @@ test('manual control: M toggles it, WASD moves the avatar, abilities have cooldo
   await page.keyboard.press('m');
   await expect(page.locator('.fight-abilities')).toBeHidden();
   await page.evaluate(() => window.__game.game.debug.advance(200));
-  expect(await page.evaluate(() => !window.__game.state._enc)).toBe(true); // it finished on its own
+  // the rush finished on its own (a regular wave may have started meanwhile: they come every 60 s)
+  expect(await page.evaluate(() => { const e = window.__game.state._enc; return !e || e.kind !== 'rush'; })).toBe(true);
   await expectNoErrors(errors);
 });
 

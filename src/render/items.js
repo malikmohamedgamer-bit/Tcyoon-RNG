@@ -2,7 +2,7 @@
 // shading), plus instanced direction arrows, rarity gems, mutation halos, "blocked"
 // markers and flow dots. Re-synced only when the simulation revision changes.
 import * as THREE from 'three';
-import { TEMPLATES } from '../sim/items.js';
+import { TEMPLATES, SKIN_COLORS } from '../sim/items.js';
 import { tierInfo } from '../gen/tiers.js';
 import { getMutation } from '../gen/mutations.js';
 import { hash32 } from '../core/rng.js';
@@ -87,6 +87,7 @@ export function createItemsRenderer({ scene, res, getSide, quality = 'medium' })
   let rev = -1;
   let lastSide = -1;
   const caps = { dots: quality === 'low' ? 120 : quality === 'medium' ? 300 : 600 };
+  const dotsFor = (q) => (q === 'low' ? 120 : q === 'medium' ? 300 : 600);
   const dummy = new THREE.Object3D();
   const col = new THREE.Color();
   const bodyMat = res.get('mat:item-body', () => new THREE.MeshLambertMaterial({ vertexColors: true, flatShading: true }));
@@ -141,7 +142,7 @@ export function createItemsRenderer({ scene, res, getSide, quality = 'medium' })
         dummy.scale.set(1, 1, 1);
         dummy.updateMatrix();
         mesh.setMatrixAt(i, dummy.matrix);
-        col.set(TYPE_COLORS[TEMPLATES.get(it.tpl)?.type] || '#ffffff');
+        col.set(it.skin != null && SKIN_COLORS[it.skin] ? SKIN_COLORS[it.skin] : TYPE_COLORS[TEMPLATES.get(it.tpl)?.type] || '#ffffff');
         mesh.setColorAt(i, col);
       });
       mesh.count = list.length;
@@ -249,6 +250,16 @@ export function createItemsRenderer({ scene, res, getSide, quality = 'medium' })
 
   const api = {
     sync,
+    setQuality(q) {
+      caps.dots = dotsFor(q);
+      const rec = meshes.get('dots');
+      if (rec) {
+        group.remove(rec.mesh);
+        rec.mesh.dispose();
+        meshes.delete('dots');
+      }
+      rev = -1; // force a re-sync so the dots mesh is rebuilt at the new capacity
+    },
     /** state: simulation state. cell: {x,y}|null. valid: bool. */
     setGhost({ tpl, x, y, dir = 0, valid = true, side }) {
       if (!tpl) {

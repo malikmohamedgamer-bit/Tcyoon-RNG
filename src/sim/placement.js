@@ -70,6 +70,7 @@ export function place(state, uid, x, y, dir, opts = {}) {
   it.dir = dir != null ? ((dir % 4) + 4) % 4 : it.dir || 0;
   state.stats.placed = (state.stats.placed || 0) + 1;
   refreshProduction(state);
+  emit(state, 'placed', { swapped: !!chk.swap });
   return { ok: true, swapped: !!chk.swap };
 }
 

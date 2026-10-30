@@ -14,12 +14,12 @@ export function createShell({ game, fmt, panels, onOpen }) {
   let bodyEl = null;
 
   hudEl.innerHTML = `
-    <div class="chip money"><small>Money</small><b data-bind="money">0</b></div>
-    <div class="chip"><small>Income</small><b data-bind="income">$0/s</b></div>
-    <div class="chip"><small>Level <span data-bind="level">1</span></small><b data-bind="xp">0%</b><div class="xpbar"><i data-bind="xpbar" style="width:0"></i></div></div>
-    <div class="chip"><small>Luck</small><b data-bind="luck">×1</b></div>
-    <div class="chip"><small>Region</small><b data-bind="region">1</b></div>
-    <div class="chip" data-bind-chip="fps"><small>FPS</small><b data-bind="fps">--</b></div>`;
+    <div class="chip money" data-chip="money"><small>Money</small><b data-bind="money">0</b></div>
+    <div class="chip" data-chip="income"><small>Income</small><b data-bind="income">$0/s</b></div>
+    <div class="chip" data-chip="level"><small>Level <span data-bind="level">1</span></small><b data-bind="xp">0%</b><div class="xpbar"><i data-bind="xpbar" style="width:0"></i></div></div>
+    <div class="chip" data-chip="luck"><small>Luck</small><b data-bind="luck">×1</b></div>
+    <div class="chip" data-chip="region"><small>Region</small><b data-bind="region">1</b></div>
+    <div class="chip" data-chip="fps"><small>FPS</small><b data-bind="fps">--</b></div>`;
   const refs = {};
   hudEl.querySelectorAll('[data-bind]').forEach((n) => (refs[n.dataset.bind] = n));
 
@@ -69,6 +69,17 @@ export function createShell({ game, fmt, panels, onOpen }) {
   let frames = 0;
   let last = performance.now();
   return {
+    /** Show/hide dock buttons and HUD chips from the player's layout settings. */
+    applyLayout(settings) {
+      dock.querySelectorAll('[data-panel]').forEach((b) => {
+        b.hidden = settings.hiddenPanels.includes(b.dataset.panel) && b.dataset.panel !== 'settings';
+      });
+      hudEl.querySelectorAll('[data-chip]').forEach((c) => {
+        const k = c.dataset.chip;
+        c.hidden = k in settings.hud ? !settings.hud[k] : false;
+      });
+      if (openId && settings.hiddenPanels.includes(openId) && openId !== 'settings') open(null);
+    },
     open,
     toggle,
     get openId() {

@@ -3,7 +3,7 @@
 // user action and a test action take exactly the same code path.
 import { SaveManager } from './core/save.js';
 import { now, sanitizeElapsed } from './core/time.js';
-import { createState, serializeState, deserializeState, SAVE_VERSION, MIGRATIONS } from './sim/state.js';
+import { createState, serializeState, deserializeState, SAVE_VERSION, MIGRATIONS, sanitizeSettings } from './sim/state.js';
 import { doRoll, stepAutoRoll, accrueFreeRolls, autoRollUnlocked } from './sim/rolling.js';
 import { sellItem, sellDuplicates, fuse as fuseItems } from './sim/inventory.js';
 import { emit } from './core/events.js';
@@ -62,6 +62,27 @@ export function createGame({ storage, seed } = {}) {
     },
     equip: (uid) => combat.equipWeapon(state, uid),
     unequip: (uid) => combat.unequipWeapon(state, uid),
+    /** Change one setting (dot path, e.g. 'camera.speed'); the value is re-validated as a whole. */
+    setSetting(path, value) {
+      const next = JSON.parse(JSON.stringify(state.settings));
+      const parts = path.split('.');
+      let o = next;
+      for (const p of parts.slice(0, -1)) o = o[p] ??= {};
+      o[parts.at(-1)] = value;
+      state.settings = sanitizeSettings(next);
+      return state.settings;
+    },
+    nameItem(uid, nick, skin) {
+      const it = state.items[uid];
+      if (!it) return false;
+      const n = String(nick || '').trim().slice(0, 24);
+      if (n) it.nick = n;
+      else delete it.nick;
+      if (Number.isInteger(skin) && skin >= 0 && skin < 8) it.skin = skin;
+      else if (skin === null) delete it.skin;
+      state._rev = (state._rev || 0) + 1;
+      return true;
+    },
     leaveEncounter() {
       if (!state._enc) return false;
       if (state._enc.kind === 'wave') return false; // automatic waves cannot be skipped

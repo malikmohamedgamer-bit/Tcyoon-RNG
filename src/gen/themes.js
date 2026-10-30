@@ -83,6 +83,12 @@ export function regionTheme(region, worldSeed = 0) {
   };
 }
 
+/** Base theme by id ('factory' ... 'pixel'), cycle 0 — used for the "theme override" setting. */
+export function themeById(id, worldSeed = 0) {
+  const i = BASE_THEMES.findIndex((t) => t.id === id);
+  return i < 0 ? null : regionTheme(i, worldSeed);
+}
+
 export function romanize(num) {
   if (num <= 0) return String(num);
   if (num > 3999) return String(num);

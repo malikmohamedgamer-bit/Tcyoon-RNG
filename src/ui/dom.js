@@ -24,8 +24,18 @@ export function patchHtml(el, html) {
     fid = active.getAttribute('data-fid') || (active.dataset.act ? `${active.dataset.act}|${active.dataset.uid || ''}|${active.dataset.id || ''}` : null);
     if (active.selectionStart != null) selStart = active.selectionStart;
   }
+  // collapsible sections keep their open/closed state across re-renders (keyed by summary text)
+  el._open ||= new Map();
+  for (const d of el.querySelectorAll('details')) {
+    const k = d.querySelector('summary')?.textContent;
+    if (k) el._open.set(k, d.open);
+  }
   el._html = html;
   el.innerHTML = html;
+  for (const d of el.querySelectorAll('details')) {
+    const k = d.querySelector('summary')?.textContent;
+    if (k && el._open.has(k)) d.open = el._open.get(k);
+  }
   if (fid) {
     const next = [...el.querySelectorAll('[data-fid],[data-act]')].find(
       (n) => (n.getAttribute('data-fid') || `${n.dataset.act}|${n.dataset.uid || ''}|${n.dataset.id || ''}`) === fid,

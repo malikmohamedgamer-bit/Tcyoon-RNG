@@ -98,3 +98,49 @@ test('corrupt or hostile v2 data is sanitised, never crashes', () => {
   assert.ok(t.freeRoll.progress >= 0);
   assert.equal(t.bag.length + Object.values(t.items).filter((i) => i.loc !== 'bag').length, Object.keys(t.items).length);
 });
+
+import { sanitizeSettings, defaultSettings } from '../src/sim/state.js';
+
+test('settings sanitiser: defaults, clamping, enum checks, hostile input, key bindings', () => {
+  assert.deepEqual(sanitizeSettings(undefined), sanitizeSettings(defaultSettings()));
+  const bad = sanitizeSettings({ pixelSize: 999, quality: 'ultra', numberFormat: 'hex', accent: 'red', themeOverride: 'lava', uiScale: -5, gameSpeed: 3, volume: { master: 9, sfx: 'x' }, camera: { speed: 100 }, hiddenPanels: [1, 'shop'], hud: { fps: 0, bogus: true }, bindings: { rotate: ['KeyZ'], x: 'no', y: [1] } });
+  assert.equal(bad.pixelSize, 16);
+  assert.equal(bad.quality, 'medium');
+  assert.equal(bad.numberFormat, 'suffix');
+  assert.equal(bad.accent, null);
+  assert.equal(bad.themeOverride, null);
+  assert.equal(bad.uiScale, 0.8);
+  assert.equal(bad.gameSpeed, 1);
+  assert.equal(bad.volume.master, 1);
+  assert.equal(bad.camera.speed, 3);
+  assert.deepEqual(bad.hiddenPanels, ['shop']);
+  assert.equal(bad.hud.fps, false);
+  assert.ok(!('bogus' in bad.hud));
+  assert.deepEqual(bad.bindings, { rotate: ['KeyZ'] });
+  const ok = sanitizeSettings({ accent: '#FFAA00', themeOverride: 'space', gameSpeed: 2, motion: 'reduced', contrast: 'high', numberFormat: 'engineering' });
+  assert.deepEqual([ok.accent, ok.themeOverride, ok.gameSpeed, ok.motion, ok.contrast, ok.numberFormat], ['#ffaa00', 'space', 2, 'reduced', 'high', 'engineering']);
+  // idempotent
+  assert.deepEqual(sanitizeSettings(ok), ok);
+  // survives a v1 save (old settings had only pixelSize/quality)
+  const t = deserializeState(JSON.parse(JSON.stringify({ ...serializeState(createState(1, 0), 1), settings: { pixelSize: 6, quality: 'high' } })));
+  assert.equal(t.settings.pixelSize, 6);
+  assert.equal(t.settings.numberFormat, 'suffix');
+});
+
+test('item nicknames and skins persist, are length-limited and sanitised; nickname replaces the generated title', async () => {
+  const { itemTitle } = await import('../src/sim/items.js');
+  const s = createState(2, 0);
+  const uid = s.bag[0];
+  s.items[uid].nick = 'Old Faithful';
+  s.items[uid].skin = 3;
+  assert.equal(itemTitle(s.items[uid]), 'Old Faithful');
+  const t = deserializeState(JSON.parse(JSON.stringify(serializeState(s, 1))));
+  assert.equal(t.items[uid].nick, 'Old Faithful');
+  assert.equal(t.items[uid].skin, 3);
+  const data = JSON.parse(JSON.stringify(serializeState(s, 1)));
+  data.items[uid].nick = 'x'.repeat(100);
+  data.items[uid].skin = 99;
+  const u = deserializeState(data);
+  assert.equal(u.items[uid].nick.length, 24);
+  assert.equal(u.items[uid].skin, undefined);
+});

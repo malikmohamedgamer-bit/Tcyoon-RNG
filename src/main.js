@@ -1,57 +1,131 @@
-// Browser shell: wires the DOM-free game to the renderer, UI, loop and input.
+// Browser shell: wires the DOM-free game to the renderer, UI, loop, input, audio and settings.
 import { createLoop } from './core/loop.js';
 import { drain } from './core/events.js';
+import { createAudio } from './core/audio.js';
+import { createInput, defaultBindings } from './core/input.js';
+import { formatDuration } from './core/time.js';
 import { createGame } from './game.js';
 import { createRenderer } from './render/scene.js';
-import { regionTheme } from './gen/themes.js';
-import { makeFmt, toast } from './ui/dom.js';
+import { attachPointerControls } from './render/camera.js';
+import { regionTheme, themeById } from './gen/themes.js';
+import { isWeapon } from './sim/items.js';
+import { makeFmt, toast, confirmDialog, esc } from './ui/dom.js';
+import { announce, applyA11y, prefersReducedMotion } from './ui/a11y.js';
 import { createShell } from './ui/hud.js';
 import { createRollPanel } from './ui/roll.js';
 import { createBackpackPanel } from './ui/backpack.js';
-import { announce } from './ui/a11y.js';
-import { attachPointerControls } from './render/camera.js';
-import { createInput, defaultBindings } from './core/input.js';
 import { createBasePanel } from './ui/base.js';
-import { createRefineryPanel } from './ui/refinery.js';
-import { createPlacement } from './ui/placement.js';
-import { createRebirthPanel } from './ui/rebirth.js';
 import { createShopPanel } from './ui/shop.js';
-import { createCombatPanel, createFightOverlay } from './ui/combat-ui.js';
 import { createRewardsPanel } from './ui/rewards.js';
-import { confirmDialog, esc } from './ui/dom.js';
-import { formatDuration } from './core/time.js';
-import { isWeapon } from './sim/items.js';
+import { createCombatPanel, createFightOverlay } from './ui/combat-ui.js';
+import { createRefineryPanel } from './ui/refinery.js';
+import { createRebirthPanel } from './ui/rebirth.js';
+import { createSettingsPanel } from './ui/settings.js';
+import { createPlacement } from './ui/placement.js';
+import { createTouchControls } from './ui/touch.js';
 
 const canvas = document.getElementById('view');
 const game = createGame();
 const gs = () => game.state;
-const fmt = makeFmt(() => gs().settings);
+const settings = () => gs().settings;
+const fmt = makeFmt(settings);
 const ui = { recent: [], selected: new Set(), msg: null, bmsg: null };
 
-const gfx = createRenderer({ canvas, quality: gs().settings.quality, pixelSize: gs().settings.pixelSize });
-gfx.setTheme(regionTheme(gs().region, gs().seed));
+// ------------------------------------------------------------------ audio + captions
+function caption(text) {
+  const box = document.getElementById('captions');
+  if (!box || !text) return;
+  while (box.children.length >= 3) box.firstChild.remove();
+  const s = document.createElement('span');
+  s.textContent = text;
+  box.appendChild(s);
+  setTimeout(() => s.remove(), 2200);
+}
+const audio = createAudio({ getSettings: settings, onCaption: caption });
+const play = (name, o) => audio.play(name, o);
+const unlockOnce = () => {
+  audio.unlock();
+  if (settings().music) audio.startMusic();
+  window.removeEventListener('pointerdown', unlockOnce, true);
+  window.removeEventListener('keydown', unlockOnce, true);
+};
+window.addEventListener('pointerdown', unlockOnce, true);
+window.addEventListener('keydown', unlockOnce, true);
+
+// ------------------------------------------------------------------ renderer, input
+const gfx = createRenderer({ canvas, quality: settings().quality, pixelSize: settings().pixelSize, reducedMotion: prefersReducedMotion(settings()) });
 gfx.setBaseSide(gs().base.side);
+gfx.onFightEvents = (evs) => {
+  for (const e of evs) {
+    if (e.k === 'shot') play('shot');
+    else if (e.k === 'kill') play('kill');
+    else if (e.k === 'nova') play('nova');
+  }
+};
 
-const bindings = defaultBindings();
-const input = createInput(window, { getBindings: () => bindings, getContext: () => (gs()._enc && gs()._enc.manual ? 'arena' : 'base') });
-const placement = createPlacement({
-  canvas,
-  gfx,
-  game,
-  input,
-  toast,
-  announce,
-  fmt,
-  onChange: () => shell && shell.refresh(),
-});
+const getBindings = () => ({ ...defaultBindings(), ...(settings().bindings || {}) });
+const input = createInput(window, { getBindings, getContext: () => (gs()._enc && gs()._enc.manual ? 'arena' : 'base') });
+const touchMove = { x: 0, z: 0 };
+const flags = { dash: false, nova: false, shield: false };
+const aim = { x: 0, z: -10 };
+
+const placement = createPlacement({ canvas, gfx, game, input, toast, announce, fmt, play, onChange: () => shell && shell.refresh() });
 attachPointerControls(canvas, gfx.cam, { shouldIgnore: (e) => placement.claim(e) });
+const setAim = (e) => {
+  const c = gfx.pickCell(e.clientX, e.clientY);
+  if (c) {
+    aim.x = c.wx;
+    aim.z = c.wz;
+  }
+};
+canvas.addEventListener('pointermove', setAim);
+canvas.addEventListener('pointerdown', setAim); // tap to aim on touch screens
 
+// ------------------------------------------------------------------ settings application
+let themeKey = '';
+function activeTheme() {
+  const s = settings();
+  const base = s.themeOverride ? themeById(s.themeOverride, gs().seed) : regionTheme(gs().region, gs().seed);
+  return s.floorSkin ? { ...base, id: `${base.id}+${s.floorSkin}`, floor: s.floorSkin } : base;
+}
+function syncTheme() {
+  const s = settings();
+  const key = `${gs().region}|${gs().seed}|${s.themeOverride}|${s.floorSkin}`;
+  if (key === themeKey) return;
+  themeKey = key;
+  const theme = activeTheme();
+  gfx.setTheme(theme);
+  audio.setFlavour(theme.sfx);
+}
+
+function applySettings() {
+  const s = settings();
+  applyA11y(s);
+  const reduced = prefersReducedMotion(s);
+  gfx.setReducedMotion(reduced);
+  gfx.cam.sway = s.camera.sway && !reduced;
+  gfx.cam.invertY = s.camera.invertY;
+  gfx.cam.speed = s.camera.speed;
+  gfx.setQuality(s.quality);
+  gfx.setPixelSize(s.pixelSize);
+  loop.speed = s.gameSpeed;
+  audio.applyVolumes();
+  if (s.music && audio.state === 'running') audio.startMusic();
+  else if (!s.music) audio.stopMusic();
+  shell.applyLayout(s);
+  syncTheme();
+}
+
+// ------------------------------------------------------------------ panels
 const ctx = {
-  refreshAll: () => { shell.update(game.income); shell.refresh(); },
   game,
   fmt,
   ui,
   placement,
+  refreshAll: () => {
+    shell.update(game.income);
+    shell.refresh();
+  },
   open: (id) => shell.open(id),
   toggleManual: () => {
     const enc = gs()._enc;
@@ -60,9 +134,11 @@ const ctx = {
       return;
     }
     game.setManual(!enc.manual);
-    announce(enc.manual ? 'Manual control on. Move with WASD, aim with the mouse.' : 'Manual control off. Your defences fight automatically.');
+    announce(enc.manual ? 'Manual control on. Move with WASD or the joystick, aim with the mouse or by tapping.' : 'Manual control off. Your defences fight automatically.');
   },
-  ability: (name) => { flags[name] = true; },
+  ability: (name) => {
+    flags[name] = true;
+  },
   placeButton: (it) => (it.loc === 'bag' && !isWeapon(it) ? `<button data-act="place" data-uid="${it.uid}">Place</button>` : ''),
   backpackAct: (name, el) => {
     if (name === 'place') {
@@ -70,32 +146,77 @@ const ctx = {
       if (window.innerWidth < 720) shell.open(null);
     }
   },
+  // settings panel hooks
+  set: (path, value) => {
+    game.setSetting(path, value);
+    applySettings();
+    shell.refresh();
+  },
+  getBindings,
+  setBindings: (b) => {
+    game.setSetting('bindings', b);
+    shell.refresh();
+  },
+  captureKey: (cb) => {
+    const h = (e) => {
+      if (['ShiftLeft', 'ShiftRight', 'ControlLeft', 'ControlRight', 'AltLeft', 'AltRight', 'MetaLeft', 'MetaRight'].includes(e.code)) return;
+      e.preventDefault();
+      e.stopPropagation();
+      window.removeEventListener('keydown', h, true);
+      cb(e.code);
+      shell.refresh();
+    };
+    window.addEventListener('keydown', h, true);
+  },
+  panelList: () => panels.filter((p) => p.id !== 'settings'),
+  isPaused: () => loop.paused,
+  togglePause: () => togglePause(),
+  resetCamera: () => gfx.cam.reset(),
+  audioState: () => audio.state,
+  afterImport: () => {
+    themeKey = '';
+    placement.cancel();
+    gfx.setBaseSide(gs().base.side);
+    applySettings();
+    shell.update(game.income);
+  },
 };
-const panels = [createRollPanel(ctx), createBackpackPanel(ctx), createBasePanel(ctx), createShopPanel(ctx), createRewardsPanel(ctx), createCombatPanel(ctx), createRefineryPanel(ctx), createRebirthPanel(ctx)];
-const touchMove = { x: 0, z: 0 };
-const flags = { dash: false, nova: false, shield: false };
-const aim = { x: 0, z: -10 };
-canvas.addEventListener('pointermove', (e) => {
-  const c = gfx.pickCell(e.clientX, e.clientY);
-  if (c) {
-    aim.x = c.wx;
-    aim.z = c.wz;
-  }
-});
+const panels = [createRollPanel(ctx), createBackpackPanel(ctx), createBasePanel(ctx), createShopPanel(ctx), createRewardsPanel(ctx), createCombatPanel(ctx), createRefineryPanel(ctx), createRebirthPanel(ctx), createSettingsPanel(ctx)];
 const shell = createShell({ game, fmt, panels });
-for (const [action, id] of [['panelRoll', 'roll'], ['panelBackpack', 'backpack'], ['panelBase', 'base'], ['panelShop', 'shop'], ['panelRebirth', 'rebirth'], ['panelCombat', 'combat'], ['panelRewards', 'rewards']]) input.on(action, () => shell.toggle(id));
+const fight = createFightOverlay(document.getElementById('arena-ui'), ctx);
+const touch = createTouchControls({ root: document.getElementById('touch-root'), placement, game, fmt, toast, touchMove, isManual: () => !!(gs()._enc && gs()._enc.manual) });
+
+function togglePause() {
+  loop.paused = !loop.paused;
+  toast(loop.paused ? 'Paused (P to resume)' : 'Resumed');
+  announce(loop.paused ? 'Game paused' : 'Game resumed');
+  shell.refresh();
+}
+
+for (const [action, id] of [['panelRoll', 'roll'], ['panelBackpack', 'backpack'], ['panelBase', 'base'], ['panelShop', 'shop'], ['panelRebirth', 'rebirth'], ['panelCombat', 'combat'], ['panelRewards', 'rewards'], ['panelSettings', 'settings']]) input.on(action, () => shell.toggle(id));
 input.on('manual', () => ctx.toggleManual());
 input.on('dash', () => (flags.dash = true));
 input.on('nova', () => (flags.nova = true));
 input.on('shield', () => (flags.shield = true));
-input.on('pause', () => {
-  loop.paused = !loop.paused;
-  toast(loop.paused ? 'Paused (P to resume)' : 'Resumed');
-  announce(loop.paused ? 'Game paused' : 'Game resumed');
+input.on('pause', togglePause);
+input.on('roll', () => {
+  const r = game.roll(1);
+  if (r.blocked) play('error');
+  shell.refresh();
 });
-const fight = createFightOverlay(document.getElementById('arena-ui'), ctx);
-input.on('roll', () => { game.roll(1); shell.refresh(); });
+input.on('roll10', () => {
+  game.roll(10);
+  shell.refresh();
+});
+input.on('resetCam', () => gfx.cam.reset());
+input.on('cancel', () => {
+  const enc = gs()._enc;
+  if (enc && enc.manual) game.setManual(false);
+  else if (placement.cancel()) return; // leaves placing / deselects first
+  else if (shell.openId) shell.open(null); // then Escape closes the open panel
+});
 
+// ------------------------------------------------------------------ per-frame helpers
 let fightCam = null;
 function syncFightCam() {
   const enc = gs()._enc;
@@ -108,41 +229,76 @@ function syncFightCam() {
   }
 }
 
-let themeRegion = gs().region;
-function syncTheme() {
-  if (gs().region !== themeRegion || gs().seed !== themeSeed) {
-    themeRegion = gs().region;
-    themeSeed = gs().seed;
-    gfx.setTheme(regionTheme(themeRegion, themeSeed));
-  }
-}
-let themeSeed = gs().seed;
-
 function handleEvents() {
   for (const e of drain(gs())) {
-    if (e.type === 'roll' && e.big) {
-      toast(`${e.title}!`);
-      announce(`Big roll: ${e.title}`);
-    } else if (e.type === 'level') {
-      toast(`Level ${e.level}!`);
-      announce(`Level up! You are now level ${e.level}`);
-    } else if (e.type === 'wave') {
-      if (e.win) announce(`Wave ${e.wave} defended`);
-      else {
-        toast(`Wave ${e.wave} lost${e.lost && !e.lost.isZero() ? ` (−$${fmt(e.lost)})` : ''}`);
-        announce(`Wave ${e.wave} lost. The base was damaged.`);
-      }
-    } else if (e.type === 'boss') {
-      toast(e.win ? `Boss defeated: ${e.name}!` : `${e.name} won this time`, 5000);
-      announce(e.win ? `Boss defeated: ${e.name}` : `Boss fight lost: ${e.name}`, { urgent: true });
-    } else if (e.type === 'prestige') {
-      toast(`Region ${e.region + 1} reached!`, 4000);
-      announce(`Prestige complete. Welcome to region ${e.region + 1}`, { urgent: true });
-    } else if (e.type === 'levelReward') {
-      toast(`Level ${e.level} reward: ${e.text}`, 5000);
-    } else if (e.type === 'toast') toast(e.text);
-    else if (e.type === 'blocked') announce('Backpack is full. Rolls are blocked.', { urgent: true });
-    else if (e.type === 'fuse') toast(e.success ? `Fusion success: ${e.title}` : 'Fusion failed');
+    switch (e.type) {
+      case 'roll':
+        if (e.big) {
+          toast(`${e.title}!`);
+          announce(`Big roll: ${e.title}`);
+          play('bigRoll', { tier: e.tier });
+        } else play('roll', { tier: e.tier });
+        break;
+      case 'level':
+        toast(`Level ${e.level}!`);
+        announce(`Level up! You are now level ${e.level}`);
+        play('levelUp');
+        break;
+      case 'levelReward':
+        toast(`Level ${e.level} reward: ${e.text}`, 5000);
+        play('reward');
+        break;
+      case 'fightStart':
+        play(e.kind === 'boss' ? 'boss' : 'waveStart');
+        announce(e.kind === 'boss' ? 'Boss fight started' : `Wave ${e.wave} is coming`);
+        break;
+      case 'wave':
+        if (e.win) {
+          announce(`Wave ${e.wave} defended`);
+          play('waveWin');
+        } else {
+          toast(`Wave ${e.wave} lost${e.lost && !e.lost.isZero() ? ` (−$${fmt(e.lost)})` : ''}`);
+          announce(`Wave ${e.wave} lost. The base was damaged.`);
+          play('waveLose');
+        }
+        break;
+      case 'boss':
+        toast(e.win ? `Boss defeated: ${e.name}!` : `${e.name} won this time`, 5000);
+        announce(e.win ? `Boss defeated: ${e.name}` : `Boss fight lost: ${e.name}`, { urgent: true });
+        play(e.win ? 'waveWin' : 'waveLose');
+        break;
+      case 'prestige':
+        toast(`Region ${e.region + 1} reached!`, 4000);
+        announce(`Prestige complete. Welcome to region ${e.region + 1}`, { urgent: true });
+        play('prestige');
+        break;
+      case 'daily':
+      case 'questDone':
+        toast(e.type === 'daily' ? `Daily reward: ${e.text}` : `Quest complete: ${e.name}`, 4000);
+        play('reward');
+        break;
+      case 'sold':
+        play('sell');
+        break;
+      case 'placed':
+        play('place');
+        break;
+      case 'bought':
+        play('buy');
+        break;
+      case 'toast':
+        toast(e.text);
+        break;
+      case 'blocked':
+        announce('Backpack is full. Rolls are blocked.', { urgent: true });
+        play('error');
+        break;
+      case 'fuse':
+        toast(e.success ? `Fusion success: ${e.title}` : 'Fusion failed');
+        play(e.success ? 'reward' : 'error');
+        break;
+      default:
+    }
   }
 }
 
@@ -157,21 +313,22 @@ function pollCameraKeys(dt) {
   if (input.isDown('zoomIn')) gfx.cam.zoomBy(Math.exp(-1.2 * dt));
   if (input.isDown('zoomOut')) gfx.cam.zoomBy(Math.exp(1.2 * dt));
 }
-input.on('resetCam', () => gfx.cam.reset());
 
+// ------------------------------------------------------------------ loop
 let uiAcc = 0;
 const loop = createLoop({
   update: (dt) => {
     const enc = gs()._enc;
     if (enc && enc.manual) {
+      // camera-relative movement: keys and joystick
       const yaw = gfx.cam.yaw;
       const fx = -Math.sin(yaw);
       const fz = -Math.cos(yaw);
       const rx = Math.cos(yaw);
       const rz = -Math.sin(yaw);
-      const f = (input.isDown('moveUp') ? 1 : 0) - (input.isDown('moveDown') ? 1 : 0);
-      const r = (input.isDown('moveRight') ? 1 : 0) - (input.isDown('moveLeft') ? 1 : 0);
-      game.manualInput = { mx: fx * f + rx * r + (touchMove.x || 0), mz: fz * f + rz * r + (touchMove.z || 0), ax: aim.x, az: aim.z, dash: flags.dash, nova: flags.nova, shield: flags.shield };
+      const f = (input.isDown('moveUp') ? 1 : 0) - (input.isDown('moveDown') ? 1 : 0) - touchMove.z;
+      const r = (input.isDown('moveRight') ? 1 : 0) - (input.isDown('moveLeft') ? 1 : 0) + touchMove.x;
+      game.manualInput = { mx: fx * f + rx * r, mz: fz * f + rz * r, ax: aim.x, az: aim.z, dash: flags.dash, nova: flags.nova, shield: flags.shield };
     } else game.manualInput = null;
     game.step(dt);
     flags.dash = flags.nova = flags.shield = false;
@@ -185,6 +342,7 @@ const loop = createLoop({
     syncTheme();
     syncFightCam();
     fight.update(gs());
+    touch.update();
     uiAcc += dt;
     if (uiAcc >= 0.25) {
       uiAcc = 0;
@@ -198,23 +356,29 @@ window.addEventListener('resize', () => gfx.resize());
 setInterval(() => game.saveNow(), 10000);
 window.addEventListener('pagehide', () => game.saveNow());
 window.addEventListener('beforeunload', () => game.saveNow());
+if (window.matchMedia) window.matchMedia('(prefers-reduced-motion: reduce)').addEventListener?.('change', applySettings);
 
 window.__game = {
   game,
+  set: (path, value) => ctx.set(path, value),
   get state() {
     return gs();
   },
   gfx,
+  audio,
   cellScreen: (x, y) => gfx.cellToScreen(x, y),
   loop,
   shell,
   placement,
   input,
+  applySettings,
   debug: game.debug,
   saveNow: () => game.saveNow(),
   gpuAudit: () => gfx.audit(),
 };
+
 shell.open('roll');
+applySettings();
 shell.update(game.income);
 loop.onGap = (gapSeconds) => {
   game.catchUp(Date.now() - gapSeconds * 1000);

@@ -579,6 +579,7 @@ export function startEncounter(state, kind) {
   } else if (state.level < WAVE_START_LEVEL) return { ok: false, reason: `Waves start at level ${WAVE_START_LEVEL}` };
   state._enc = createEncounter(state, kind);
   if (kind === 'wave') state.combat.timer = WAVE_INTERVAL; // waves come every 60 s start-to-start, however long a fight lasts
+  emit(state, 'fightStart', { kind, wave: state.combat.wave });
   return { ok: true, enc: state._enc };
 }
 

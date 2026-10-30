@@ -18,7 +18,7 @@ export function itemCard(item, fmt, { actions = '', selected = false, extra = ''
   const hy = item.hy ? `<span class="badge">🧩 Hybrid: ${esc(item.hy)}</span>` : '';
   const lines = statLines(item, fmt).map((l) => `<li>${esc(l)}</li>`).join('');
   const band = Math.min(6, 1 + Math.floor(Math.log2(item.tier + 1)));
-  return `<article class="card item${selected ? ' selected' : ''}" data-uid="${item.uid}" style="--tc:${ti.color};--bw:${band}px" aria-label="${esc(ti.label)} ${esc(itemTitle(item))}">
+  return `<article class="card item${selected ? ' selected' : ''}" data-uid="${item.uid}" data-band="${band}" style="--tc:${ti.color};--bw:${band}px" aria-label="${esc(ti.label)} ${esc(itemTitle(item))}">
     <header><span class="ico" aria-hidden="true">${itemIcon(item)}</span><div><b>${esc(itemTitle(item))}</b><br><small class="muted">${esc(type)}</small></div>${rarityBadge(item.tier)}</header>
     ${muts || hy ? `<div class="badges">${muts}${hy}</div>` : ''}
     <ul class="stats">${lines}</ul>${extra}

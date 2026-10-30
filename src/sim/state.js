@@ -21,7 +21,63 @@ import { START_SIDE, MAX_SIDE } from './placement.js';
 export const SAVE_VERSION = 2;
 
 export function defaultSettings() {
-  return { pixelSize: 4, quality: 'medium' };
+  return {
+    pixelSize: 4, // render-target downscale (1 = native resolution)
+    quality: 'medium', // low | medium | high
+    numberFormat: 'suffix', // suffix | scientific | engineering
+    accent: null, // custom accent colour (#rrggbb) or null
+    themeOverride: null, // null = theme follows the region; otherwise a base theme id
+    floorSkin: null, // null = theme floor; plates | rivets | hex | circuit | checker
+    camera: { invertY: false, speed: 1, sway: true },
+    uiScale: 1,
+    contrast: 'normal', // normal | high
+    motion: 'auto', // auto (follow the OS) | reduced | full
+    colorblind: false, // extra non-colour rarity cues (border styles)
+    gameSpeed: 1,
+    captions: false,
+    muted: false,
+    music: false,
+    volume: { master: 0.7, sfx: 1, music: 0.35 },
+    hiddenPanels: [],
+    hud: { level: true, income: true, luck: true, region: true, fps: true },
+    bindings: null, // null = defaults; otherwise { action: [codes] }
+  };
+}
+
+const clampNum = (v, lo, hi, d) => (Number.isFinite(Number(v)) ? Math.min(hi, Math.max(lo, Number(v))) : d);
+const oneOf = (v, list, d) => (list.includes(v) ? v : d);
+
+/** Validate/repair settings from a save or an import: unknown keys dropped, numbers clamped, enums checked. */
+export function sanitizeSettings(raw) {
+  const d = defaultSettings();
+  const r = raw && typeof raw === 'object' ? raw : {};
+  const out = {
+    pixelSize: Math.round(clampNum(r.pixelSize, 1, 16, d.pixelSize)),
+    quality: oneOf(r.quality, ['low', 'medium', 'high'], d.quality),
+    numberFormat: oneOf(r.numberFormat, ['suffix', 'scientific', 'engineering'], d.numberFormat),
+    accent: typeof r.accent === 'string' && /^#[0-9a-fA-F]{6}$/.test(r.accent) ? r.accent.toLowerCase() : null,
+    themeOverride: oneOf(r.themeOverride, ['factory', 'steampunk', 'space', 'scifi', 'pixel'], null),
+    floorSkin: oneOf(r.floorSkin, ['plates', 'rivets', 'hex', 'circuit', 'checker'], null),
+    camera: { invertY: !!r.camera?.invertY, speed: clampNum(r.camera?.speed, 0.25, 3, 1), sway: r.camera?.sway !== false },
+    uiScale: clampNum(r.uiScale, 0.8, 1.6, 1),
+    contrast: oneOf(r.contrast, ['normal', 'high'], 'normal'),
+    motion: oneOf(r.motion, ['auto', 'reduced', 'full'], 'auto'),
+    colorblind: !!r.colorblind,
+    gameSpeed: oneOf(Number(r.gameSpeed), [0.5, 1, 2, 4], 1),
+    captions: !!r.captions,
+    muted: !!r.muted,
+    music: !!r.music,
+    volume: { master: clampNum(r.volume?.master, 0, 1, d.volume.master), sfx: clampNum(r.volume?.sfx, 0, 1, d.volume.sfx), music: clampNum(r.volume?.music, 0, 1, d.volume.music) },
+    hiddenPanels: Array.isArray(r.hiddenPanels) ? r.hiddenPanels.filter((x) => typeof x === 'string').slice(0, 20) : [],
+    hud: { ...d.hud, ...Object.fromEntries(Object.entries(r.hud || {}).filter(([k]) => k in d.hud).map(([k, v]) => [k, !!v])) },
+    bindings: null,
+  };
+  if (r.bindings && typeof r.bindings === 'object') {
+    const b = {};
+    for (const [a, keys] of Object.entries(r.bindings)) if (Array.isArray(keys) && keys.every((k) => typeof k === 'string' && k.length < 30)) b[a] = keys.slice(0, 4);
+    out.bindings = Object.keys(b).length ? b : null;
+  }
+  return out;
 }
 
 export function createState(seed = hash32(String(Date.now())), nowMs = Date.now()) {
@@ -74,6 +130,8 @@ export function installModHooks(state) {
 const slimItem = (it) => {
   const o = { uid: it.uid, tpl: it.tpl, tier: it.tier, vs: it.vs || 0, hy: it.hy || null, mut: it.mut || [], loc: it.loc, lv: it.lv };
   if (it.loc === 'placed') Object.assign(o, { x: it.x, y: it.y, dir: it.dir || 0 });
+  if (it.nick) o.nick = it.nick;
+  if (it.skin != null) o.skin = it.skin;
   return o;
 };
 
@@ -137,7 +195,7 @@ export function deserializeState(data) {
   s.freeRoll = { progress: Math.max(0, num(data.freeRoll?.progress)), count: Math.max(0, Math.floor(num(data.freeRoll?.count))) };
   s.fusePity = Math.max(0, num(data.fusePity));
   s.stats = { ...s.stats, ...(data.stats || {}) };
-  s.settings = { ...defaultSettings(), ...(data.settings || {}) };
+  s.settings = sanitizeSettings(data.settings);
   s.base = { side: Math.min(MAX_SIDE, Math.max(START_SIDE, Math.floor(num(data.base?.side, START_SIDE)))), expansions: Math.max(0, Math.floor(num(data.base?.expansions))), mega: Math.max(0, Math.floor(num(data.base?.mega))) };
   s.layers = (Array.isArray(data.layers) ? data.layers : []).slice(0, 1000).map((l) => ({
     count: Math.max(0, Math.floor(num(l?.count))),
@@ -158,6 +216,8 @@ export function deserializeState(data) {
     if (!raw || typeof raw.tpl !== 'string' || !TEMPLATES.has(raw.tpl)) continue; // unknown template: drop (data removed)
     const uid = Number.isFinite(Number(raw.uid)) ? Number(raw.uid) : s.nextUid++;
     const item = { uid, loc: 'bag', tpl: raw.tpl, tier: Math.max(0, Math.floor(num(raw.tier))), vs: num(raw.vs), hy: raw.hy || null, mut: Array.isArray(raw.mut) ? raw.mut : [], lv: Math.max(1, Math.floor(num(raw.lv, s.level))) };
+    if (typeof raw.nick === 'string' && raw.nick.trim()) item.nick = raw.nick.slice(0, 24);
+    if (Number.isInteger(raw.skin) && raw.skin >= 0 && raw.skin < 8) item.skin = raw.skin;
     if (raw.loc === 'placed') {
       const x = Math.floor(num(raw.x, -1));
       const y = Math.floor(num(raw.y, -1));

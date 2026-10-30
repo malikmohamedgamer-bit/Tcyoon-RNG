@@ -64,3 +64,12 @@ All notable changes, by milestone. Dates are build dates.
 - `scripts/simulate-combat.js`: proves a reasonable tier-t build beats waves up to ≥3t and loses before 3t+18 (never impossible, never trivial), bosses sit in their intended band, hp/numbers are finite forever, manual play beats waves auto play cannot.
 - Render: pooled instanced enemies with hp bars (cap by quality), capped effects (tracers/pops/nova rings, none flashing with reduced motion), fight camera; UI: Combat panel (forecast, gear slots, boss details, arena rush), fight overlay with touch-sized ability buttons.
 - `M` toggles manual control; WASD/arrows move, mouse aims, Shift dash, Q nova, E shield, Esc leaves.
+
+## M8 — Customization, accessibility, touch, audio
+- `core/audio.js`: all sounds are synthesised with WebAudio (no files). Pure `soundDef(name, {tier, flavour})` (unit tested), voice cap, per-sound rate limits, master/sfx/music volumes, mute, ambient music loop whose scale follows the region theme, and a **caption for every sound** (shown as on-screen captions when enabled).
+- `ui/settings.js` (Settings panel): pixel size, graphics quality (rebuilds pools, no GPU leak across switches), number format (suffix / scientific / engineering), game speed (0.5x-4x) and pause, region theme override, base floor skin, accent colour, camera speed / invert / sway, show or hide panels and status chips, text size, motion (auto / reduced / full), high contrast, colour-blind rarity border styles (rarity always also has name + icon), captions, sound, **key remapping with conflict detection**, save export / import / reset.
+- `sim/state.js`: `defaultSettings` / `sanitizeSettings` (every setting is validated on load, so a hand-edited save cannot break the UI); item nicknames and skin colours persist.
+- `ui/touch.js`: touch bar for placement (rotate / pick up / sell / cancel), virtual joystick for the arena; all controls >= 44 px; `prefers-reduced-motion` honoured by default.
+- `ui/a11y.js`: ARIA live announcements throttled to one per 1.5 s (latest wins, urgent ones bypass).
+- Fixes found while testing (BUGS.md 24-26): collapsible Settings sections re-collapsed on every refresh; Escape did not close an open panel; placement and main both handled Escape.
+- New e2e: `e2e/m8-customization-a11y.spec.js` (16 tests).

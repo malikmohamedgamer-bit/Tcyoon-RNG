@@ -40,6 +40,8 @@ const RANGE_LOG_FACTOR = 0.03;
 const RANGE_MAX_MULT = 3;
 const ROF_MAX = 20;
 
+/** Player-selectable item skin colours (colour-blind friendly hues; shape and rarity icon still carry the information). */
+export const SKIN_COLORS = ['#ff6b6b', '#ffa94d', '#ffd43b', '#69db7c', '#38d9a9', '#4dabf7', '#9775fa', '#f783ac'];
 export const templateOf = (item) => TEMPLATES.get(item.tpl);
 export const typeOf = (item) => templateOf(item)?.type || 'dropper';
 export const isWeapon = (item) => typeOf(item) === 'weapon';
@@ -110,8 +112,9 @@ function computeStats(item) {
   return stats;
 }
 
-/** Human readable name: "Rare Pebble Drill «Zorvath»". */
+/** Human readable name: "Rare Pebble Drill «Zorvath»" (or the player's nickname). */
 export function itemTitle(item) {
+  if (item.nick) return item.nick; // player-chosen name
   const tpl = templateOf(item);
   const ti = tierInfo(item.tier);
   const variant = item.vs ? ` «${variantWord(item.vs)}»` : '';

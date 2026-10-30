@@ -4,7 +4,7 @@ import { itemCard } from './itemcard.js';
 import { sellValue } from '../sim/economy.js';
 import { expandCost, MAX_SIDE, PRESET_LIMIT } from '../sim/placement.js';
 import { DIR_NAMES, megaBonus } from '../sim/production.js';
-import { itemTitle, itemIcon, typeOf } from '../sim/items.js';
+import { itemTitle, itemIcon, typeOf, SKIN_COLORS } from '../sim/items.js';
 
 export function createBasePanel(ctx) {
   const { game, fmt, ui } = ctx;
@@ -16,6 +16,7 @@ export function createBasePanel(ctx) {
       const s = game.state;
       const p = s._p;
       const sel = ctx.placement.state.selected != null ? s.items[ctx.placement.state.selected] : null;
+      if (ui.nickFor !== (sel ? sel.uid : null)) { ui.nickDraft = undefined; ui.nickFor = sel ? sel.uid : null; }
       const placed = Object.values(s.items).filter((it) => it.loc === 'placed');
       const rows = placed
         .map((it) => ({ it, p: p.perItem.get(it.uid) }))
@@ -34,6 +35,12 @@ export function createBasePanel(ctx) {
               <button data-act="sellp" data-uid="${sel.uid}">Sell $${fmt(sellValue(s, sel))} (X)</button>`,
           })}`
         : '';
+      const nameSkin = sel
+        ? `<details><summary>Name &amp; skin</summary>
+            <label>Nickname (max 24) <input type="text" maxlength="24" data-act="nick-draft" data-fid="nick" value="${esc(ui.nickDraft ?? sel.nick ?? '')}" aria-label="Item nickname"></label>
+            <div class="swatches" role="radiogroup" aria-label="Item skin colour">${SKIN_COLORS.map((c, i) => `<label class="sw" style="background:${c}" title="Skin ${i + 1}"><input type="radio" name="skin" data-act="skin" data-id="${i}" ${sel.skin === i ? 'checked' : ''} aria-label="Skin ${i + 1}"></label>`).join('')}</div>
+            <div class="row2"><button data-act="save-name" data-uid="${sel.uid}">Save name</button><button data-act="clear-skin" data-uid="${sel.uid}">Default skin</button></div></details>`
+        : '';
       const presets = s.presets
         .map(
           (pr, i) =>
@@ -51,7 +58,7 @@ export function createBasePanel(ctx) {
       </div>
       ${s.base.mega ? `<p class="muted">Mega tiles: ${s.base.mega} → income ×${megaBonus(s.base.mega).toFixed(3)} (soft-capped at ×2.5)</p>` : maxed ? '<p class="muted">Base is at max size: further expansions give mega-tile income bonuses.</p>' : ''}
       <details><summary>How flow works</summary><p class="muted">Droppers produce units and send them the way they face. Each item passes units to the next cell it faces and applies its effect in order: throughput cap → flat bonus → refine → multiply. A seller cashes out. Facing an empty cell, a wall or a turret blocks the flow (⚠).</p></details>
-      ${inspector}
+      ${inspector}${nameSkin}
       <h3>Layout presets (${s.presets.length}/${PRESET_LIMIT})</h3>
       <div class="row2"><input type="text" data-fid="preset-name" data-act="preset-name" maxlength="40" placeholder="Preset name" aria-label="Preset name" value="${esc(ui.presetName || '')}"><button data-act="save-preset">Save layout</button></div>
       <ul class="plain">${presets || '<li class="muted">No presets yet.</li>'}</ul>
@@ -64,6 +71,7 @@ export function createBasePanel(ctx) {
       const note = (text, kind) => (ui.base = { text, kind });
       switch (name) {
         case 'select':
+          ui.nickDraft = undefined;
           ctx.placement.select(uid);
           break;
         case 'rotate':
@@ -89,6 +97,22 @@ export function createBasePanel(ctx) {
           note(r.ok ? `Base is now ${r.side}×${r.side}${r.mega ? ` (+${r.mega} mega)` : ''}.` : r.reason, r.ok ? 'ok' : '');
           break;
         }
+        case 'nick-draft':
+          ui.nickDraft = el.value;
+          break;
+        case 'save-name': {
+          const sel2 = ctx.placement.state.selected;
+          if (sel2 != null) game.nameItem(sel2, ui.nickDraft ?? game.state.items[sel2]?.nick ?? '', undefined);
+          ui.nickDraft = undefined;
+          note('Name saved.', 'ok');
+          break;
+        }
+        case 'skin':
+          if (ctx.placement.state.selected != null) game.nameItem(ctx.placement.state.selected, game.state.items[ctx.placement.state.selected]?.nick ?? '', id);
+          break;
+        case 'clear-skin':
+          game.nameItem(uid, game.state.items[uid]?.nick ?? '', null);
+          break;
         case 'preset-name':
           ui.presetName = el.value;
           break;
