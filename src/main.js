@@ -67,6 +67,8 @@ function handleEvents() {
     } else if (e.type === 'level') {
       toast(`Level ${e.level}!`);
       announce(`Level up! You are now level ${e.level}`);
+    } else if (e.type === 'levelReward') {
+      toast(`Level ${e.level} reward: ${e.text}`, 5000);
     } else if (e.type === 'toast') toast(e.text);
     else if (e.type === 'blocked') announce('Backpack is full. Rolls are blocked.', { urgent: true });
     else if (e.type === 'fuse') toast(e.success ? `Fusion success: ${e.title}` : 'Fusion failed');

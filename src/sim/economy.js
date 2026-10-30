@@ -28,6 +28,13 @@ export function modifiers(state) {
     dmg: ONE,
     baseHp: ONE,
   };
+  const b = state.bonus;
+  if (b) {
+    m.backpackBonus += b.backpack;
+    m.luck = m.luck.mul(b.luck);
+    m.gearSlots += b.gear;
+    m.freeCap += b.freeCap;
+  }
   if (state._mods) state._mods(m); // extension hook installed by shop/rebirth modules
   return m;
 }

@@ -123,6 +123,14 @@ export function expand(state) {
   return { ok: true, side: state.base.side, mega: state.base.mega || 0, bonus: megaBonus(state.base.mega) };
 }
 
+/** Free expansion (level rewards): same effect as buying one. */
+export function grantExpansion(state) {
+  state.base.expansions += 1;
+  if (state.base.side < MAX_SIDE) state.base.side += 1;
+  else state.base.mega = (state.base.mega || 0) + 1;
+  refreshProduction(state);
+}
+
 // --------------------------------------------------------------------- presets
 export function savePreset(state, name) {
   const layout = Object.values(state.items)

@@ -30,7 +30,7 @@ const MAX_LEVELS_PER_CALL = 100000;
  * and is passed to `onLevel(level)` so reward code can grant that level's reward once.
  * @returns {number} levels gained
  */
-export function addXp(state, amount, onLevel) {
+export function addXp(state, amount, onLevel = state._onLevel) {
   amount = Big.from(amount).nonNeg().mul(modifiers(state).xp);
   if (amount.isZero()) return 0;
   state.xp = state.xp.add(amount);

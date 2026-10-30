@@ -9,6 +9,7 @@ import { tierInfo } from '../gen/tiers.js';
 import ECON from '../data/economy.json' with { type: 'json' };
 import { rarityBadge } from './itemcard.js';
 import { itemTitle } from '../sim/items.js';
+import { levelReward, describeReward } from '../sim/rewards.js';
 
 export function createRollPanel(ctx) {
   const { game, fmt, ui } = ctx;
@@ -58,6 +59,7 @@ export function createRollPanel(ctx) {
             ? `<p class="msg">Not enough money for a roll ($${fmt(cost)}). Place droppers and a seller on your base to earn money.</p>`
             : ''
       }
+      <p class="muted">🎁 Level ${s.level + 1} reward: ${esc(describeReward(levelReward(s.level + 1)))}</p>
       <h3>Pity</h3>
       ${PITY.map((p) => {
         const v = s.pity[p.id] || 0;

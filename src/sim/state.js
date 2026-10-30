@@ -12,6 +12,7 @@ import ECON from '../data/economy.json' with { type: 'json' };
 import { addToBag } from './inventory.js';
 import { TEMPLATES, isWeapon } from './items.js';
 import { refreshProduction } from './production.js';
+import { createRewardState, createBonus, installRewardHooks } from './rewards.js';
 import { START_SIDE, MAX_SIDE } from './placement.js';
 
 export const SAVE_VERSION = 2;
@@ -38,6 +39,8 @@ export function createState(seed = hash32(String(Date.now())), nowMs = Date.now(
     bag: [],
     base: { side: START_SIDE, expansions: 0, mega: 0 },
     presets: [],
+    rewards: createRewardState(),
+    bonus: createBonus(),
     nextUid: 1,
     backpackTier: 0,
     autoRoll: false,
@@ -48,6 +51,7 @@ export function createState(seed = hash32(String(Date.now())), nowMs = Date.now(
     settings: defaultSettings(),
   };
   // starter kit: one dropper and one seller so the first income needs no luck
+  installRewardHooks(state);
   addToBag(state, { tpl: 'pebble_drill', tier: 0, vs: 0, hy: null, mut: [] }, { force: true });
   addToBag(state, { tpl: 'stall', tier: 0, vs: 0, hy: null, mut: [] }, { force: true });
   return state;
@@ -78,6 +82,8 @@ export function serializeState(state, nowMs = Date.now()) {
       bag: state.bag,
       base: state.base,
       presets: state.presets,
+      rewards: state.rewards,
+      bonus: state.bonus,
       nextUid: state.nextUid,
       backpackTier: state.backpackTier,
       autoRoll: state.autoRoll,
@@ -114,6 +120,8 @@ export function deserializeState(data) {
   s.stats = { ...s.stats, ...(data.stats || {}) };
   s.settings = { ...defaultSettings(), ...(data.settings || {}) };
   s.base = { side: Math.min(MAX_SIDE, Math.max(START_SIDE, Math.floor(num(data.base?.side, START_SIDE)))), expansions: Math.max(0, Math.floor(num(data.base?.expansions))), mega: Math.max(0, Math.floor(num(data.base?.mega))) };
+  s.rewards = { levelClaimed: Math.max(1, Math.floor(num(data.rewards?.levelClaimed, Math.max(1, num(data.level, 1))))) };
+  s.bonus = { backpack: Math.max(0, Math.floor(num(data.bonus?.backpack))), luck: Big.from(data.bonus?.luck ?? 1).max(1), gear: Math.max(0, Math.floor(num(data.bonus?.gear))), freeCap: Math.max(0, Math.floor(num(data.bonus?.freeCap))) };
   s.presets = Array.isArray(data.presets) ? data.presets.filter((p) => p && Array.isArray(p.layout)).slice(0, 12) : [];
   const occupied = new Set();
   for (const raw of Object.values(data.items && !Array.isArray(data.items) ? data.items : {})) {
