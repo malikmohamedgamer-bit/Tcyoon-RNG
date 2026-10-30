@@ -24,7 +24,7 @@ If browsers are missing: `npx playwright install chromium` (in the Claude sandbo
 * Any icon id used in data must resolve in `src/ui/icons.js` (`tests/icons.test.js`).
 
 ## Change a theme or font
-Tokens in `src/ui/style.css`, per-theme construction in `themes.css`. Fonts: `npm run` script `scripts/vendor-fonts.js` regenerates `fonts.css`; files live in `vendor/fonts`. Design rules: `docs/design.md`.
+Tokens in `src/ui/style.css`, per-theme construction in `themes.css`. Fonts: `node scripts/vendor-fonts.js` (also run by `npm run vendor`) regenerates `fonts.css`; files live in `vendor/fonts`. Design rules: `docs/design.md`.
 
 ## Save handling
 Settings, Save data: export gives `TRNG1.<base64>.<hash>`; import verifies the hash. Key `tcyoon-rng:save`. A save belongs to one browser and one web address.
