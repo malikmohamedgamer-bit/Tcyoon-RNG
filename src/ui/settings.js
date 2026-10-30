@@ -7,7 +7,7 @@ import { speedOptions, effectiveSpeed } from '../sim/speed.js';
 import { MODES, modeId } from '../sim/difficulty.js';
 import { TIPS, seenTips } from '../sim/tips.js';
 
-const NUMBER_SAMPLES = { suffix: '1.23M · 4.5aa', scientific: '1.23e6 · 4.5e39', engineering: '1.23e6 · 4.5e39' };
+const NUMBER_SAMPLES = { friendly: '12,345 · 1.23M · 4.5aa', suffix: '1.23M · 4.5aa', scientific: '1.23e6 · 4.5e39', engineering: '1.23e6 · 4.5e39' };
 
 export function createSettingsPanel(ctx) {
   const { game, ui } = ctx;
@@ -30,7 +30,7 @@ export function createSettingsPanel(ctx) {
       <details open><summary>Display</summary>
         ${range('pixelSize', 'Pixel size (1 = sharp)', s.pixelSize, 1, 8, 1)}
         <label>Graphics quality ${sel('quality', [['low', 'Low (fewer effects, chunkier pixels)'], ['medium', 'Medium'], ['high', 'High']], s.quality)}</label>
-        <label>Number format ${sel('numberFormat', [['suffix', 'Suffixes (K, M, B … aa, ab)'], ['scientific', 'Scientific (1.23e6)'], ['engineering', 'Engineering (123e3)']], s.numberFormat)}<small class="muted"> e.g. ${NUMBER_SAMPLES[s.numberFormat]}</small></label>
+        <label>Number format ${sel('numberFormat', [['friendly', 'Friendly (12,345 then 1.23M)'], ['suffix', 'Suffixes (K, M, B … aa, ab)'], ['scientific', 'Scientific (1.23e6)'], ['engineering', 'Engineering (123e3)']], s.numberFormat)}<small class="muted"> e.g. ${NUMBER_SAMPLES[s.numberFormat]}</small></label>
         <label>Game speed <select data-act="set" data-key="gameSpeed" data-fid="set-gameSpeed" aria-describedby="speed-note">${speedOptions(game.state).map((o) => `<option value="${o.speed}" ${o.unlocked ? '' : 'disabled'} ${Number(effectiveSpeed(game.state)) === o.speed ? 'selected' : ''}>${o.speed}×${o.unlocked ? (o.speed < 1 ? ' (slower)' : '') : ` — locked: ${o.note.replace('Unlocks', 'unlocks')}`}</option>`).join('')}</select></label>
         <p class="muted" id="speed-note">Slower speeds are always available (an accessibility option). Faster speeds are unlocked by playing and only speed up the game, never your saves or offline progress.</p>
         <label>Difficulty <select data-act="difficulty" data-fid="set-difficulty">${Object.entries(MODES).map(([id, m]) => `<option value="${id}" ${modeId(game.state) === id ? 'selected' : ''}>${esc(m.name)}</option>`).join('')}</select></label>
@@ -51,6 +51,7 @@ export function createSettingsPanel(ctx) {
         <div class="row2"><button data-act="reset-cam">Reset camera (Home)</button></div>
       </details>
       <details><summary>Interface layout</summary>
+        ${chk('advancedUI', 'Advanced UI: show every menu and status from the start (otherwise they appear as you unlock them)', s.advancedUI)}
         <p class="muted">Show or hide menu panels and status chips.</p>
         ${panelsList.map((p) => chk('panel:' + p.id, `${p.icon} ${p.label}`, !s.hiddenPanels.includes(p.id))).join('')}
         ${Object.keys(s.hud).map((k) => chk('hud.' + k, `Status chip: ${k}`, s.hud[k])).join('')}

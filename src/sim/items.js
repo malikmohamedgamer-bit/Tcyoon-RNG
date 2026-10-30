@@ -126,24 +126,33 @@ export function itemIcon(item) {
 }
 
 /** Short one-line stats summary for cards/tooltips. */
-export function statLines(item, fmt) {
+export function statParts(item, fmt) {
   const s = itemStats(item);
   const out = [];
   const f = (b) => fmt(b);
-  if (s.rate) out.push(`Rate ${f(s.rate)}/s`);
-  if (s.value) out.push(`Value ${f(s.value)}/unit`);
-  if (s.cap) out.push(`Throughput ${f(s.cap)}/s`);
-  if (s.add) out.push(`+${f(s.add)} per unit`);
-  if (s.mult) out.push(`×${f(s.mult)} value`);
-  if (s.refine) out.push(`Refine ×${f(s.refine)} (≤${f(s.rcap)}/s)`);
-  if (s.sell) out.push(`Sell ×${f(s.sell)} (≤${f(s.scap)}/s)`);
-  if (s.aura) out.push(`Neighbours ×${f(s.aura)} speed`);
-  if (s.luck) out.push(`Luck ×${f(s.luck)}`);
-  if (s.xp) out.push(`XP ×${f(s.xp)}`);
-  if (s.dmg) out.push(`Damage ${f(s.dmg)} ${s.dtype || ''}`.trim());
-  if (s.rof) out.push(`${Number(s.rof.toFixed(2))} shots/s · range ${Number((s.range || 0).toFixed(1))}`);
-  if (s.special) out.push(`${s.special.kind} ${s.special.amount}`);
+  const add = (tip, label, rest) => out.push({ tip, label, rest });
+  if (s.rate) add('rate', 'Rate', ` ${f(s.rate)}/s`);
+  if (s.value) add('value', 'Value', ` ${f(s.value)}/unit`);
+  if (s.cap) add('cap', 'Throughput', ` ${f(s.cap)}/s`);
+  if (s.add) add('add', `+${f(s.add)}`, ' per unit');
+  if (s.mult) add('mult', `×${f(s.mult)}`, ' value');
+  if (s.refine) add('refine', 'Refine', ` ×${f(s.refine)} (≤${f(s.rcap)}/s)`);
+  if (s.sell) add('sell', 'Sell', ` ×${f(s.sell)} (≤${f(s.scap)}/s)`);
+  if (s.aura) add('aura', 'Neighbours', ` ×${f(s.aura)} speed`);
+  if (s.luck) add('luckStat', 'Luck', ` ×${f(s.luck)}`);
+  if (s.xp) add('xpStat', 'XP', ` ×${f(s.xp)}`);
+  if (s.dmg) {
+    add('dmg', 'Damage', ` ${f(s.dmg)}`);
+    if (s.dtype) add('dtype', s.dtype, '');
+  }
+  if (s.rof) add('rof', `${Number(s.rof.toFixed(2))} shots/s`, ` · range ${Number((s.range || 0).toFixed(1))}`);
+  if (s.special) add('special', s.special.kind, ` ${s.special.amount}`);
   return out;
+}
+
+/** One-line plain text per stat (also used where no markup is possible). */
+export function statLines(item, fmt) {
+  return statParts(item, fmt).map((p) => `${p.label}${p.rest}`.trim());
 }
 
 export const mutationList = (item) => (item.mut || []).map((m) => getMutation(m[0])).filter(Boolean);

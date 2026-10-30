@@ -179,6 +179,7 @@ export function prestige(state, k) {
   ls.total = ls.total.add(gain);
   ls.run = ls.run.add(gain);
   ls.count += 1;
+  state._undo = []; // the base was reset: nothing left to undo
   state.stats.rebirths = (state.stats.rebirths || 0) + 1;
   state.stats['prestige' + k] = (state.stats['prestige' + k] || 0) + 1;
   state.region += 1;

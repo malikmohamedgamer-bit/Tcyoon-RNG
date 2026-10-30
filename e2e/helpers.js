@@ -2,7 +2,7 @@
 // drive time and read state deterministically instead of sleeping.
 import { expect } from '@playwright/test';
 
-export async function openGame(page, { clearSave = true, init, tutorial = false, pace = 'standard' } = {}) {
+export async function openGame(page, { clearSave = true, init, tutorial = false, pace = 'standard', simpleUI = false } = {}) {
   const errors = [];
   page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
   page.on('console', (m) => {
@@ -21,6 +21,8 @@ export async function openGame(page, { clearSave = true, init, tutorial = false,
   }
   // older tests are about other features: skip the first-run tutorial unless a test asks for it
   if (!tutorial) await page.evaluate(() => window.__game.game.tutorial.skip({ forever: true }));
+  // older tests click every panel from level 1: they use the Advanced UI (the default UI is covered by the new-player tests)
+  if (!simpleUI) await page.evaluate(() => window.__game.set('advancedUI', true));
   return errors;
 }
 

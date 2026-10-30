@@ -11,7 +11,7 @@ export const ECONOMY = ECON;
  * Later milestones extend this single function; everything that needs a global
  * multiplier reads it from here so there is one place to audit.
  */
-export function modifiers(state) {
+export function baseModifiers(state) {
   const d = state._d || {};
   const m = {
     income: ONE, // global income multiplier
@@ -40,8 +40,29 @@ export function modifiers(state) {
     m.gearSlots += b.gear;
     m.freeCap += b.freeCap;
   }
+  return m;
+}
+
+export function modifiers(state) {
+  const m = baseModifiers(state);
   for (const fn of state._modFns || []) fn(m); // layer tree, shop upgrades, ... (installed by sim/state.js)
   return m;
+}
+
+/**
+ * The same modifiers, one source at a time: [{label, factors: [{key, factor}]}] where `factor` is what that
+ * source multiplied the modifier `key` by. Used by "Why is my income this?" (sim/explain.js).
+ */
+export function modifierSteps(state, keys = ['income', 'rate', 'value', 'sellMult']) {
+  const m = baseModifiers(state);
+  const steps = [];
+  for (const fn of state._modFns || []) {
+    const before = Object.fromEntries(keys.map((k) => [k, m[k]]));
+    fn(m);
+    const factors = keys.filter((k) => !m[k].eq(before[k])).map((k) => ({ key: k, factor: m[k].div(before[k]) }));
+    steps.push({ label: fn.label || 'bonus', factors });
+  }
+  return steps;
 }
 
 /** Roll price: baseCost * (1 + (level-1)/10)^3 * discounts (rebirth tree), never below $1. */

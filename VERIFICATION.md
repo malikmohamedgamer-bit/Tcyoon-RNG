@@ -166,3 +166,16 @@ Not verified: the tutorial on a real phone, with a screen reader, or how long a 
 | Tips: once only, suppressed in the tutorial and when off, persist, named conditions | `tests/tips.test.js`, e2e tips test | PASS |
 | Speed rules, endless generation, locked speed refused, clamp, loop scaling bounded, offline identical at every speed, playtime real-time | `tests/speed.test.js` | PASS |
 Honest note: the 15% enemy-health reduction does not change the highest wave a build beats in the combat simulator (15 vs 15, 23 vs 23, 33 vs 33); only the slower waves, lower penalty and boss time make Relaxed easier in combat. Whether Relaxed *feels* easier to a person is not measured.
+
+## F3 — Clarity features
+| What | How tested | Result |
+|---|---|---|
+| Tooltip ids used in the UI, every item type, mutation (incl. generated), rarity (tiers 0 … 10^9) and every stat of every item template at tiers 0/3/9/40 resolve | `tests/glossary.test.js` | PASS |
+| Hover, keyboard focus, Esc, aria-describedby; touch tap toggle and tap-away; focus survives a re-render | `e2e/f3-clarity.spec.js` | PASS |
+| Income breakdown adds up to the real income exactly; multipliers ordered with sources; blocked items reported | `tests/explain.test.js`, e2e | PASS |
+| Help search (AND of words), rarity table and rebirth example computed from real data | `tests/glossary.test.js`, e2e | PASS |
+| Undo: place/move/swap/pick up/sell/sell duplicates, 20 s expiry, 10-action limit, no XP/money farming, cleared by rebirth | `tests/undo.test.js` (8), e2e (key Z and chip) | PASS |
+| Progressive disclosure rules, unlock events once, tutorial reveal, old saves, Advanced UI | `tests/disclosure.test.js`, e2e | PASS |
+| Friendly numbers, larger text on phones | `tests/bignum.test.js`, e2e | PASS |
+| Whole e2e suite after F3 | 74 + 1 passed (the boss test was fixed, see BUGS #35) | PASS |
+Not verified: that the explanations are *clear to a new player* (nobody but me has read them); screen-reader output of the tooltips and the income list; that Tab order through item lists is comfortable (stat labels in long lists are deliberately not tab stops).

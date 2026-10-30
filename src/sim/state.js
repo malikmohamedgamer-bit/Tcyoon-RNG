@@ -18,6 +18,7 @@ import { createCombatState } from './combat.js';
 import { createRewardState, createBonus, installRewardHooks } from './rewards.js';
 import { START_SIDE, MAX_SIDE } from './placement.js';
 import { applyDifficultyMods, isMode } from './difficulty.js';
+import { createUiState, sanitizeUiState, checkUnlocks } from './disclosure.js';
 import { createTipState, sanitizeTips, observe as observeTip } from './tips.js';
 import { createTutorialState, legacyTutorialState, sanitizeTutorial } from './tutorial.js';
 
@@ -28,7 +29,7 @@ export function defaultSettings() {
   return {
     pixelSize: 4, // render-target downscale (1 = native resolution)
     quality: 'medium', // low | medium | high
-    numberFormat: 'suffix', // suffix | scientific | engineering
+    numberFormat: 'friendly', // friendly (12,345 then 1.23M) | suffix | scientific | engineering
     accent: null, // custom accent colour (#rrggbb) or null
     themeOverride: null, // null = theme follows the region; otherwise a base theme id
     floorSkin: null, // null = theme floor; plates | rivets | hex | circuit | checker
@@ -39,6 +40,7 @@ export function defaultSettings() {
     colorblind: false, // extra non-colour rarity cues (border styles)
     gameSpeed: 1, // faster speeds are unlocked by progress (sim/speed.js); slower ones are always allowed
     tips: true, // one-time contextual tips
+    advancedUI: false, // false: panels and chips appear as they are unlocked; true: everything is visible from the start
     captions: false,
     muted: false,
     music: false,
@@ -59,7 +61,7 @@ export function sanitizeSettings(raw) {
   const out = {
     pixelSize: Math.round(clampNum(r.pixelSize, 1, 16, d.pixelSize)),
     quality: oneOf(r.quality, ['low', 'medium', 'high'], d.quality),
-    numberFormat: oneOf(r.numberFormat, ['suffix', 'scientific', 'engineering'], d.numberFormat),
+    numberFormat: oneOf(r.numberFormat, ['friendly', 'suffix', 'scientific', 'engineering'], d.numberFormat),
     accent: typeof r.accent === 'string' && /^#[0-9a-fA-F]{6}$/.test(r.accent) ? r.accent.toLowerCase() : null,
     themeOverride: oneOf(r.themeOverride, ['factory', 'steampunk', 'space', 'scifi', 'pixel'], null),
     floorSkin: oneOf(r.floorSkin, ['plates', 'rivets', 'hex', 'circuit', 'checker'], null),
@@ -70,6 +72,7 @@ export function sanitizeSettings(raw) {
     colorblind: !!r.colorblind,
     gameSpeed: clampNum(r.gameSpeed, 0.25, 1e12, 1),
     tips: r.tips !== false,
+    advancedUI: !!r.advancedUI,
     captions: !!r.captions,
     muted: !!r.muted,
     music: !!r.music,
@@ -122,6 +125,7 @@ export function createState(seed = hash32(String(Date.now())), nowMs = Date.now(
     tutorial: createTutorialState(),
     difficulty: null, // null until chosen on the first run
     tips: createTipState(),
+    ui: createUiState(),
   };
   // starter kit: one dropper and one seller so the first income needs no luck
   installRewardHooks(state);
@@ -134,7 +138,8 @@ export function createState(seed = hash32(String(Date.now())), nowMs = Date.now(
 /** Modifier hooks (layer tree etc.). Transient; reinstalled on create/load. */
 export function installModHooks(state) {
   state._onEvent = (ev) => observeTip(state, ev);
-  state._modFns = [(m) => applyLayerMods(state, m), (m) => applyShopMods(state, m), (m) => applyDifficultyMods(state, m)];
+  const named = (label, fn) => Object.assign(fn, { label });
+  state._modFns = [named('Rebirth bonuses and tree', (m) => applyLayerMods(state, m)), named('Shop upgrades and boosters', (m) => applyShopMods(state, m)), named('Difficulty', (m) => applyDifficultyMods(state, m))];
 }
 
 const slimItem = (it) => {
@@ -183,6 +188,7 @@ export function serializeState(state, nowMs = Date.now()) {
       tutorial: state.tutorial,
       difficulty: state.difficulty,
       tips: state.tips,
+      ui: state.ui,
     }),
   );
 }
@@ -212,6 +218,7 @@ export function deserializeState(data) {
   s.settings = sanitizeSettings(data.settings);
   s.difficulty = isMode(data.difficulty) ? data.difficulty : null;
   s.tips = sanitizeTips(data.tips);
+  s.ui = sanitizeUiState(data.ui);
   // an existing save has already seen what it has seen: do not pop old tips for things the player already did
   if (!data.tips) for (const t of TIPS_FOR_LEGACY) if (s.level > 1 || (s.stats.rolls || 0) > 2) s.tips.seen[t] = 1;
   // saves from before the tutorial existed (or experienced players) do not get a surprise tutorial
@@ -255,6 +262,7 @@ export function deserializeState(data) {
   const inBag = new Set();
   for (const u of order) if (s.items[u] && s.items[u].loc === 'bag' && !inBag.has(u)) { inBag.add(u); s.bag.push(u); }
   for (const it of Object.values(s.items)) if (it.loc === 'bag' && !inBag.has(it.uid)) s.bag.push(it.uid);
+  checkUnlocks(s, { silent: !data.ui }); // an old save: what it already reached is unlocked without a fanfare
   refreshProduction(s);
   return s;
 }

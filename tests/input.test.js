@@ -22,9 +22,9 @@ test('rebind refuses a conflicting key and reports who owns it', () => {
   assert.equal(bad.ok, false);
   assert.deepEqual(bad.conflicts, ['sellSel']);
   assert.deepEqual(bad.bindings.rotate, ['KeyR']);
-  const good = rebind(b, 'rotate', 'KeyZ');
+  const good = rebind(b, 'rotate', 'KeyJ');
   assert.ok(good.ok);
-  assert.deepEqual(good.bindings.rotate, ['KeyZ']);
+  assert.deepEqual(good.bindings.rotate, ['KeyJ']);
   assert.deepEqual(wouldConflict(b, 'roll', 'KeyP'), ['pause']);
   assert.deepEqual(wouldConflict(b, 'rotate', 'KeyR'), []);
 });

@@ -84,7 +84,7 @@ test('boss fight is won through the UI; drops a weapon with the unique mutation,
   expect(s.idx).toBe(1);
   expect(s.bosses).toBe(1);
   expect(s.drop).toBeTruthy();
-  expect(s.bag).toBe(bag0 + 1);
+  expect(s.bag).toBeGreaterThanOrEqual(bag0 + 1); // the boss drop; an automatic wave during the fast-forward may drop a weapon too (12% each)
   await expect(page.locator('#toasts')).toContainText('Boss defeated');
   await expect(page.locator('#panels')).toContainText('boss #2');
   await expectNoErrors(errors);

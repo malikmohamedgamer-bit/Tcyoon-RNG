@@ -24,7 +24,7 @@ export function createBasePanel(ctx) {
         .map(({ it, p: pi }) => {
           const t = typeOf(it);
           const val = t === 'dropper' ? `$${fmt(pi.out)}/s` : t === 'seller' ? `cashes $${fmt(pi.flowW)}/s flow` : pi.flowU.isZero() ? 'idle' : `${fmt(pi.flowU)} units/s`;
-          return `<li><button class="link" data-act="select" data-uid="${it.uid}" aria-label="Select ${esc(itemTitle(it))}">${itemIcon(it)} ${esc(itemTitle(it))}</button> <span class="${pi.blocked ? 'bad' : 'muted'}">${pi.blocked ? '⚠ blocked — ' : ''}${val}</span></li>`;
+          return `<li><button class="link" data-act="select" data-uid="${it.uid}" aria-label="Select ${esc(itemTitle(it))}">${itemIcon(it)} ${esc(itemTitle(it))}</button> <span class="${pi.blocked ? 'bad' : 'muted'}">${pi.blocked ? '⚠ blocked — ' : ''}${val}</span>${pi.blocked ? ` <button class="link" data-act="rotate" data-uid="${it.uid}" aria-label="Rotate ${esc(itemTitle(it))} to try another direction">Rotate it</button>` : ''}</li>`;
         })
         .join('');
       const inspector = sel

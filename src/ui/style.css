@@ -11,9 +11,10 @@
   --bad: #ff6b6b;
   --focus: #7cc4ff;
   --ui-scale: 1;
+  --ui-auto: 1; /* larger default text on small screens (the player's text size setting multiplies it) */
   --radius: 10px;
   --touch: 44px;
-  font-size: calc(16px * var(--ui-scale));
+  font-size: calc(16px * var(--ui-scale) * var(--ui-auto));
 }
 :root[data-contrast="high"] {
   --bg: #000; --panel: #000; --panel-2: #111; --line: #fff; --text: #fff; --muted: #e6e6e6;
@@ -184,3 +185,23 @@ kbd { background: var(--panel-2); border: 1px solid var(--line); border-bottom-w
 .modal .choices { display: flex; flex-direction: column; gap: .4rem; margin-top: .8rem; }
 .modal .choices button { min-height: 44px; text-align: center; }
 @media (min-width: 720px) { .modal .choices { flex-direction: row-reverse; flex-wrap: wrap; } }
+
+/* ---- tooltips ---- */
+#tooltip { position: fixed; z-index: 60; max-width: min(20rem, calc(100vw - 16px)); background: var(--panel); color: var(--text); border: 1px solid var(--accent); border-radius: 8px; padding: .5rem .7rem; box-shadow: 0 6px 20px rgba(0, 0, 0, .5); font-size: .9rem; line-height: 1.35; pointer-events: none; display: flex; flex-direction: column; gap: .15rem; }
+#tooltip[hidden] { display: none; }
+.term { border-bottom: 1px dotted var(--muted); cursor: help; }
+.term:focus-visible, [data-tip]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.chip { font: inherit; color: inherit; text-align: left; cursor: default; }
+button.chip { cursor: pointer; }
+.gloss dt { font-weight: 700; margin-top: .5rem; }
+.gloss dd { margin: 0 0 0 .8rem; }
+.panel details { margin: .4rem 0; }
+.panel details > summary { cursor: pointer; font-weight: 600; min-height: 32px; }
+.money { color: var(--accent); font-variant-numeric: tabular-nums; }
+.small { font-size: .85rem; }
+
+/* ---- undo chip ---- */
+#undo-root { position: absolute; left: 50%; bottom: 4.6rem; transform: translateX(-50%); z-index: 22; pointer-events: none; }
+.undo-chip { pointer-events: auto; min-height: 44px; border: 1px solid var(--accent); background: var(--panel); color: var(--text); border-radius: 999px; padding: 0 1rem; box-shadow: 0 4px 14px rgba(0, 0, 0, .4); }
+#dock button.is-new::after { content: "NEW"; margin-left: .35rem; font-size: .6rem; font-weight: 800; letter-spacing: .06em; background: var(--accent); color: var(--accent-text, #111); border-radius: 4px; padding: 1px 4px; }
+@media (max-width: 640px) { :root { --ui-auto: 1.12; } }

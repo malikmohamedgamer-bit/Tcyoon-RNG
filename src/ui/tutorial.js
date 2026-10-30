@@ -7,7 +7,7 @@ import { typeOf } from '../sim/items.js';
 import { DIRS } from '../sim/production.js';
 import { STEPS, STUCK_SECONDS } from '../sim/tutorial.js';
 
-export function createTutorialUI({ game, shell, placement, gfx, root }) {
+export function createTutorialUI({ game, shell, placement, gfx, root, syncLayout = () => {} }) {
   root.innerHTML = `
     <div class="tut-dim" hidden></div>
     <div class="tut-ring" hidden></div>
@@ -75,8 +75,8 @@ export function createTutorialUI({ game, shell, placement, gfx, root }) {
   const TARGETS = {
     roll: () => q('#panels [data-tut="roll"]') || dockRect('roll'),
     'dock:backpack': () => dockRect('backpack'),
-    'dock:refinery': () => dockRect('refinery') || dockRect('settings'),
-    'dock:rebirth': () => dockRect('rebirth') || dockRect('settings'),
+    'dock:refinery': () => dockRect('refinery'),
+    'dock:rebirth': () => dockRect('rebirth'),
     'dock:settings': () => dockRect('settings'),
     'place:dropper': () => placeTarget('dropper'),
     'place:seller': () => placeTarget('seller'),
@@ -157,6 +157,8 @@ export function createTutorialUI({ game, shell, placement, gfx, root }) {
     }
     if (shownId !== step.id) {
       shownId = step.id;
+      game.refreshUnlocks(); // reveal the panel this step needs...
+      syncLayout(); // ...and show it right now, so the spotlight never points at a hidden button
       announce(`Tutorial step ${tut.step + 1} of ${STEPS.length}. ${step.text}`);
       if (step.panel && shell.openId !== step.panel) shell.open(step.panel);
     }

@@ -10,6 +10,7 @@ import ECON from '../data/economy.json' with { type: 'json' };
 import { rarityBadge } from './itemcard.js';
 import { itemTitle } from '../sim/items.js';
 import { levelReward, describeReward } from '../sim/rewards.js';
+import { needMore } from './feedback.js';
 
 export function createRollPanel(ctx) {
   const { game, fmt, ui } = ctx;
@@ -56,7 +57,7 @@ export function createRollPanel(ctx) {
         full
           ? `<div class="msg" role="alert">Backpack full — rolls are blocked. <div class="row2"><button data-act="sell-dupes">Sell duplicates</button><button data-act="open-backpack">Open backpack</button></div></div>`
           : broke
-            ? `<p class="msg">Not enough money for a roll ($${fmt(cost)}). Place droppers and a seller on your base to earn money.</p>`
+            ? `<div class="msg" role="status">${esc(needMore(game, fmt, cost))}. Place a dropper and a seller on your base to earn money, or sell items you do not need. <div class="row2"><button data-act="open-base">Open the Base</button><button data-act="open-backpack">Open the Backpack</button></div></div>`
             : ''
       }
       <p class="muted">🎁 Level ${s.level + 1} reward: ${esc(describeReward(levelReward(s.level + 1)))}</p>
@@ -80,7 +81,7 @@ export function createRollPanel(ctx) {
           ui.recent.length = Math.min(ui.recent.length, 6);
           if (r.blocked === 'full') ui.msg = { text: 'Backpack is full — sell or fuse something first.' };
           else if (r.blocked === 'money') ui.msg = { text: 'Not enough money for the next roll.' };
-          else if (r.blocked === 'locked') ui.msg = { text: 'That roll size is not unlocked yet.' };
+          else if (r.blocked === 'locked') ui.msg = { text: `That roll size unlocks at level ${Number(el.dataset.id) >= 100 ? ECON.roll.x100Level : ECON.roll.x10Level}.` };
           else ui.msg = r.rolled.length > 1 ? { text: `Rolled ${r.rolled.length} items.`, kind: 'ok' } : null;
           break;
         }
@@ -94,6 +95,9 @@ export function createRollPanel(ctx) {
         }
         case 'open-backpack':
           ctx.open('backpack');
+          break;
+        case 'open-base':
+          ctx.open('base');
           break;
         default:
       }

@@ -21,11 +21,15 @@ import { createCombatPanel, createFightOverlay } from './ui/combat-ui.js';
 import { createRefineryPanel } from './ui/refinery.js';
 import { createRebirthPanel } from './ui/rebirth.js';
 import { createSettingsPanel } from './ui/settings.js';
+import { createIncomePanel } from './ui/income.js';
+import { createHelpPanel } from './ui/help.js';
+import { visiblePanels, visibleChips } from './sim/disclosure.js';
 import { createPlacement } from './ui/placement.js';
 import { createTouchControls } from './ui/touch.js';
 import { createTutorialUI } from './ui/tutorial.js';
 import { effectiveSpeed } from './sim/speed.js';
 import { createTipsUI } from './ui/tips.js';
+import { createTooltips } from './ui/tooltips.js';
 import { MODES } from './sim/difficulty.js';
 
 const canvas = document.getElementById('view');
@@ -116,8 +120,12 @@ function applySettings() {
   audio.applyVolumes();
   if (s.music && audio.state === 'running') audio.startMusic();
   else if (!s.music) audio.stopMusic();
-  shell.applyLayout(s);
+  syncDisclosure();
   syncTheme();
+}
+
+function syncDisclosure() {
+  shell.applyLayout(settings(), { panels: visiblePanels(gs()), chips: visibleChips(gs()) });
 }
 
 // ------------------------------------------------------------------ panels
@@ -157,6 +165,19 @@ const ctx = {
     shell.refresh();
   },
   tutorialStatus: () => ({ new: 'not started', active: 'in progress', paused: 'paused', skipped: 'skipped', done: `finished (${gs().tutorial.completed}×)` })[gs().tutorial.status] || 'unknown',
+  undo: () => {
+    const r = game.undo();
+    if (r.ok) {
+      toast(`Undone: ${r.label}`);
+      announce(`Undone: ${r.label}`);
+      play('place');
+    } else {
+      toast(r.reason, 4500);
+      play('error');
+    }
+    shell.refresh();
+    return r;
+  },
   getBindings,
   setBindings: (b) => {
     game.setSetting('bindings', b);
@@ -173,7 +194,7 @@ const ctx = {
     };
     window.addEventListener('keydown', h, true);
   },
-  panelList: () => panels.filter((p) => p.id !== 'settings'),
+  panelList: () => panels.filter((p) => p.id !== 'settings' && !p.hidden),
   isPaused: () => loop.paused,
   togglePause: () => togglePause(),
   resetCamera: () => gfx.cam.reset(),
@@ -186,13 +207,14 @@ const ctx = {
     shell.update(game.income);
   },
 };
-const panels = [createRollPanel(ctx), createBackpackPanel(ctx), createBasePanel(ctx), createShopPanel(ctx), createRewardsPanel(ctx), createCombatPanel(ctx), createRefineryPanel(ctx), createRebirthPanel(ctx), createSettingsPanel(ctx)];
+const panels = [createRollPanel(ctx), createBackpackPanel(ctx), createBasePanel(ctx), createShopPanel(ctx), createRewardsPanel(ctx), createCombatPanel(ctx), createRefineryPanel(ctx), createRebirthPanel(ctx), createHelpPanel(ctx), createSettingsPanel(ctx), createIncomePanel(ctx)];
 const shell = createShell({ game, fmt, panels, onOpen: (id) => id && game.tutorial.flag('panel:' + id) });
-const tutorialUI = createTutorialUI({ game, shell, placement, gfx, root: document.getElementById('tutorial') });
+const tutorialUI = createTutorialUI({ game, shell, placement, gfx, root: document.getElementById('tutorial'), syncLayout: () => syncDisclosure() });
 // the tutorial's "inspect" step: the player looked at (clicked or focused) an item card
 document.getElementById('panels').addEventListener('click', (e) => {
   if (e.target.closest('article.item')) game.tutorial.flag('inspect');
 });
+const tooltips = createTooltips({ root: document.getElementById('app') });
 const tipsUI = createTipsUI({ root: document.getElementById('tips'), game, shell });
 const fight = createFightOverlay(document.getElementById('arena-ui'), ctx);
 const touch = createTouchControls({ root: document.getElementById('touch-root'), placement, game, fmt, toast, touchMove, isManual: () => !!(gs()._enc && gs()._enc.manual) });
@@ -204,12 +226,13 @@ function togglePause() {
   shell.refresh();
 }
 
-for (const [action, id] of [['panelRoll', 'roll'], ['panelBackpack', 'backpack'], ['panelBase', 'base'], ['panelShop', 'shop'], ['panelRebirth', 'rebirth'], ['panelCombat', 'combat'], ['panelRewards', 'rewards'], ['panelSettings', 'settings']]) input.on(action, () => shell.toggle(id));
+for (const [action, id] of [['panelRoll', 'roll'], ['panelBackpack', 'backpack'], ['panelBase', 'base'], ['panelShop', 'shop'], ['panelRebirth', 'rebirth'], ['panelCombat', 'combat'], ['panelRewards', 'rewards'], ['panelSettings', 'settings'], ['panelHelp', 'help']]) input.on(action, () => shell.toggle(id));
 input.on('manual', () => ctx.toggleManual());
 input.on('dash', () => (flags.dash = true));
 input.on('nova', () => (flags.nova = true));
 input.on('shield', () => (flags.shield = true));
 input.on('pause', togglePause);
+input.on('undo', () => ctx.undo());
 input.on('roll', () => {
   const r = game.roll(1);
   if (r.blocked) play('error');
@@ -303,6 +326,15 @@ function handleEvents() {
       case 'tip':
         tipsUI.push(e);
         break;
+      case 'unlock': {
+        const p = panels.find((x) => x.id === e.id);
+        if (p) {
+          toast(`New: ${p.label} unlocked!`, 4500);
+          announce(`New menu unlocked: ${p.label}`);
+          play('reward');
+        }
+        break;
+      }
       case 'tutorialAssist':
         toast(e.text, 4500);
         announce(e.text);
@@ -342,6 +374,20 @@ function pollCameraKeys(dt) {
   if (input.isDown('zoomOut')) gfx.cam.zoomBy(Math.exp(1.2 * dt));
 }
 
+// ------------------------------------------------------------------ undo chip
+const undoRoot = document.getElementById('undo-root');
+let undoShown = '';
+function updateUndoChip() {
+  const u = game.undoInfo();
+  const key = u ? `${u.label}|${Math.ceil(u.left)}` : '';
+  if (key === undoShown) return;
+  undoShown = key;
+  undoRoot.innerHTML = u ? `<button type="button" class="undo-chip" data-undo aria-label="Undo: ${esc(u.label)}. ${Math.ceil(u.left)} seconds left. Shortcut Z">↶ Undo: ${esc(u.label)} <small>(${Math.ceil(u.left)} s)</small></button>` : '';
+}
+undoRoot.addEventListener('click', (e) => {
+  if (e.target.closest('[data-undo]')) ctx.undo();
+});
+
 // ------------------------------------------------------------------ loop
 let uiAcc = 0;
 const loop = createLoop({
@@ -378,6 +424,8 @@ const loop = createLoop({
       gfx.setBaseSide(gs().base.side);
       shell.update(game.income);
       shell.refresh();
+      syncDisclosure();
+      updateUndoChip();
     }
   },
 });
@@ -406,6 +454,7 @@ window.__game = {
   gpuAudit: () => gfx.audit(),
   tutorialUI,
   tipsUI,
+  tooltips,
 };
 
 shell.open('roll');

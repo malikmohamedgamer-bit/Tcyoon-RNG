@@ -34,7 +34,7 @@ async function clickTile(page) {
 
 test('walk the whole tutorial with real clicks on what the spotlight shows; rewards are paid once', async ({ page }) => {
   test.setTimeout(120_000);
-  const errors = await openGame(page, { tutorial: true, pace: 'relaxed' });
+  const errors = await openGame(page, { tutorial: true, pace: 'relaxed', simpleUI: true });
   expect(await page.evaluate(() => window.__game.state.difficulty)).toBe('relaxed');
   const adv = (s) => page.evaluate((x) => window.__game.game.debug.advance(x), s);
   const free0 = await page.evaluate(() => window.__game.state.freeRoll.count);

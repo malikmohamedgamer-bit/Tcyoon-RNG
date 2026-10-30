@@ -1,0 +1,50 @@
+{
+  "_doc": "In-game Help articles (searchable). Plain paragraphs; `block` names a generated table or worked example (see sim/help.js) so numbers always match the real data. Add an article by adding an object here.",
+  "articles": [
+    { "id": "big-picture", "title": "How the game works", "keywords": "start basics loop overview", "paras": [
+      "You roll for random items. Items wait in your backpack. You place them on your base so they make money. You spend that money on more rolls and upgrades, which finds better items, which makes more money.",
+      "Rolling gives XP, XP gives levels, and levels give rewards. When your run is going well you can Rebirth: restart for permanent bonuses and a new region. The game never ends: there is always a rarer item, a higher level and another prestige layer."
+    ] },
+    { "id": "rolling", "title": "Rolling and rarity", "keywords": "roll odds luck pity tier rarity", "paras": [
+      "Every roll picks a rarity tier at random. Rarer tiers are much less likely and much stronger. Luck makes rarer tiers likelier: doubling your luck doubles the chance of any rare result.",
+      "Pity is a safety net. After 30 rolls without a 1-in-8 or better item, the next roll is guaranteed one. After 200 rolls it is guaranteed a 1-in-120 or better item.",
+      "A free roll recharges every couple of minutes (up to a cap). Bigger roll buttons and auto-roll unlock as you level up."
+    ], "block": "rarityTable" },
+    { "id": "base", "title": "Building your base", "keywords": "place dropper seller conveyor flow income blocked arrow", "paras": [
+      "Each item on the base faces one direction (the arrow). A dropper makes units. Every unit moves to the tile its arrow points at. Conveyors, multipliers, refiners and upgraders change the units on the way. A seller at the end turns units into money.",
+      "If an item points at an empty tile, the edge, or something that cannot accept units, its output is lost. The game marks that item as blocked and says why.",
+      "Generators and turrets are different: they do not need a line. Generators give bonuses (luck, XP, faster neighbours) and turrets defend the base."
+    ] },
+    { "id": "items", "title": "Mutations, fusing and selling", "keywords": "mutation fuse sell hybrid variant refinery", "paras": [
+      "Mutations are bonus traits on an item (Golden, Shiny and many more). Each multiplies some of its stats. The Refinery can re-roll, move or combine mutations for money.",
+      "Fusing merges 3 to 10 items of the same tier into one. More items, and identical items, raise the chance of getting the next tier. A failed fuse still gives you one item.",
+      "Selling pays at most half of what a roll cost, so rolling only to sell can never make money. Droppers and sellers on your base are the real income."
+    ] },
+    { "id": "shop", "title": "Money, shop and upgrades", "keywords": "shop upgrade booster backpack price", "paras": [
+      "The Shop sells upgrades, timed boosters, bigger backpacks and a daily rotating set of offers. Prices grow with your level, so they stay meaningful. Upgrades reset when you rebirth; boosters and levels do not.",
+      "You can never spend more than you have: a button is disabled when you cannot afford it, and the Shop tells you how much more you need."
+    ] },
+    { "id": "levels", "title": "Levels and rewards", "keywords": "level xp reward quest daily", "paras": [
+      "Rolling and selling give XP. Every level pays a reward exactly once (money, free rolls, backpack space, luck and more). Quests, achievements and a daily reward are in the Rewards panel."
+    ] },
+    { "id": "combat", "title": "Waves, turrets and bosses", "keywords": "wave monster boss turret weapon defence manual", "paras": [
+      "From level 4 a wave of monsters attacks about once a minute. Turrets on your base and weapons you equip defend automatically. Losing a wave costs a little money (never items).",
+      "Bosses are optional, tougher fights with big drops. In a fight you can take manual control (press M) to move, dash and use abilities; it is optional and never required."
+    ] },
+    { "id": "rebirth", "title": "Rebirth and prestige, with an example", "keywords": "rebirth prestige layer region currency", "paras": [
+      "Rebirth resets your money, items and base, and in return gives you a permanent prestige currency. That currency gives a bonus that lasts forever and buys upgrades in a tree. You also move to a new region with a new look.",
+      "Prestige layers stack: after enough rebirths a second layer appears that resets the first for an even stronger bonus, then a third, and so on without end."
+    ], "block": "prestigeExample" },
+    { "id": "formulas", "title": "The formulas, in plain words", "keywords": "formula math price xp sell fuse luck wave", "paras": [], "block": "formulas" },
+    { "id": "speed", "title": "Game speed and offline progress", "keywords": "speed fast slow offline away", "paras": [
+      "Game speed starts at 1×. Faster speeds unlock as you progress; slower speeds are always available in Settings. Speed only changes how fast the game runs, never your saves or what you earn while away.",
+      "While the game is closed you keep earning: when you come back, your base's income for the time away is added (up to 10 years), plus free rolls and a summary of waves."
+    ] },
+    { "id": "saving", "title": "Saving", "keywords": "save export import browser storage", "paras": [
+      "Your game saves automatically in this browser, for this web address. It does not leave your device. Use Settings → Save data → Export to copy your save as text, and Import to load it, for example on another device or after moving to a new address."
+    ] },
+    { "id": "controls", "title": "Controls", "keywords": "keys keyboard touch mouse controls", "paras": [
+      "Roll: Space (×10: T). Panels: keys 1 to 8. Pause: P. Undo: Z. Close or cancel: Esc. Place: choose Place on an item, then click a tile; R rotates, drag to move, X sells, Delete picks up. Everything is remappable in Settings. On touch screens use the on-screen buttons and tap tiles."
+    ] }
+  ]
+}

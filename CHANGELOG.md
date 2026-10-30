@@ -96,3 +96,12 @@ All notable changes, by milestone. Dates are build dates.
 - `data/difficulty.json` + `sim/difficulty.js`: first-run Relaxed/Standard choice, changeable in Settings; exact differences documented in the README and checked by both simulators (`--difficulty relaxed`).
 - `data/speed.json` + `sim/speed.js`: pure unlock rules (level, rebirths, layer count, tree, upgrade) with endless generated speeds; loop scaling bounded per frame; locked speeds refused in `game.setSetting`; playtime counts real seconds. (UI selector with locked options is in Settings.) An old test that expected `gameSpeed: 3` to reset to 1 was changed: any number is now stored and *clamped to the unlocked speeds at use*.
 - Simulator note: an income-ratio check for Relaxed was meaningless in an exponential economy (10^5.4); replaced by a time-based check (third prestige layer 9% sooner).
+
+## F3 — Tooltips, income breakdown, Help, feedback, undo, simple/advanced UI
+- `data/glossary.json` + `sim/glossary.js` + `ui/tooltips.js`: data-driven tooltips/popovers (hover, focus, tap) for stats, item types, rarities, mutations, hybrids and HUD numbers; `statParts` gives item cards structured stats. Tests: every tooltip id and every stat of every template resolves.
+- `sim/explain.js` + `ui/income.js`: "Why is my income this?" (click the Income number): each line, each item's effect, every multiplier in order with its source, blocked/idle items. `economy.modifierSteps` splits the modifiers by source. Test: the listed lines add up to the income exactly.
+- `data/help.json` + `sim/help.js` + `ui/help.js`: searchable Help (articles, glossary, real odds table, rebirth worked example, formulas in plain words).
+- `sim/undo.js`: undo for place / move / swap / pick up / sell / sell duplicates (20 s, 10 actions, anti-farming rules), `Z` and an Undo chip.
+- `data/disclosure.json` + `sim/disclosure.js` + `sim/unlock.js`: progressive disclosure with unlock toasts and NEW badges; Settings -> Advanced UI shows everything. The speed unlock rules now share `sim/unlock.js`.
+- Friendly default number format (`12,345`), larger default text on phones, "Need $X more" and one-click fixes for blocked actions.
+- Changed tests (intended UI/behaviour changes): `tests/input.test.js` rebinding used `KeyZ`, which is now Undo; `tests/migration.test.js` default number format is now `friendly`; the e2e helper turns on the Advanced UI (older tests click every panel from level 1) and answers the first-run pace dialog.

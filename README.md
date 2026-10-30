@@ -40,8 +40,9 @@ All keys are remappable in **Settings → Controls** (a key that clashes with an
 | Action | Default |
 |---|---|
 | Roll once / ×10 | `Space` / `T` |
-| Open Roll, Backpack, Base, Shop, Rebirth, Combat, Rewards, Settings | `1` … `8` |
+| Open Roll, Backpack, Base, Shop, Rebirth, Combat, Rewards, Settings, Help | `1` … `9` |
 | Pause | `P` |
+| Undo the last place / move / pick up / sale | `Z` (or the Undo chip) |
 | Cancel / close panel / deselect | `Esc` |
 | Rotate placed item / sell selected / pick up | `R` / `X` / `Delete` |
 | Pan the camera | `WASD` or arrows, or drag with the left mouse button |
@@ -168,6 +169,16 @@ Each shows once (never while the tutorial runs), has an optional button that ope
 
 Both modes are checked by the simulators (`npm run sim:economy -- --difficulty relaxed`, `npm run sim:combat -- --difficulty relaxed`): every check passes in Relaxed too, and the standard run adds a check that Relaxed is easier but not trivial.
 Measured honestly: with the bot, Relaxed reaches the third prestige layer 9% sooner (5 h 56 m vs 6 h 30 m); the first rebirths are equal (the bot waits 10 minutes between rebirths in both modes); and the 15% lower enemy health does not change the highest wave a given build beats (the real relief is slower waves, a halved penalty, more boss time and a little more income).
+
+## Understanding the game: tooltips, income breakdown, Help, undo, simple UI
+
+* **Tooltips on everything.** Every stat, item type, rarity, mutation, hybrid, status chip and number has an explanation (`src/data/glossary.json`; rarity and mutation text is generated from their own data, so endless generated content explains itself too). Hover, focus with Tab, or tap: a real `role="tooltip"` popover appears (Esc closes it; a tap toggles it on touch). Status chips, rarity/type/mutation badges and every stat label in the inspector are Tab-reachable; stat labels in long item lists are hover/tap only, and the Help glossary lists every term for keyboard users. A test checks that every tooltip id used in the UI and every stat of every item template at many tiers resolves.
+* **"Why is my income this?"** Click the **Income** number. The panel lists each dropper → seller line with its $/s, what every item on the line does (cap, add, refine, multiply), then **every multiplier in the order it is applied** with its source (speed upgrades, value upgrades, seller bonus, income multipliers split into rebirth bonuses / shop upgrades and boosters / difficulty, mega tiles), and why something could be higher (blocked or idle items, with a "show on base" button). The listed lines are the numbers the game uses; a test checks they add up to the income exactly.
+* **Help** (`9`, or the Help button): searchable articles (how the game works, rolling and rarity with the real odds table, building, mutations/fuse/sell, shop, levels, combat, **rebirth and prestige with a worked example computed from the real formulas**, the formulas in plain words, speed and offline, saving, controls) plus the full glossary. Search matches every word you type.
+* **Clear feedback.** Blocked actions say why and offer a fix: "Need $X more (about N s of income)" with "Open the Base / Backpack" buttons, "Select matching items for me" for fuse, a "Rotate it" button on blocked items, "unlocks at level N" for locked roll sizes, and the same "Need $X more" line under every shop item you cannot afford.
+* **Undo** (`Z` or the Undo chip, 20 s window): reverses placing, moving/swapping, picking up, selling one item, selling duplicates. Rules (`src/sim/undo.js`): only the last 10 actions, newest first, only within 20 seconds of play; a sale can be undone only if you can pay the money back and have not levelled up since (the sale's XP is taken back too, so sell → undo → sell never farms anything); a rebirth clears the history; the history is not saved.
+* **Simple UI by default, Advanced UI on request** (`src/data/disclosure.json`): a new player sees Roll, Backpack, Base, Help and Settings, and the Money, Income and Level chips. Shop and Rewards unlock at level 2, Combat at level 4, Refinery at level 6, Rebirth after earning $100,000 in total; the Luck chip at level 2, the Region chip after the first rebirth. A toast and a NEW badge announce each unlock; the tutorial reveals the panel a step needs. **Settings → Interface layout → Advanced UI** shows everything from the start (and the FPS chip). Old saves keep everything they already reached.
+* **Friendly numbers by default**: `12,345` below a million, then `1.23M` and the endless suffixes (K, M, B … aa, ab …). Scientific and engineering formats remain in Settings. Text is about 12% larger by default on screens narrower than 640 px (the text-size setting multiplies it).
 
 ## Game speed
 

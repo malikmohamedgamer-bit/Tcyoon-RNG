@@ -194,3 +194,12 @@ test('random cross-check against doubles', () => {
     assert.equal(big(a).cmp(b), Math.sign(a - b));
   }
 });
+
+test('friendly format: whole numbers with thousands separators below a million, suffixes above, endless', () => {
+  const f = (v) => Big.fromNumber(v).format({ mode: 'friendly' });
+  assert.equal(f(5), '5');
+  assert.equal(f(1234), '1,234');
+  assert.equal(f(999999), '999,999');
+  assert.equal(f(1234567), '1.23M');
+  assert.equal(Big.from('1e5000').format({ mode: 'friendly' }), Big.from('1e5000').format({ mode: 'suffix' }));
+});

@@ -5,6 +5,17 @@ import { sellValue, backpackCapacity, backpackCost } from '../sim/economy.js';
 import { canFuse, fuseChance, sortBag } from '../sim/inventory.js';
 import ECON from '../data/economy.json' with { type: 'json' };
 
+/** The biggest group of same-tier backpack items that can be fused (>= the minimum), or []. */
+function fusable(s) {
+  const groups = new Map();
+  for (const u of s.bag) {
+    const it = s.items[u];
+    (groups.get(it.tier) || groups.set(it.tier, []).get(it.tier)).push(u);
+  }
+  const best = [...groups.values()].filter((g) => g.length >= ECON.fuse.min).sort((a, b) => b.length - a.length)[0];
+  return best ? best.slice(0, ECON.fuse.max) : [];
+}
+
 export function createBackpackPanel(ctx) {
   const { game, fmt, ui } = ctx;
   return {
@@ -44,7 +55,8 @@ export function createBackpackPanel(ctx) {
           <button data-act="fuse" ${chk && chk.ok ? '' : 'disabled'}>Fuse ${sel.length} selected${chk && chk.ok ? ` (${Math.round(chance * 100)}%)` : ''}</button>
           <button data-act="clear-sel" ${sel.length ? '' : 'disabled'}>Clear</button>
         </div>
-        ${sel.length && chk && !chk.ok ? `<small class="bad">${esc(chk.reason)}</small>` : ''}
+        ${sel.length && chk && !chk.ok ? `<small class="bad">${esc(chk.reason)}</small> <button data-act="auto-select">Select matching items for me</button>` : ''}
+        ${!sel.length && !fusable(s) ? `<small class="muted">You need ${ECON.fuse.min} items of the same tier to fuse.</small>` : !sel.length ? `<button data-act="auto-select">Select ${ECON.fuse.min}+ matching items for me</button>` : ''}
       </div>
       <div class="grid" style="margin-top:.5rem">${cards || '<p class="muted">Your backpack is empty. Roll for items!</p>'}</div>`;
     },
@@ -61,6 +73,12 @@ export function createBackpackPanel(ctx) {
           if (el.checked) ui.selected.add(uid);
           else ui.selected.delete(uid);
           break;
+        case 'auto-select': {
+          const g = fusable(game.state);
+          ui.selected = new Set(g);
+          ui.bmsg = g.length ? { text: `Selected ${g.length} items of the same tier. Press Fuse.`, kind: 'ok' } : { text: `You do not have ${ECON.fuse.min} items of the same tier yet. Roll more, then try again.` };
+          break;
+        }
         case 'clear-sel':
           ui.selected.clear();
           break;

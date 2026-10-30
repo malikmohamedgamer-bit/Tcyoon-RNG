@@ -1,9 +1,10 @@
 // HUD chips, dock buttons and the open-panel manager. Frequently changing numbers use
 // [data-bind] elements updated in place; panels re-render through patchHtml (focus-safe).
 import { Big } from '../core/bignum.js';
-import { esc, patchHtml, delegate, textInput } from './dom.js';
+import { esc, patchHtml, delegate, textInput, term } from './dom.js';
 import { levelProgress } from '../sim/leveling.js';
 import { luckOf } from '../sim/economy.js';
+import { PANEL_RULES } from '../sim/disclosure.js';
 
 export function createShell({ game, fmt, panels, onOpen }) {
   const hudEl = document.getElementById('hud');
@@ -14,16 +15,18 @@ export function createShell({ game, fmt, panels, onOpen }) {
   let bodyEl = null;
 
   hudEl.innerHTML = `
-    <div class="chip money" data-chip="money"><small>Money</small><b data-bind="money">0</b></div>
-    <div class="chip" data-chip="income"><small>Income</small><b data-bind="income">$0/s</b></div>
-    <div class="chip" data-chip="level"><small>Level <span data-bind="level">1</span></small><b data-bind="xp">0%</b><div class="xpbar"><i data-bind="xpbar" style="width:0"></i></div></div>
-    <div class="chip" data-chip="luck"><small>Luck</small><b data-bind="luck">×1</b></div>
-    <div class="chip" data-chip="region"><small>Region</small><b data-bind="region">1</b></div>
-    <div class="chip" data-chip="fps"><small>FPS</small><b data-bind="fps">--</b></div>`;
+    <div class="chip money" data-chip="money"><small>${term('money', 'Money')}</small><b data-bind="money">0</b></div>
+    <button type="button" class="chip" data-chip="income" data-act-income aria-label="Income per second. Open the income breakdown"><small>${term('income', 'Income', { focus: false })}</small><b data-bind="income">$0/s</b></button>
+    <div class="chip" data-chip="level"><small>${term('level', 'Level')} <span data-bind="level">1</span></small><b data-bind="xp">0%</b><div class="xpbar"><i data-bind="xpbar" style="width:0"></i></div></div>
+    <div class="chip" data-chip="luck"><small>${term('luck', 'Luck')}</small><b data-bind="luck">×1</b></div>
+    <div class="chip" data-chip="region"><small>${term('region', 'Region')}</small><b data-bind="region">1</b></div>
+    <div class="chip" data-chip="fps"><small>${term('fps', 'FPS')}</small><b data-bind="fps">--</b></div>`;
+  hudEl.querySelector('[data-act-income]').addEventListener('click', () => toggle('income'));
   const refs = {};
   hudEl.querySelectorAll('[data-bind]').forEach((n) => (refs[n.dataset.bind] = n));
 
   dock.innerHTML = panels
+    .filter((p) => !p.hidden)
     .map((p) => `<button type="button" data-panel="${p.id}" aria-pressed="false" aria-controls="panels"><span aria-hidden="true">${p.icon}</span> ${esc(p.label)}<span class="badge-n" data-badge="${p.id}" hidden></span></button>`)
     .join('');
   dock.addEventListener('click', (e) => {
@@ -36,6 +39,7 @@ export function createShell({ game, fmt, panels, onOpen }) {
   }
   function open(id) {
     openId = id;
+    if (id && game.state.ui) game.state.ui.opened[id] = true;
     dock.querySelectorAll('[data-panel]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.panel === id)));
     host.textContent = '';
     panelEl = bodyEl = null;
@@ -70,15 +74,18 @@ export function createShell({ game, fmt, panels, onOpen }) {
   let last = performance.now();
   return {
     /** Show/hide dock buttons and HUD chips from the player's layout settings. */
-    applyLayout(settings) {
+    /** `vis` = {panels:Set, chips:Set} from sim/disclosure.js (progressive disclosure); settings can hide more. */
+    applyLayout(settings, vis = null) {
+      const shown = (id) => !vis || vis.panels.has(id);
       dock.querySelectorAll('[data-panel]').forEach((b) => {
-        b.hidden = settings.hiddenPanels.includes(b.dataset.panel) && b.dataset.panel !== 'settings';
+        const id = b.dataset.panel;
+        b.hidden = (settings.hiddenPanels.includes(id) && id !== 'settings') || !shown(id);
       });
       hudEl.querySelectorAll('[data-chip]').forEach((c) => {
         const k = c.dataset.chip;
-        c.hidden = k in settings.hud ? !settings.hud[k] : false;
+        c.hidden = (k in settings.hud ? !settings.hud[k] : false) || (vis ? !vis.chips.has(k) : false);
       });
-      if (openId && settings.hiddenPanels.includes(openId) && openId !== 'settings') open(null);
+      if (openId && ((settings.hiddenPanels.includes(openId) && openId !== 'settings') || (vis && !vis.panels.has(openId) && openId !== 'income'))) open(null);
     },
     open,
     toggle,
@@ -104,6 +111,7 @@ export function createShell({ game, fmt, panels, onOpen }) {
         b.hidden = !n;
         b.textContent = String(n);
       }
+      for (const b of dock.querySelectorAll('[data-panel]')) b.classList.toggle('is-new', !!(s.ui.unlocked[b.dataset.panel] && s.ui.opened[b.dataset.panel] !== true && PANEL_RULES[b.dataset.panel] !== null));
       refs.money.textContent = '$' + fmt(s.money);
       refs.income.textContent = '$' + fmt(income || Big.fromNumber(0)) + '/s';
       refs.level.textContent = String(s.level);

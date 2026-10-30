@@ -5,7 +5,7 @@ import { SaveManager } from './core/save.js';
 import { now, sanitizeElapsed } from './core/time.js';
 import { createState, serializeState, deserializeState, SAVE_VERSION, MIGRATIONS, sanitizeSettings } from './sim/state.js';
 import { doRoll, stepAutoRoll, accrueFreeRolls, autoRollUnlocked } from './sim/rolling.js';
-import { sellItem, sellDuplicates, fuse as fuseItems } from './sim/inventory.js';
+import { fuse as fuseItems } from './sim/inventory.js';
 import { emit } from './core/events.js';
 import { Big } from './core/bignum.js';
 import { addToBag, bagFull } from './sim/inventory.js';
@@ -20,7 +20,9 @@ import * as combat from './sim/combat.js';
 import * as quests from './sim/quests.js';
 import { applyOffline, WELCOME_MIN_SECONDS } from './sim/offline.js';
 import * as tutorial from './sim/tutorial.js';
+import * as undo from './sim/undo.js';
 import { checkTips } from './sim/tips.js';
+import { checkUnlocks } from './sim/disclosure.js';
 import { setDifficulty } from './sim/difficulty.js';
 import { isUnlocked } from './sim/speed.js';
 
@@ -68,6 +70,7 @@ export function createGame({ storage, seed } = {}) {
       if (state._tipT >= 1) {
         state._tipT = 0;
         checkTips(state);
+        checkUnlocks(state);
       }
     },
     /** Tutorial controls (the state machine itself lives in sim/tutorial.js). */
@@ -144,10 +147,15 @@ export function createGame({ storage, seed } = {}) {
     get income() {
       return incomeRate(state);
     },
-    place: (uid, x, y, dir) => placement.place(state, uid, x, y, dir),
+    place: (uid, x, y, dir) => undo.placeU(state, uid, x, y, dir),
     rotate: (uid) => placement.rotate(state, uid),
-    pickUp: (uid) => placement.pickUp(state, uid),
-    sellPlaced: (uid) => placement.sellPlaced(state, uid),
+    pickUp: (uid) => undo.pickUpU(state, uid),
+    sellPlaced: (uid) => undo.sellPlacedU(state, uid),
+    /** Re-check which panels are unlocked (also runs once a second inside step()). */
+    refreshUnlocks: () => checkUnlocks(state),
+    /** Undo the last place / move / pick up / sale (20 s window, see sim/undo.js). */
+    undo: () => undo.undoLast(state),
+    undoInfo: () => undo.peekUndo(state),
     expand: () => placement.expand(state),
     autoPlace: () => placement.autoLayout(state),
     savePreset: (name) => placement.savePreset(state, name),
@@ -166,10 +174,10 @@ export function createGame({ storage, seed } = {}) {
       return doRoll(state, n);
     },
     sell(uid) {
-      return sellItem(state, uid);
+      return undo.sellU(state, uid);
     },
     sellDuplicates() {
-      return sellDuplicates(state);
+      return undo.sellDuplicatesU(state);
     },
     fuse(uids) {
       return fuseItems(state, uids);

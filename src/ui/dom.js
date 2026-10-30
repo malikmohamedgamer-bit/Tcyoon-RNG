@@ -3,6 +3,9 @@ import { Big } from '../core/bignum.js';
 
 export const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 
+/** A term with a tooltip/tap-popover (ids: see data/glossary.json). `focus` makes it reachable with Tab. */
+export const term = (id, html, { focus = true } = {}) => `<span class="term" data-tip="${esc(id)}"${focus ? ' tabindex="0"' : ''}>${html}</span>`;
+
 export function makeFmt(getSettings) {
   return (b, digits = 2) => {
     const st = getSettings() || {};
@@ -22,6 +25,11 @@ export function patchHtml(el, html) {
   let selStart = null;
   if (active && el.contains(active)) {
     fid = active.getAttribute('data-fid') || (active.dataset.act ? `${active.dataset.act}|${active.dataset.uid || ''}|${active.dataset.id || ''}` : null);
+    if (!fid && active.dataset.tip) {
+      // a focused tooltip term: remember which one (the n-th term with that id) so a re-render keeps keyboard focus on it
+      const same = [...el.querySelectorAll(`[data-tip="${CSS.escape(active.dataset.tip)}"]`)];
+      fid = `tip:${active.dataset.tip}:${same.indexOf(active)}`;
+    }
     if (active.selectionStart != null) selStart = active.selectionStart;
   }
   // collapsible sections keep their open/closed state across re-renders (keyed by summary text)
@@ -37,9 +45,13 @@ export function patchHtml(el, html) {
     if (k && el._open.has(k)) d.open = el._open.get(k);
   }
   if (fid) {
-    const next = [...el.querySelectorAll('[data-fid],[data-act]')].find(
-      (n) => (n.getAttribute('data-fid') || `${n.dataset.act}|${n.dataset.uid || ''}|${n.dataset.id || ''}`) === fid,
-    );
+    let next;
+    if (fid.startsWith('tip:')) {
+      const m = fid.match(/^tip:(.*):(\d+)$/);
+      next = m ? el.querySelectorAll(`[data-tip="${CSS.escape(m[1])}"]`)[Number(m[2])] : null;
+    } else {
+      next = [...el.querySelectorAll('[data-fid],[data-act]')].find((n) => (n.getAttribute('data-fid') || `${n.dataset.act}|${n.dataset.uid || ''}|${n.dataset.id || ''}`) === fid);
+    }
     if (next) {
       next.focus({ preventScroll: true });
       if (selStart != null && next.setSelectionRange) {
@@ -64,7 +76,7 @@ export function delegate(root, handler) {
   root.addEventListener('change', (e) => {
     const t = e.target.closest('[data-act]');
     // text fields are handled by 'input' (no re-render), see textInput below
-    if (t && (t.tagName === 'SELECT' || (t.tagName === 'INPUT' && t.type !== 'text'))) handler(t.dataset.act, t, e);
+    if (t && (t.tagName === 'SELECT' || (t.tagName === 'INPUT' && t.type !== 'text' && t.type !== 'search'))) handler(t.dataset.act, t, e);
   });
 }
 
@@ -72,7 +84,7 @@ export function delegate(root, handler) {
 export function textInput(root, handler) {
   root.addEventListener('input', (e) => {
     const t = e.target.closest('[data-act]');
-    if (t && (t.type === 'text' || t.tagName === 'TEXTAREA')) handler(t.dataset.act, t, e);
+    if (t && (t.type === 'text' || t.type === 'search' || t.tagName === 'TEXTAREA')) handler(t.dataset.act, t, e);
   });
 }
 

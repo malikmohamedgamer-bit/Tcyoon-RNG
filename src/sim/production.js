@@ -145,7 +145,7 @@ export function computeProduction(state) {
     }
   }
   const blocked = nodes.filter((n) => n.blocked).map((n) => n.uid);
-  return { income, perItem, blocked, luck, xp, unitsSold: sold, sellers: flow.filter((n) => n.type === 'seller').length, droppers: sources.length };
+  return { income, perItem, blocked, luck, xp, unitsSold: sold, sellers: flow.filter((n) => n.type === 'seller').length, droppers: sources.length, nodes: new Map(nodes.map((n) => [n.uid, n])), sources, globalMult, aura, mods };
 }
 
 /** Recompute and cache production (call after any change to items, layout or modifiers). */

@@ -106,7 +106,7 @@ test('settings sanitiser: defaults, clamping, enum checks, hostile input, key bi
   const bad = sanitizeSettings({ pixelSize: 999, quality: 'ultra', numberFormat: 'hex', accent: 'red', themeOverride: 'lava', uiScale: -5, gameSpeed: 'fast', volume: { master: 9, sfx: 'x' }, camera: { speed: 100 }, hiddenPanels: [1, 'shop'], hud: { fps: 0, bogus: true }, bindings: { rotate: ['KeyZ'], x: 'no', y: [1] } });
   assert.equal(bad.pixelSize, 16);
   assert.equal(bad.quality, 'medium');
-  assert.equal(bad.numberFormat, 'suffix');
+  assert.equal(bad.numberFormat, 'friendly');
   assert.equal(bad.accent, null);
   assert.equal(bad.themeOverride, null);
   assert.equal(bad.uiScale, 0.8);
@@ -124,7 +124,7 @@ test('settings sanitiser: defaults, clamping, enum checks, hostile input, key bi
   // survives a v1 save (old settings had only pixelSize/quality)
   const t = deserializeState(JSON.parse(JSON.stringify({ ...serializeState(createState(1, 0), 1), settings: { pixelSize: 6, quality: 'high' } })));
   assert.equal(t.settings.pixelSize, 6);
-  assert.equal(t.settings.numberFormat, 'suffix');
+  assert.equal(t.settings.numberFormat, 'friendly');
 });
 
 test('item nicknames and skins persist, are length-limited and sanitised; nickname replaces the generated title', async () => {

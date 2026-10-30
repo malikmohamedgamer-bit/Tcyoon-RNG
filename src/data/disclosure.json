@@ -1,0 +1,24 @@
+{
+  "_doc": "Progressive disclosure: the simple UI shows a panel or status chip only once the player has unlocked it (same requirement rules as game speed, see sim/unlock.js); Settings -> 'Advanced UI' shows everything from the start. req null = always visible. The tutorial reveals what its current step needs. To add a panel to the rules, add its id here.",
+  "panels": {
+    "roll": null,
+    "backpack": null,
+    "base": null,
+    "shop": { "kind": "level", "value": 2 },
+    "rewards": { "kind": "level", "value": 2 },
+    "combat": { "kind": "level", "value": 4 },
+    "refinery": { "kind": "level", "value": 6 },
+    "rebirth": { "kind": "totalMoney", "value": 100000 },
+    "index": null,
+    "help": null,
+    "settings": null
+  },
+  "chips": {
+    "money": null,
+    "income": null,
+    "level": null,
+    "luck": { "kind": "level", "value": 2 },
+    "region": { "kind": "rebirths", "value": 1 },
+    "fps": "advanced"
+  }
+}

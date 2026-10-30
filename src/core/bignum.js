@@ -243,7 +243,7 @@ export class Big {
    * digits: significant digits after the point for the mantissa (default 2).
    */
   format(opts = {}) {
-    const mode = opts.mode || 'suffix';
+    let mode = opts.mode || 'suffix';
     const digits = opts.digits == null ? 2 : opts.digits;
     if (this.s === 0) return '0';
     const sign = this.s < 0 ? '-' : '';
@@ -261,6 +261,11 @@ export class Big {
       const g = e - (((e % 3) + 3) % 3);
       const mm = this.m * Math.pow(10, e - g);
       return sign + trimZeros(mm.toFixed(digits)) + (g ? 'e' + g : '');
+    }
+    // friendly: whole numbers with thousands separators below a million ($12,345), suffixes above
+    if (mode === 'friendly') {
+      if (e >= 3 && e < 6) return sign + String(Math.round(this.m * Math.pow(10, e))).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+      mode = 'suffix';
     }
     // suffix
     if (e < 3) {

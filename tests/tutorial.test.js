@@ -179,3 +179,12 @@ test('the tutorial position survives a save and reload', () => {
   assert.deepEqual(back.tutorial.claimed, g.state.tutorial.claimed);
   drain(g.state);
 });
+
+test('the fuse assist only counts same-tier belts: three higher-tier belts do not satisfy "three tier-0 belts"', () => {
+  const g = newGame();
+  g.tutorial.start();
+  for (let i = 0; i < 3; i++) g.debug.giveItem('belt', 2);
+  while (g.tutorial.step.id !== 'fuse') g.tutorial.skipStep();
+  const tier0 = g.state.bag.filter((u) => g.state.items[u].tpl === 'belt' && g.state.items[u].tier === 0);
+  assert.equal(tier0.length, 3, 'three tier-0 practice belts were provided');
+});
