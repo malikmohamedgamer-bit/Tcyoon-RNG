@@ -1,0 +1,8 @@
+{
+  "_doc": "Mutation refinery operations (money sinks that work on items in the backpack or on the base). Cost = rollCost * costMult * (1 + 0.5 * mutationCount). Placed 'refiner' flow items live in items.json. Add an operation by adding it here and a handler in sim/refiners.js.",
+  "ops": {
+    "reroll":   { "name": "Re-roll mutations", "costMult": 6,  "luckBoost": 2, "desc": "Discard all mutations and roll new ones (boosted odds). Can come out worse." },
+    "transfer": { "name": "Transfer a mutation", "costMult": 12, "desc": "Move one mutation from a donor item to a target item (needs a free slot and a free group)." },
+    "combine":  { "name": "Combine mutations", "costMult": 15, "chanceBase": 0.75, "chancePerLevel": 0.1, "chanceMin": 0.1, "desc": "Both items carry the same mutation: target's level +1. On failure the donor loses it, the target is unchanged." }
+  }
+}

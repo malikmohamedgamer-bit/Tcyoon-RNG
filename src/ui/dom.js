@@ -53,7 +53,16 @@ export function delegate(root, handler) {
   });
   root.addEventListener('change', (e) => {
     const t = e.target.closest('[data-act]');
-    if (t && (t.tagName === 'INPUT' || t.tagName === 'SELECT' || t.tagName === 'TEXTAREA')) handler(t.dataset.act, t, e);
+    // text fields are handled by 'input' (no re-render), see textInput below
+    if (t && (t.tagName === 'SELECT' || (t.tagName === 'INPUT' && t.type !== 'text'))) handler(t.dataset.act, t, e);
+  });
+}
+
+/** Live-update text fields without re-rendering the panel (which would drop focus/typing). */
+export function textInput(root, handler) {
+  root.addEventListener('input', (e) => {
+    const t = e.target.closest('[data-act]');
+    if (t && (t.type === 'text' || t.tagName === 'TEXTAREA')) handler(t.dataset.act, t, e);
   });
 }
 

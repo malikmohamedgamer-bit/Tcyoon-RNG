@@ -1,7 +1,7 @@
 // HUD chips, dock buttons and the open-panel manager. Frequently changing numbers use
 // [data-bind] elements updated in place; panels re-render through patchHtml (focus-safe).
 import { Big } from '../core/bignum.js';
-import { esc, patchHtml, delegate } from './dom.js';
+import { esc, patchHtml, delegate, textInput } from './dom.js';
 import { levelProgress } from '../sim/leveling.js';
 import { luckOf } from '../sim/economy.js';
 
@@ -54,6 +54,7 @@ export function createShell({ game, fmt, panels, onOpen }) {
         p.act(name, el, ev);
         refresh();
       });
+      textInput(bodyEl, (name, el, ev) => p.act(name, el, ev));
       refresh();
       panelEl.focus({ preventScroll: true });
     }

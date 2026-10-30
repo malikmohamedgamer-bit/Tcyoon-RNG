@@ -102,3 +102,9 @@ table.odds td:first-child, table.odds th:first-child { text-align: left; }
 ul.plain { list-style: none; margin: 0; padding: 0; display: grid; gap: .25rem; font-size: .85rem; }
 .panel:focus { outline: none; }
 .panel h2 { margin-right: 3rem; }
+
+#ghost-label { position: fixed; pointer-events: none; z-index: 15; background: #000d; color: #fff; padding: 2px 8px; border-radius: 6px; font-size: .8rem; white-space: nowrap; }
+button.link { background: none; border: 0; padding: 0 .2rem; min-height: var(--touch); text-align: left; text-decoration: underline; cursor: pointer; }
+ul.plain li { display: flex; flex-wrap: wrap; gap: .3rem; align-items: center; }
+label { display: block; margin-top: .3rem; }
+label select { width: 100%; }

@@ -27,3 +27,11 @@ All notable changes, by milestone. Dates are build dates.
 - UI: HUD, dock, roll panel (odds table, pity bars), backpack panel (sell, fuse with live odds, sell duplicates, bigger backpack), throttled ARIA announcements.
 - Save format **v1** frozen at the end of this milestone (fixture `tests/fixtures/save-v1.json` was produced by the real v1 serializer).
 - First level now takes ~11 rolls (xp base 10) so the first minute has a reward.
+
+## M3 — Placement, production, refiners, mutations
+- `sim/production.js`: closed-form production flow solver (cap → add → refine → multiply → sell; loops/dead ends blocked and flagged; dynamo aura, clover luck, lamp xp; exact per-dropper income attribution).
+- `sim/placement.js`: bounds/occupancy rules, place/move/swap/rotate/pick up/sell, base expansion (to 32x32, then soft-capped mega-tile bonus), layout presets, lane-based auto-layout.
+- `sim/refiners.js` + `data/refiners.json`: mutation refinery (re-roll, transfer, combine with documented odds).
+- Save format **v2** with a real v1→v2 migration, tested against the v1 fixture; hostile/corrupt v2 data is sanitised.
+- 3D: instanced items per shape (merged primitives), direction arrows, rarity gems, mutation halos, blocked markers, flow dots, placement ghost (ring = valid, cross = invalid) + text label, ray-cast grid picking.
+- `core/input.js`: action-based input, remappable bindings, conflict detection. UI: placement controller (click/tap, drag to move/swap, R/X/Delete/Esc), Base panel (income per item, inspector, presets, expansion), Refinery panel.

@@ -12,11 +12,15 @@ import { Big } from './core/bignum.js';
 import { addToBag, bagFull } from './sim/inventory.js';
 import { addMoney } from './sim/economy.js';
 import { addXp } from './sim/leveling.js';
+import { refreshProduction, stepProduction, incomeRate } from './sim/production.js';
+import * as placement from './sim/placement.js';
+import * as refiners from './sim/refiners.js';
 
 export function createGame({ storage, seed } = {}) {
   const save = new SaveManager({ version: SAVE_VERSION, migrations: MIGRATIONS, ...(storage ? { storage } : {}) });
   const loaded = save.load();
   let state = loaded.data ? deserializeState(loaded.data) : createState(seed);
+  refreshProduction(state);
   const game = {
     save,
     loadStatus: loaded.status,
@@ -33,7 +37,24 @@ export function createGame({ storage, seed } = {}) {
       state.playtime += dt;
       accrueFreeRolls(state, dt);
       stepAutoRoll(state, dt);
+      stepProduction(state, dt, addMoney);
     },
+
+    get income() {
+      return incomeRate(state);
+    },
+    place: (uid, x, y, dir) => placement.place(state, uid, x, y, dir),
+    rotate: (uid) => placement.rotate(state, uid),
+    pickUp: (uid) => placement.pickUp(state, uid),
+    sellPlaced: (uid) => placement.sellPlaced(state, uid),
+    expand: () => placement.expand(state),
+    autoPlace: () => placement.autoLayout(state),
+    savePreset: (name) => placement.savePreset(state, name),
+    loadPreset: (i) => placement.loadPreset(state, i),
+    deletePreset: (i) => placement.deletePreset(state, i),
+    reroll: (uid) => refiners.reroll(state, uid),
+    transferMutation: (a, b, id) => refiners.transfer(state, a, b, id),
+    combineMutation: (a, b, id) => refiners.combine(state, a, b, id),
 
     roll(n = 1) {
       return doRoll(state, n);
@@ -73,6 +94,7 @@ export function createGame({ storage, seed } = {}) {
       const r = save.importText(text);
       if (!r.ok) return r;
       state = deserializeState(r.data);
+      refreshProduction(state);
       game.saveNow();
       return { ok: true };
     },
@@ -100,6 +122,7 @@ export function createGame({ storage, seed } = {}) {
     hardReset() {
       save.wipe();
       state = createState();
+      refreshProduction(state);
       game.saveNow();
     },
   };

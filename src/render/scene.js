@@ -6,7 +6,8 @@ import * as THREE from 'three';
 import { Resources, gpuAudit } from './resources.js';
 import { createPixelPipeline } from './pixelate.js';
 import { createCameraController } from './camera.js';
-import { createBase, worldToCell, MAX_SIDE } from './base.js';
+import { createBase, worldToCell, cellToWorld, MAX_SIDE } from './base.js';
+import { createItemsRenderer } from './items.js';
 
 export const QUALITY = {
   low: { props: 4, effects: 40, pixelMin: 3 },
@@ -30,11 +31,13 @@ export function createRenderer({ canvas, quality = 'medium', pixelSize = 4, redu
   scene.add(hemi, sun);
 
   const base = createBase({ scene, res, quality });
+  const items = createItemsRenderer({ scene, res, getSide: () => base.side, quality });
   const raycaster = new THREE.Raycaster();
   const ground = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
   const hit = new THREE.Vector3();
   const ndc = new THREE.Vector2();
   let motion = reducedMotion ? 0 : 1;
+  let clock = 0;
   let q = quality;
 
   function resize() {
@@ -53,6 +56,7 @@ export function createRenderer({ canvas, quality = 'medium', pixelSize = 4, redu
     cam,
     res,
     base,
+    items,
     pixel,
     setTheme(theme) {
       base.setTheme(theme, q);
@@ -83,15 +87,25 @@ export function createRenderer({ canvas, quality = 'medium', pixelSize = 4, redu
       const c = worldToCell(hit.x, hit.z, base.side);
       return { ...c, wx: hit.x, wz: hit.z, inside: c.x >= 0 && c.y >= 0 && c.x < base.side && c.y < base.side };
     },
-    render(dt) {
+    /** Screen (client) position of a grid cell centre; used by tests and tooltips. */
+    cellToScreen(cx, cy) {
+      const w = cellToWorld(cx, cy, base.side);
+      const v = new THREE.Vector3(w.x, 0.3, w.z).project(camera);
+      const r = canvas.getBoundingClientRect();
+      return { x: r.left + ((v.x + 1) / 2) * r.width, y: r.top + ((1 - v.y) / 2) * r.height };
+    },
+    render(dt, state) {
       cam.update(dt);
       base.update(dt, motion);
+      clock += dt;
+      if (state) items.update(state, clock, motion);
       pixel.render(scene, camera);
     },
     audit() {
       return gpuAudit(renderer, res);
     },
     dispose() {
+      items.dispose();
       base.dispose();
       pixel.dispose();
       res.disposeAll();

@@ -15,6 +15,9 @@ export function modifiers(state) {
   const d = state._d || {};
   const m = {
     income: ONE, // global income multiplier
+    rate: ONE, // dropper speed multiplier
+    value: ONE, // dropper unit value multiplier
+    sellMult: ONE, // seller multiplier
     luck: d.luck || ONE, // placed Clover Shrines
     xp: d.xp || ONE,
     freeCap: 0,
