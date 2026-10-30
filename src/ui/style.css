@@ -153,3 +153,26 @@ kbd { background: var(--panel-2); border: 1px solid var(--line); border-bottom-w
 .touch-bar button { min-width: 64px; min-height: 52px; background: color-mix(in srgb, var(--panel) 92%, transparent); }
 .joystick { position: absolute; left: 1rem; bottom: 1rem; width: 120px; height: 120px; border-radius: 50%; border: 2px solid var(--line); background: color-mix(in srgb, var(--panel) 70%, transparent); pointer-events: auto; touch-action: none; display: grid; place-items: center; }
 .joystick .stick { width: 52px; height: 52px; border-radius: 50%; background: var(--accent); opacity: .85; }
+
+/* ---- tutorial overlay (visual only; never blocks input) ---- */
+#tutorial { position: absolute; inset: 0; pointer-events: none; z-index: 30; }
+.tut-dim { position: fixed; inset: 0; background: transparent; }
+.tut-ring { position: fixed; border-radius: 12px; border: 3px solid var(--accent); box-shadow: 0 0 0 9999px rgba(0, 0, 0, .38), 0 0 18px var(--accent); pointer-events: none; animation: tutpulse 1.4s ease-in-out infinite; }
+[data-motion="reduced"] .tut-ring { animation: none; }
+@keyframes tutpulse { 50% { box-shadow: 0 0 0 9999px rgba(0, 0, 0, .38), 0 0 4px var(--accent); } }
+.tut-card { position: fixed; left: 1rem; width: min(24rem, calc(100vw - 2rem)); background: var(--panel); color: var(--text); border: 2px solid var(--accent); border-radius: 12px; padding: .7rem .9rem; pointer-events: auto; box-shadow: 0 6px 24px rgba(0, 0, 0, .5); }
+.tut-card[data-pos="bottom"] { bottom: 4.6rem; }
+.tut-card[data-pos="top"] { top: 4.6rem; }
+.tut-head { display: flex; justify-content: space-between; align-items: center; font-size: .8rem; color: var(--muted); }
+.tut-dots { display: inline-flex; gap: 3px; }
+.tut-dots i { width: 6px; height: 6px; border-radius: 50%; background: var(--line); }
+.tut-dots i.done { background: var(--accent); }
+.tut-dots i.now { background: var(--text); }
+.tut-text { margin: .35rem 0 .5rem; font-size: 1.05rem; line-height: 1.35; }
+.tut-actions { display: flex; flex-wrap: wrap; gap: .4rem; align-items: center; }
+.tut-actions button { min-height: 44px; }
+.tut-actions .link { margin-left: auto; background: none; border: none; text-decoration: underline; color: var(--muted); }
+.tut-resume { position: fixed; left: 1rem; bottom: 4.6rem; pointer-events: auto; min-height: 44px; border-color: var(--accent); }
+.modal .choices { display: flex; flex-direction: column; gap: .4rem; margin-top: .8rem; }
+.modal .choices button { min-height: 44px; text-align: center; }
+@media (min-width: 720px) { .modal .choices { flex-direction: row-reverse; flex-wrap: wrap; } }

@@ -69,6 +69,11 @@ export function createSettingsPanel(ctx) {
         <table class="keys"><tbody>${keyRows}</tbody></table>
         <div class="row2"><button data-act="reset-keys">Reset all keys</button></div>
       </details>
+      <details><summary>Help and tutorial</summary>
+        <p class="muted">Tutorial: ${ctx.tutorialStatus()}</p>
+        <div class="row2"><button data-act="tut-replay">${game.state.tutorial.status === 'active' ? 'Restart the tutorial' : 'Replay the tutorial'}</button>${game.state.tutorial.status === 'paused' ? '<button data-act="tut-resume">Resume the tutorial</button>' : ''}</div>
+        <p class="muted">Replaying is always safe: its rewards are only paid once.</p>
+      </details>
       <details><summary>Save data</summary>
         <p class="muted">Saves live in this browser (${game.save.usingFallback ? '<b class="bad">storage unavailable: playing from memory, export your save!</b>' : 'localStorage'}). Autosaves every 10 s.</p>
         <div class="row2"><button data-act="export">Export save text</button><button data-act="save-now">Save now</button></div>
@@ -106,6 +111,14 @@ export function createSettingsPanel(ctx) {
           ctx.setBindings({ ...ctx.getBindings(), [action]: [code] });
           msg(`${ACTIONS[action].label} is now ${keyLabel(code)}.`);
         }); break;
+        case 'tut-replay':
+          game.tutorial.start({ replay: true });
+          ctx.open(null);
+          break;
+        case 'tut-resume':
+          game.tutorial.resume();
+          ctx.open(null);
+          break;
         case 'reset-keys': ctx.setBindings(defaultBindings()); msg('Keys reset to defaults.'); break;
         case 'export': ui.saveText = game.exportText(); msg('Save text created below. Copy it somewhere safe.'); break;
         case 'save-text': ui.saveText = el.value; break;

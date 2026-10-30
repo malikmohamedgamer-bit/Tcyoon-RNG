@@ -69,6 +69,8 @@ export function place(state, uid, x, y, dir, opts = {}) {
   it.y = y;
   it.dir = dir != null ? ((dir % 4) + 4) % 4 : it.dir || 0;
   state.stats.placed = (state.stats.placed || 0) + 1;
+  const typ = typeOf(it);
+  state.stats['placed_' + typ] = (state.stats['placed_' + typ] || 0) + 1;
   refreshProduction(state);
   emit(state, 'placed', { swapped: !!chk.swap });
   return { ok: true, swapped: !!chk.swap };

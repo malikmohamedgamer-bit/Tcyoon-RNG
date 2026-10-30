@@ -138,3 +138,20 @@ Walking through the brief item by item. "Done" means implemented *and* covered b
 * Heap rises about 5 MB over a 5-minute random-input soak before flattening; not investigated further.
 * The soak's random sequence is seeded and deterministic in its choices, but timings are real-time, so runs differ slightly.
 * Clock set forward by a player gives offline progress up to 10 years.
+
+---
+
+# Follow-up project (tutorial, clarity, speed, index, redesign, reveals, hosting)
+
+Each milestone below lists what was run on that milestone's code. "Not verified" items are repeated in the final review.
+
+## F1 — Tutorial engine and skip confirmation
+| What | How tested | Result |
+|---|---|---|
+| Tutorial data: unique ids, ≤ 20 words per step, valid conditions/rewards | `tests/tutorial.test.js` | PASS |
+| Full walk-through with the real simulation: each of the 16 steps advances only after its action; assists provide what is missing | `tests/tutorial.test.js` | PASS |
+| Rewards/assists exactly once (also on replay), skipping a step pays nothing, practice items are worth $0 | `tests/tutorial.test.js` | PASS |
+| Resume after reload, legacy saves get no surprise tutorial | `tests/tutorial.test.js` | PASS |
+| UI: spotlight on the Roll button, input not blocked, skip dialog (3 choices, focus on Keep learning, Esc keeps learning, Tab trapped), Skip for now → Resume survives reload, "don't ask again", replay from Settings, card reachable by Tab and not a trap, no pulse with reduced motion, step announced in the live region | `e2e/f1-tutorial.spec.js` (7 tests) | PASS |
+| Existing e2e suite unchanged in meaning (helper skips the tutorial) | full `npx playwright test`: 63 passed | PASS |
+Not verified: the tutorial on a real phone, with a screen reader, or how long a real first-time player needs (the "about 3 minutes" goal is unmeasured; no one has played it).

@@ -17,6 +17,8 @@ import { applyShopMods } from './shop.js';
 import { createCombatState } from './combat.js';
 import { createRewardState, createBonus, installRewardHooks } from './rewards.js';
 import { START_SIDE, MAX_SIDE } from './placement.js';
+import { applyDifficultyMods, isMode } from './difficulty.js';
+import { createTutorialState, legacyTutorialState, sanitizeTutorial } from './tutorial.js';
 
 export const SAVE_VERSION = 2;
 
@@ -113,6 +115,8 @@ export function createState(seed = hash32(String(Date.now())), nowMs = Date.now(
     fusePity: 0,
     stats: { rolls: 0, sold: 0, fused: 0, bestTier: 0 },
     settings: defaultSettings(),
+    tutorial: createTutorialState(),
+    difficulty: null, // null until chosen on the first run
   };
   // starter kit: one dropper and one seller so the first income needs no luck
   installRewardHooks(state);
@@ -124,13 +128,14 @@ export function createState(seed = hash32(String(Date.now())), nowMs = Date.now(
 
 /** Modifier hooks (layer tree etc.). Transient; reinstalled on create/load. */
 export function installModHooks(state) {
-  state._modFns = [(m) => applyLayerMods(state, m), (m) => applyShopMods(state, m)];
+  state._modFns = [(m) => applyLayerMods(state, m), (m) => applyShopMods(state, m), (m) => applyDifficultyMods(state, m)];
 }
 
 const slimItem = (it) => {
   const o = { uid: it.uid, tpl: it.tpl, tier: it.tier, vs: it.vs || 0, hy: it.hy || null, mut: it.mut || [], loc: it.loc, lv: it.lv };
   if (it.loc === 'placed') Object.assign(o, { x: it.x, y: it.y, dir: it.dir || 0 });
   if (it.nick) o.nick = it.nick;
+  if (it.practice) o.practice = true;
   if (it.skin != null) o.skin = it.skin;
   return o;
 };
@@ -169,6 +174,8 @@ export function serializeState(state, nowMs = Date.now()) {
       fusePity: state.fusePity,
       stats: state.stats,
       settings: state.settings,
+      tutorial: state.tutorial,
+      difficulty: state.difficulty,
     }),
   );
 }
@@ -196,6 +203,9 @@ export function deserializeState(data) {
   s.fusePity = Math.max(0, num(data.fusePity));
   s.stats = { ...s.stats, ...(data.stats || {}) };
   s.settings = sanitizeSettings(data.settings);
+  s.difficulty = isMode(data.difficulty) ? data.difficulty : null;
+  // saves from before the tutorial existed (or experienced players) do not get a surprise tutorial
+  s.tutorial = sanitizeTutorial(data.tutorial) || (s.level > 1 || (s.stats.rolls || 0) > 2 ? legacyTutorialState() : createTutorialState());
   s.base = { side: Math.min(MAX_SIDE, Math.max(START_SIDE, Math.floor(num(data.base?.side, START_SIDE)))), expansions: Math.max(0, Math.floor(num(data.base?.expansions))), mega: Math.max(0, Math.floor(num(data.base?.mega))) };
   s.layers = (Array.isArray(data.layers) ? data.layers : []).slice(0, 1000).map((l) => ({
     count: Math.max(0, Math.floor(num(l?.count))),
@@ -217,6 +227,7 @@ export function deserializeState(data) {
     const uid = Number.isFinite(Number(raw.uid)) ? Number(raw.uid) : s.nextUid++;
     const item = { uid, loc: 'bag', tpl: raw.tpl, tier: Math.max(0, Math.floor(num(raw.tier))), vs: num(raw.vs), hy: raw.hy || null, mut: Array.isArray(raw.mut) ? raw.mut : [], lv: Math.max(1, Math.floor(num(raw.lv, s.level))) };
     if (typeof raw.nick === 'string' && raw.nick.trim()) item.nick = raw.nick.slice(0, 24);
+    if (raw.practice === true) item.practice = true;
     if (Number.isInteger(raw.skin) && raw.skin >= 0 && raw.skin < 8) item.skin = raw.skin;
     if (raw.loc === 'placed') {
       const x = Math.floor(num(raw.x, -1));

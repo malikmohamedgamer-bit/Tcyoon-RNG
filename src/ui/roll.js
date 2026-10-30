@@ -42,7 +42,7 @@ export function createRollPanel(ctx) {
       return `
       <h2>🎲 Roll <span class="muted" style="font-size:.8rem">Luck ×${fmt(luck)}</span></h2>
       ${ui.msg ? `<p class="msg ${ui.msg.kind || ''}" role="status">${esc(ui.msg.text)}</p>` : ''}
-      <button class="primary big-btn" data-act="roll" data-id="1" ${full || broke ? 'disabled' : ''}>
+      <button class="primary big-btn" data-tut="roll" data-act="roll" data-id="1" ${full || broke ? 'disabled' : ''}>
         ${free > 0 ? `Free roll (${free})` : `Roll — $${fmt(cost)}`}</button>
       <div class="row2" style="margin-top:.4rem">${batchBtn(10, ECON.roll.x10Level)}${batchBtn(100, ECON.roll.x100Level)}
         ${

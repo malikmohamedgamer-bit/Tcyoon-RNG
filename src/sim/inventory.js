@@ -101,6 +101,7 @@ export function fuse(state, uids, rng = state.rng) {
   const parent = rng.pick(items);
   const tier = items[0].tier + (success ? 1 : 0);
   const base = { tpl: parent.tpl, tier, vs: rng.chance(0.5) ? parent.vs : 0, hy: parent.hy || null, mut: [], lv: Math.min(...items.map((x) => x.lv ?? state.level)) };
+  if (items.every((x) => x.practice)) base.practice = true; // fusing only practice items yields a practice item
   const logLuck = luckOf(state).log10Num();
   if (success) {
     const pool = items.flatMap((it) => it.mut || []);

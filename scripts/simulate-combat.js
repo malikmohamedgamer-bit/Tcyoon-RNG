@@ -20,6 +20,7 @@ import { waveHp } from '../src/gen/monsters.js';
 const args = process.argv.slice(2);
 const flag = (n, d) => { const i = args.indexOf('--' + n); return i >= 0 ? Number(args[i + 1]) : d; };
 const quick = args.includes('--quick');
+const DIFFICULTY = args.includes('--difficulty') ? args[args.indexOf('--difficulty') + 1] : null;
 const TIERS = flag('tiers', quick ? 12 : 30);
 const BOSSES = flag('bosses', quick ? 5 : 12);
 const SEED = flag('seed', 1);
@@ -34,8 +35,9 @@ export const BOUNDS = {
 const TURRETS = ['gun_turret', 'flame_tower', 'frost_spire', 'arc_coil', 'void_cannon', 'gun_turret'];
 
 /** The reference "reasonable build": 6 turrets and 2 weapons of tier t on a 6x6 base. */
-export function buildState(tier, seed = SEED) {
+export function buildState(tier, seed = SEED, difficulty = DIFFICULTY) {
   const s = createState(seed, 0);
+  if (difficulty) s.difficulty = difficulty;
   s.level = 12;
   for (const u of [...s.bag]) delete s.items[u];
   s.bag = [];
@@ -51,24 +53,24 @@ export function buildState(tier, seed = SEED) {
   return s;
 }
 
-function beats(tier, wave, seed) {
-  const s = buildState(tier, seed);
+function beats(tier, wave, seed, difficulty = DIFFICULTY) {
+  const s = buildState(tier, seed, difficulty);
   s.combat.wave = wave;
   const enc = createEncounter(s, 'wave');
   return runEncounter(enc, { maxSeconds: 300 }) === 'win';
 }
 
 /** Highest wave the tier-t reference build beats (binary search; waves are monotonically harder). */
-export function maxWave(tier, seed = SEED) {
+export function maxWave(tier, seed = SEED, difficulty = DIFFICULTY) {
   let lo = 0;
   let hi = 4;
-  while (hi < 5000 && beats(tier, hi, seed)) {
+  while (hi < 5000 && beats(tier, hi, seed, difficulty)) {
     lo = hi;
     hi *= 2;
   }
   while (hi - lo > 1) {
     const mid = (lo + hi) >> 1;
-    if (beats(tier, mid, seed)) lo = mid;
+    if (beats(tier, mid, seed, difficulty)) lo = mid;
     else hi = mid;
   }
   return lo;
@@ -113,7 +115,7 @@ function maxWaveWeapons(tier, seed, manual) {
 }
 
 function main() {
-  console.log(`Combat simulation: tiers 1-${TIERS}, bosses 0-${BOSSES - 1}, seed ${SEED}${quick ? ' (quick)' : ''}`);
+  console.log(`Combat simulation: tiers 1-${TIERS}, bosses 0-${BOSSES - 1}, seed ${SEED}${DIFFICULTY ? `, difficulty ${DIFFICULTY}` : ''}${quick ? ' (quick)' : ''}`);
   const t0 = Date.now();
   const checks = [];
   const check = (name, ok, detail) => checks.push({ name, ok, detail });
@@ -162,6 +164,10 @@ function main() {
   const rows = tiersM.map((t) => ({ t, auto: maxWaveWeapons(t, SEED, false), manual: maxWaveWeapons(t, SEED, true) }));
   check('6. manual play beats waves auto play cannot (never worse), so it is faster progress but never required', rows.every((r) => r.manual >= r.auto + 1), rows.map((r) => `tier ${r.t}: auto wave ${r.auto} vs manual wave ${r.manual}`).join('; '));
 
+  if (!DIFFICULTY) {
+    const rel = [2, 6, 10].map((t) => ({ t, std: best[t - 1] ?? maxWave(t), rel: maxWave(t, SEED, 'relaxed') }));
+    check('7. relaxed is easier but not trivial: it beats at least as many waves, but at most 6 more', rel.every((r) => r.rel >= r.std && r.rel <= r.std + 6), rel.map((r) => `tier ${r.t}: standard wave ${r.std} vs relaxed wave ${r.rel}`).join('; '));
+  }
   console.log(`\n(${((Date.now() - t0) / 1000).toFixed(1)} s)\n`);
   let fail = 0;
   for (const c of checks) {

@@ -19,6 +19,7 @@ import * as shop from './sim/shop.js';
 import * as combat from './sim/combat.js';
 import * as quests from './sim/quests.js';
 import { applyOffline, WELCOME_MIN_SECONDS } from './sim/offline.js';
+import * as tutorial from './sim/tutorial.js';
 
 export function createGame({ storage, seed } = {}) {
   const save = new SaveManager({ version: SAVE_VERSION, migrations: MIGRATIONS, ...(storage ? { storage } : {}) });
@@ -27,6 +28,8 @@ export function createGame({ storage, seed } = {}) {
   const savedAt = loaded.data ? Number(loaded.data.savedAt) : 0;
   let state = loaded.data ? deserializeState(loaded.data) : createState(seed);
   refreshProduction(state);
+  // transient callbacks the pure tutorial uses to start its scripted wave (never serialised)
+  const hooks = () => (state._tutorialHooks ||= { demoWave: () => combat.startEncounter(state, 'demo') });
   const offlineHooks = { waves: (st, sec) => combat.offlineWaves(st, sec) };
   const game = {
     offlineHooks,
@@ -48,8 +51,25 @@ export function createGame({ storage, seed } = {}) {
       stepAutoRoll(state, dt);
       stepProduction(state, dt, addMoney);
       shop.stepBoosters(state, dt);
+      if (state.tutorial.status === 'active') {
+        hooks();
+        tutorial.tickTutorial(state, dt);
+      }
       const r = combat.stepCombat(state, dt, game.manualInput);
       if (r) game.lastCombat = r;
+    },
+    /** Tutorial controls (the state machine itself lives in sim/tutorial.js). */
+    tutorial: {
+      start: ({ replay = false } = {}) => (hooks(), tutorial.startTutorial(state, { replay })),
+      resume: () => (hooks(), tutorial.resumeTutorial(state)),
+      skip: ({ forever = false } = {}) => tutorial.skipTutorial(state, { forever }),
+      skipStep: () => (hooks(), tutorial.skipStep(state)),
+      ack: () => tutorial.ackTutorial(state),
+      flag: (name) => tutorial.setTutorialFlag(state, name),
+      summary: () => tutorial.skipSummary(state),
+      get step() {
+        return tutorial.currentStep(state);
+      },
     },
     manualInput: null,
     lastCombat: null,

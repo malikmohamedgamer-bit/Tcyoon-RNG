@@ -2,7 +2,7 @@
 // drive time and read state deterministically instead of sleeping.
 import { expect } from '@playwright/test';
 
-export async function openGame(page, { clearSave = true, init } = {}) {
+export async function openGame(page, { clearSave = true, init, tutorial = false } = {}) {
   const errors = [];
   page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
   page.on('console', (m) => {
@@ -12,6 +12,8 @@ export async function openGame(page, { clearSave = true, init } = {}) {
   if (init) await page.addInitScript(init);
   await page.goto('/');
   await page.waitForFunction(() => window.__game && window.__game.loop && window.__game.loop.frames > 2);
+  // older tests are about other features: skip the first-run tutorial unless a test asks for it
+  if (!tutorial) await page.evaluate(() => window.__game.game.tutorial.skip({ forever: true }));
   return errors;
 }
 

@@ -123,3 +123,38 @@ export function confirmDialog({ title, html, confirmText = 'Confirm', cancelText
     no.focus();
   });
 }
+
+/**
+ * Modal dialog with any number of choices. `focus` is the id of the choice that gets keyboard focus
+ * (the safe default); Esc picks `escape` (default: the focus choice). Tab is trapped, focus returns afterwards.
+ * Resolves with the chosen id.
+ */
+export function choiceDialog({ title, html, choices, focus, escape }) {
+  const root = document.getElementById('modal-root');
+  const prev = document.activeElement;
+  return new Promise((resolve) => {
+    root.innerHTML = `<div class="backdrop"><div class="modal" role="alertdialog" aria-modal="true" aria-labelledby="dlg-title" aria-describedby="dlg-body">
+      <h2 id="dlg-title">${esc(title)}</h2><div id="dlg-body">${html}</div>
+      <div class="choices">${choices.map((c) => `<button type="button" class="${c.primary ? 'primary' : ''}" data-choice="${esc(c.id)}">${esc(c.label)}</button>`).join('')}</div></div></div>`;
+    const btns = [...root.querySelectorAll('[data-choice]')];
+    const close = (v) => {
+      root.innerHTML = '';
+      document.removeEventListener('keydown', onKey, true);
+      if (prev && prev.focus) prev.focus();
+      resolve(v);
+    };
+    const onKey = (e) => {
+      if (e.key === 'Escape') {
+        e.stopPropagation();
+        close(escape || focus);
+      } else if (e.key === 'Tab') {
+        e.preventDefault();
+        const i = btns.indexOf(document.activeElement);
+        btns[(i + (e.shiftKey ? -1 : 1) + btns.length) % btns.length].focus();
+      }
+    };
+    document.addEventListener('keydown', onKey, true);
+    for (const b of btns) b.addEventListener('click', () => close(b.dataset.choice));
+    (btns.find((b) => b.dataset.choice === focus) || btns[0]).focus();
+  });
+}

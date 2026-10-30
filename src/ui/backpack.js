@@ -36,7 +36,7 @@ export function createBackpackPanel(ctx) {
         <button data-act="sort">Sort</button>
         <button data-act="upgrade" ${s.money.lt(backpackCost(s)) ? 'disabled' : ''}>Bigger backpack $${fmt(backpackCost(s))}</button>
       </div>
-      <div class="card">
+      <div class="card" data-tut="fuse">
         <b>Fuse</b> <span class="muted">${ECON.fuse.min}–${ECON.fuse.max} items of the same tier → one item of the next tier.
         Odds: ${Math.round(ECON.fuse.baseChance * 100)}% for ${ECON.fuse.min}, +${Math.round(ECON.fuse.perExtra * 100)}% per extra item, +${Math.round(ECON.fuse.identicalBonus * 100)}% if all the same item, max ${Math.round(ECON.fuse.maxChance * 100)}%.
         A failed fuse still gives one item of the same tier.</span>

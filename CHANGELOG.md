@@ -79,3 +79,13 @@ All notable changes, by milestone. Dates are build dates.
 - **The long-numbers soak found a real freeze** (BUGS.md #29): with tower-sized XP multipliers the level search looped forever. Levels are now capped at 10^12; regression tests in `tests/leveling.test.js` and `tests/longnumbers.test.js` (217 unit tests).
 - README (setup, controls, every rule and formula, add-by-data guides, tests, simulators, Pages deploy), VERIFICATION.md (what was checked, results, what could not be verified, requirements review), BUGS.md up to #29.
 - Final run: lint clean, 217 unit tests, 56 e2e tests, both simulators (`--quick`) pass; 30-day economy simulation passes 8/8 (run before the final level-cap change).
+
+# Follow-up project: onboarding, clarity, speed, index, redesign, reveals, hosting
+
+## F1 — Tutorial engine, skip confirmation, data
+- `sim/tutorial.js` + `data/tutorial.json`: pure tutorial state machine (no DOM, no clock). 16 data-driven steps (one sentence of at most 20 words each, enforced by a test); each step advances by itself when its condition holds (stat since the step began, money earned, a UI flag, or "Got it"). Saved with the game (resumable after reload), replayable, never reached by a surprise on old saves.
+- Assists (documented in README): a top-up of roll money, a free roll, and **practice items** (worth $0, so replaying can never farm money) when the backpack lacks what a step needs; a scripted **demo wave** (no penalty, no wave progress) in `sim/combat.js`.
+- Small tutorial rewards are paid exactly once per save (ledger), also on replay; skipping a step never pays its reward.
+- `ui/tutorial.js`: spotlight ring + one-sentence card. The overlay never blocks input and never steals focus; ring pulse stops with reduced motion; each step is announced to screen readers; "Skip this step" appears when a step is stuck for 20 s.
+- Skipping asks "Skip the tutorial?" with what you would miss and three choices (Keep learning = default focus and Esc, Skip for now, Skip and don't ask again); a Resume chip appears after "Skip for now"; Settings → Help and tutorial replays it.
+- New `choiceDialog` (focus-trapped, any number of choices). e2e helper skips the tutorial by default so older tests keep their meaning.

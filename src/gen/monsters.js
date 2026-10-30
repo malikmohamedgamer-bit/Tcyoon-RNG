@@ -27,11 +27,11 @@ export const waveSlots = (w) => Math.min(40, 4 + Math.floor(1.2 * Math.pow(Math.
  * The enemies of wave w. Each entry: { tpl, name, hp (Big), speed, range, dpsFrac, res, traits, t (spawn time s), angle }.
  * `scale` multiplies slot count and hp share for rush/arena waves (more enemies, same toughness).
  */
-export function buildWave(seed, w, { slotMult = 1 } = {}) {
+export function buildWave(seed, w, { slotMult = 1, hpMult = 1 } = {}) {
   const rng = rngFrom(seed, 'wave', w);
   const slots = Math.min(60, Math.round(waveSlots(w) * slotMult));
   const pool = EN.templates.filter((t) => t.minWave <= w);
-  const baseHp = waveHp(w);
+  const baseHp = waveHp(w).mul(hpMult);
   const out = [];
   let total = Big.fromNumber(0);
   for (let i = 0; i < slots; i++) {

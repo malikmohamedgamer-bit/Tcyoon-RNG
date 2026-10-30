@@ -78,6 +78,7 @@ export const backpackCost = (state) => Big.fromNumber(ECON.backpack.baseCost).mu
  * Capped at 50% of that price so "roll then sell" can never print money.
  */
 export function sellValue(state, item) {
+  if (item.practice) return ZERO; // tutorial practice items are worth nothing (they cannot be farmed)
   const s = ECON.sell;
   const frac = Math.min(s.maxFraction, s.perTier * (1 + Math.min(item.tier, 1000)) + s.perMutation * mutationCount(item));
   return rollCostAtLevel(state, item.lv ?? state.level).mul(frac);

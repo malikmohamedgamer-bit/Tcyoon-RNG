@@ -19,6 +19,7 @@ import { ZERO } from '../core/bignum.js';
 import { rngFrom } from '../core/rng.js';
 import { emit } from '../core/events.js';
 import { buildWave, waveHp, enemyTemplate } from '../gen/monsters.js';
+import { diffMods } from './difficulty.js';
 import { bossDef, mechanic } from '../gen/bosses.js';
 import { itemStats, typeOf } from './items.js';
 import { modifiers, rollCost, addMoney, luckOf } from './economy.js';
@@ -31,6 +32,8 @@ import { refreshProduction } from './production.js';
 import { upgradeLevel } from './shop.js';
 
 export const WAVE_INTERVAL = EN.base.waveInterval;
+/** Seconds between waves for this save (Relaxed mode slows them down). */
+export const waveInterval = (state) => WAVE_INTERVAL * diffMods(state).wavePace;
 export const SPAWN_RADIUS = EN.base.spawnRadius;
 export const WAVE_START_LEVEL = 4;
 export const MANUAL_BONUS = 1.5;
@@ -82,7 +85,7 @@ const resistFactor = (res, dtype) => (dtype === 'void' ? 1 : Math.max(0.05, 1 - 
  * The encounter object is transient (never saved); a reload mid-fight simply restarts the wave timer.
  */
 export function createEncounter(state, kind, { bossN = state.combat.bossIndex } = {}) {
-  const w = state.combat.wave;
+  const w = kind === 'demo' ? 1 : state.combat.wave;
   const baseMax = baseMaxHp(state, kind === 'boss' ? Math.max(w, bossDef(bossN).wave) : w);
   const enc = {
     kind,
@@ -108,10 +111,10 @@ export function createEncounter(state, kind, { bossN = state.combat.bossIndex } 
   if (kind === 'boss') {
     const def = bossDef(bossN);
     enc.boss = { def, spawned: false, summonT: 0, pulseT: 0 };
-    enc.timeLimit = def.timeLimit;
+    enc.timeLimit = def.timeLimit * diffMods(state).bossTime;
     enc.queue.push({ t: 0, boss: true });
   } else {
-    const wv = buildWave(state.seed, w, { slotMult: kind === 'rush' ? RUSH.slotMult : 1 });
+    const wv = buildWave(state.seed, w, { slotMult: kind === 'rush' ? RUSH.slotMult : kind === 'demo' ? 0.5 : 1, hpMult: diffMods(state).enemyHp });
     enc.wave = w;
     enc.totalHp = wv.totalHp;
     enc.queue = wv.enemies.map((e) => ({ t: e.t, e }));
@@ -405,7 +408,7 @@ export const specialFactor = (sp, rof) => (sp && SPECIAL_FACTOR[sp.kind] ? SPECI
  * @returns {{win:boolean, margin:number, baseDamage:number, defenceDps:Big, enemyHp:Big, arrival:number}}
  */
 export function forecastWave(state, w, { slotMult = 1, defenders = null } = {}) {
-  const wv = buildWave(state.seed, w, { slotMult });
+  const wv = buildWave(state.seed, w, { slotMult, hpMult: diffMods(state).enemyHp });
   const defs = defenders || buildDefenders(state);
   const ETA = 0.75;
   // group enemy hp by template for resist/coverage weighting
@@ -503,7 +506,7 @@ function dropWeapon(state, rng, tierPlus) {
 
 export function loseWavePenalty(state) {
   const income = state._p ? state._p.income : ZERO;
-  const lost = state.money.mul(0.02).min(income.mul(30)).nonNeg();
+  const lost = state.money.mul(0.02).min(income.mul(30)).mul(diffMods(state).lossPenalty).nonNeg();
   state.money = state.money.sub(lost).nonNeg(); // never negative, never touches items or the save
   return lost;
 }
@@ -514,6 +517,13 @@ export function settleEncounter(state, enc) {
   enc.settled = true;
   const c = state.combat;
   const r = { kind: enc.kind, outcome: enc.done, wave: enc.wave, kills: enc.kills, lost: ZERO, money: ZERO, items: [] };
+  if (enc.kind === 'demo') {
+    // the scripted tutorial wave: no reward, no penalty, no wave progress
+    state.stats.demoWaves = (state.stats.demoWaves || 0) + 1;
+    emit(state, 'wave', { win: enc.done === 'win', wave: 1, kind: 'demo' });
+    enc.result = r;
+    return r;
+  }
   if (enc.done === 'win') {
     if (enc.kind === 'boss') {
       const def = enc.boss.def;
@@ -576,9 +586,9 @@ export function startEncounter(state, kind) {
   if (kind === 'boss') {
     const c = canFightBoss(state);
     if (!c.ok) return c;
-  } else if (state.level < WAVE_START_LEVEL) return { ok: false, reason: `Waves start at level ${WAVE_START_LEVEL}` };
+  } else if (kind !== 'demo' && state.level < WAVE_START_LEVEL) return { ok: false, reason: `Waves start at level ${WAVE_START_LEVEL}` };
   state._enc = createEncounter(state, kind);
-  if (kind === 'wave') state.combat.timer = WAVE_INTERVAL; // waves come every 60 s start-to-start, however long a fight lasts
+  if (kind === 'wave') state.combat.timer = waveInterval(state); // waves come every 60 s start-to-start, however long a fight lasts
   emit(state, 'fightStart', { kind, wave: state.combat.wave });
   return { ok: true, enc: state._enc };
 }
@@ -640,7 +650,7 @@ export function unequipWeapon(state, uid, { force = false } = {}) {
 export function offlineWaves(state, seconds) {
   const c = state.combat;
   if (state.level < WAVE_START_LEVEL || !(seconds > 0)) return null;
-  const n = Math.floor(seconds / WAVE_INTERVAL);
+  const n = Math.floor(seconds / waveInterval(state));
   if (n < 1) return null;
   const best = bestWinnableWave(state, 1);
   const res = { waves: n, wins: 0, losses: 0, text: '' };

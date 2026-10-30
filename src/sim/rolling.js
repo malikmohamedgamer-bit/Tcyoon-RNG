@@ -107,6 +107,7 @@ export function doRoll(state, count = 1) {
     if (state.freeRoll.count > 0) {
       state.freeRoll.count -= 1;
       res.freeUsed++;
+      state.stats.freeRolls = (state.stats.freeRolls || 0) + 1;
     } else if (trySpend(state, cost)) {
       res.spent = res.spent.add(cost);
     } else {

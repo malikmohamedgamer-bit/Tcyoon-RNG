@@ -8,7 +8,7 @@
 //      after every rebirth, and is never free)
 //   4. time-to-next-rebirth stays within documented bounds
 //   5. numbers stay finite over very long runs
-// Usage: node scripts/simulate-economy.js [--days 30] [--seed 1] [--quick]
+// Usage: node scripts/simulate-economy.js [--days 30] [--seed 1] [--quick] [--difficulty relaxed]
 import { Big } from '../src/core/bignum.js';
 import { newBotState, decide, advance } from './lib/bot.js';
 import { modifiers, rollCost, luckOf } from '../src/sim/economy.js';
@@ -41,8 +41,9 @@ export function allFinite(state) {
   return Number.isFinite(state.level) && Number.isFinite(m.rollCostMult);
 }
 
-export function run({ days, seed = 1, noPrestige = false, rebirthFactor = 1, maxSide = 14, stepScale = 1, minRun = 600, noRoll = false } = {}) {
+export function run({ days, seed = 1, noPrestige = false, rebirthFactor = 1, maxSide = 14, stepScale = 1, minRun = 600, noRoll = false, difficulty = null } = {}) {
   const s = newBotState(seed);
+  if (difficulty) s.difficulty = difficulty;
   const endT = days * 24 * HOUR;
   let t = 0;
   let nextHour = HOUR;
@@ -82,8 +83,8 @@ export function run({ days, seed = 1, noPrestige = false, rebirthFactor = 1, max
 const fmtB = (b) => Big.from(b).format({ digits: 2 });
 const median = (a) => a.slice().sort((x, y) => x - y)[a.length >> 1];
 
-export function evaluate(days, seed, { horizon: horizonDays = 1.5 } = {}) {
-  const r = run({ days, seed });
+export function evaluate(days, seed, { horizon: horizonDays = 1.5, difficulty = null, compare = true } = {}) {
+  const r = run({ days, seed, difficulty });
   const s = r.state;
   const l0 = r.rebirths.filter((x) => x.layer === 0);
   const first = l0[0];
@@ -98,7 +99,7 @@ export function evaluate(days, seed, { horizon: horizonDays = 1.5 } = {}) {
   // exploit baselines: same bot, same seed, 1.5 simulated days, coarser decisions. Income right after a
   // rebirth is deliberately low, so the fair measure is the PEAK income over the last 6 hourly samples.
   const horizon = Math.min(days, horizonDays);
-  const o = { days: horizon, seed, stepScale: 2 };
+  const o = { days: horizon, seed, stepScale: 2, difficulty };
   const base = run(o);
   const noRoll = run({ ...o, noRoll: true });
   const spam = run({ ...o, rebirthFactor: 0, minRun: 0 });
@@ -110,6 +111,14 @@ export function evaluate(days, seed, { horizon: horizonDays = 1.5 } = {}) {
   check('3. rolling remains worthwhile: paid rolling beats never-rolling by >= 10x best-income-so-far at every checkpoint', adv.length > 0 && adv.every((a) => a.d >= BOUNDS.rollingAdvantage), adv.map((a) => `${a.h}h: x10^${a.d.toFixed(1)}`).join(', '));
   check('2b. rebirth-spamming at the minimum threshold is not better than playing', peak(spam) <= peak(base), `peak income (last 6 h of ${horizon} d): spam 1e${peak(spam).toFixed(1)} vs normal 1e${peak(base).toFixed(1)}`);
   check('2c. never prestiging is worse than prestiging', peak(base) >= peak(hoard), `peak income: normal 1e${peak(base).toFixed(1)}/s vs never-prestige 1e${peak(hoard).toFixed(1)}/s after ${horizon} d`);
+  if (compare && !difficulty) {
+    // Relaxed mode must be easier than Standard, but not trivially so (same bot, same seed, same horizon)
+    const rel = run({ days: horizon, seed, stepScale: 2, difficulty: 'relaxed' });
+    const f1 = base.rebirths.find((x) => x.layer === 0);
+    const f2 = rel.rebirths.find((x) => x.layer === 0);
+    const gain = peak(rel) - peak(base);
+    check('6. relaxed mode is easier but not trivial (first rebirth faster by at most 2x, peak income at most 10^3 higher)', !!f1 && !!f2 && f2.t <= f1.t && f2.t >= f1.t / 2 && gain >= 0 && gain <= 3, f1 && f2 ? `first rebirth standard ${formatDuration(f1.t)} vs relaxed ${formatDuration(f2.t)}; peak income relaxed - standard = 10^${gain.toFixed(2)}` : 'no rebirth');
+  }
   return { r, checks, first, gaps };
 }
 
@@ -119,8 +128,10 @@ function main() {
   const quick = args.includes('--quick');
   const days = quick ? 2 : flag('days', 30);
   const seed = flag('seed', 1);
-  console.log(`Economy simulation: ${days} simulated day(s), seed ${seed}${quick ? ' (quick)' : ''}`);
-  const { r, checks } = evaluate(days, seed, { horizon: quick ? 1 : 1.5 });
+  const dIdx = args.indexOf('--difficulty');
+  const difficulty = dIdx >= 0 ? args[dIdx + 1] : null;
+  console.log(`Economy simulation: ${days} simulated day(s), seed ${seed}${difficulty ? `, difficulty ${difficulty}` : ''}${quick ? ' (quick)' : ''}`);
+  const { r, checks } = evaluate(days, seed, { horizon: quick ? 1 : 1.5, difficulty });
   console.log(`\nSimulated ${days} days in ${(r.ms / 1000).toFixed(1)}s real time (${r.decisions} bot decisions)`);
   console.log('\nHour  Income/s   Money      Level  Prestige counts per layer');
   const step = Math.max(1, Math.floor(r.hours.length / 14));

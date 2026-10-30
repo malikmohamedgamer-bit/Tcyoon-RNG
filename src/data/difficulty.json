@@ -1,0 +1,16 @@
+{
+  "_doc": "Difficulty modes, chosen on the first run (changeable in Settings). Each value is a plain multiplier applied by sim/difficulty.js; 1 = unchanged. standard is the reference the simulators were calibrated against. relaxed: income x1.15 (money from production), wavePace x1.5 (a wave every 90 s instead of 60 s, offline waves too), enemyHp x0.85, lossPenalty x0.5 (a lost wave costs half as much), freeRollInterval x0.75 (a free roll every 90 s instead of 120 s), bossTime x1.25 (150 s becomes 187.5 s). Add a mode by adding an object here; add a knob by reading it in sim/difficulty.js.",
+  "default": "standard",
+  "modes": {
+    "standard": {
+      "name": "Standard",
+      "tagline": "The intended pace.",
+      "mods": { "income": 1, "wavePace": 1, "enemyHp": 1, "lossPenalty": 1, "freeRollInterval": 1, "bossTime": 1 }
+    },
+    "relaxed": {
+      "name": "Relaxed",
+      "tagline": "More forgiving: slower waves, smaller penalties, a bit more income.",
+      "mods": { "income": 1.15, "wavePace": 1.5, "enemyHp": 0.85, "lossPenalty": 0.5, "freeRollInterval": 0.75, "bossTime": 1.25 }
+    }
+  }
+}

@@ -23,6 +23,7 @@ import { createRebirthPanel } from './ui/rebirth.js';
 import { createSettingsPanel } from './ui/settings.js';
 import { createPlacement } from './ui/placement.js';
 import { createTouchControls } from './ui/touch.js';
+import { createTutorialUI } from './ui/tutorial.js';
 
 const canvas = document.getElementById('view');
 const game = createGame();
@@ -152,6 +153,7 @@ const ctx = {
     applySettings();
     shell.refresh();
   },
+  tutorialStatus: () => ({ new: 'not started', active: 'in progress', paused: 'paused', skipped: 'skipped', done: `finished (${gs().tutorial.completed}×)` })[gs().tutorial.status] || 'unknown',
   getBindings,
   setBindings: (b) => {
     game.setSetting('bindings', b);
@@ -182,7 +184,12 @@ const ctx = {
   },
 };
 const panels = [createRollPanel(ctx), createBackpackPanel(ctx), createBasePanel(ctx), createShopPanel(ctx), createRewardsPanel(ctx), createCombatPanel(ctx), createRefineryPanel(ctx), createRebirthPanel(ctx), createSettingsPanel(ctx)];
-const shell = createShell({ game, fmt, panels });
+const shell = createShell({ game, fmt, panels, onOpen: (id) => id && game.tutorial.flag('panel:' + id) });
+const tutorialUI = createTutorialUI({ game, shell, placement, gfx, root: document.getElementById('tutorial') });
+// the tutorial's "inspect" step: the player looked at (clicked or focused) an item card
+document.getElementById('panels').addEventListener('click', (e) => {
+  if (e.target.closest('article.item')) game.tutorial.flag('inspect');
+});
 const fight = createFightOverlay(document.getElementById('arena-ui'), ctx);
 const touch = createTouchControls({ root: document.getElementById('touch-root'), placement, game, fmt, toast, touchMove, isManual: () => !!(gs()._enc && gs()._enc.manual) });
 
@@ -289,6 +296,20 @@ function handleEvents() {
       case 'toast':
         toast(e.text);
         break;
+      case 'tutorialAssist':
+        toast(e.text, 4500);
+        announce(e.text);
+        break;
+      case 'tutorialReward':
+        toast(`Tutorial reward: ${e.text}`, 4500);
+        play('reward');
+        announce(`Tutorial reward: ${e.text}`);
+        break;
+      case 'tutorialDone':
+        toast('Tutorial complete! Replay it any time from Settings.', 5000);
+        announce('Tutorial complete.', { urgent: true });
+        play('levelUp');
+        break;
       case 'blocked':
         announce('Backpack is full. Rolls are blocked.', { urgent: true });
         play('error');
@@ -342,6 +363,7 @@ const loop = createLoop({
     syncTheme();
     syncFightCam();
     fight.update(gs());
+    tutorialUI.update(false, dt);
     touch.update();
     uiAcc += dt;
     if (uiAcc >= 0.25) {
@@ -375,10 +397,12 @@ window.__game = {
   debug: game.debug,
   saveNow: () => game.saveNow(),
   gpuAudit: () => gfx.audit(),
+  tutorialUI,
 };
 
 shell.open('roll');
 applySettings();
+if (gs().tutorial.status === 'new') game.tutorial.start(); // first run: begin the guided tutorial
 shell.update(game.income);
 loop.onGap = (gapSeconds) => {
   game.catchUp(Date.now() - gapSeconds * 1000);
