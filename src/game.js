@@ -20,6 +20,9 @@ import * as combat from './sim/combat.js';
 import * as quests from './sim/quests.js';
 import { applyOffline, WELCOME_MIN_SECONDS } from './sim/offline.js';
 import * as tutorial from './sim/tutorial.js';
+import { checkTips } from './sim/tips.js';
+import { setDifficulty } from './sim/difficulty.js';
+import { isUnlocked } from './sim/speed.js';
 
 export function createGame({ storage, seed } = {}) {
   const save = new SaveManager({ version: SAVE_VERSION, migrations: MIGRATIONS, ...(storage ? { storage } : {}) });
@@ -45,8 +48,8 @@ export function createGame({ storage, seed } = {}) {
     },
 
     /** Advance the simulation by dt seconds (fixed step from the loop). */
-    step(dt) {
-      state.playtime += dt;
+    step(dt, realDt = dt) {
+      state.playtime += realDt; // real seconds: game speed never makes playtime rewards come faster
       accrueFreeRolls(state, dt);
       stepAutoRoll(state, dt);
       stepProduction(state, dt, addMoney);
@@ -55,8 +58,17 @@ export function createGame({ storage, seed } = {}) {
         hooks();
         tutorial.tickTutorial(state, dt);
       }
-      const r = combat.stepCombat(state, dt, game.manualInput);
-      if (r) game.lastCombat = r;
+      // combat keeps its fidelity at any speed: big steps are split into <= 0.1 s sub-steps
+      const n = Math.max(1, Math.ceil(dt / 0.1));
+      for (let i = 0; i < n; i++) {
+        const r = combat.stepCombat(state, dt / n, game.manualInput);
+        if (r) game.lastCombat = r;
+      }
+      state._tipT = (state._tipT || 0) + dt;
+      if (state._tipT >= 1) {
+        state._tipT = 0;
+        checkTips(state);
+      }
     },
     /** Tutorial controls (the state machine itself lives in sim/tutorial.js). */
     tutorial: {
@@ -84,6 +96,7 @@ export function createGame({ storage, seed } = {}) {
     unequip: (uid) => combat.unequipWeapon(state, uid),
     /** Change one setting (dot path, e.g. 'camera.speed'); the value is re-validated as a whole. */
     setSetting(path, value) {
+      if (path === 'gameSpeed' && !isUnlocked(state, Number(value))) return state.settings; // locked speeds cannot be chosen
       const next = JSON.parse(JSON.stringify(state.settings));
       const parts = path.split('.');
       let o = next;
@@ -91,6 +104,12 @@ export function createGame({ storage, seed } = {}) {
       o[parts.at(-1)] = value;
       state.settings = sanitizeSettings(next);
       return state.settings;
+    },
+    /** Pick Standard or Relaxed (first-run choice, also in Settings). Takes effect immediately. */
+    setDifficulty(id) {
+      const ok = setDifficulty(state, id);
+      if (ok) refreshProduction(state);
+      return ok;
     },
     nameItem(uid, nick, skin) {
       const it = state.items[uid];

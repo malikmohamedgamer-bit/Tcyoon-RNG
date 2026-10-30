@@ -2,7 +2,7 @@
 // drive time and read state deterministically instead of sleeping.
 import { expect } from '@playwright/test';
 
-export async function openGame(page, { clearSave = true, init, tutorial = false } = {}) {
+export async function openGame(page, { clearSave = true, init, tutorial = false, pace = 'standard' } = {}) {
   const errors = [];
   page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
   page.on('console', (m) => {
@@ -12,6 +12,13 @@ export async function openGame(page, { clearSave = true, init, tutorial = false 
   if (init) await page.addInitScript(init);
   await page.goto('/');
   await page.waitForFunction(() => window.__game && window.__game.loop && window.__game.loop.frames > 2);
+  // first run: choose the pace (Relaxed/Standard dialog); a returning save has no dialog
+  await page.waitForFunction(() => document.querySelector('.modal [data-choice]') || window.__game.state.difficulty !== null || window.__game.state.tutorial.status !== 'new');
+  const choice = page.locator(`.modal [data-choice="${pace}"]`);
+  if (await choice.count()) {
+    await choice.click();
+    await page.waitForFunction(() => window.__game.state.difficulty !== null);
+  }
   // older tests are about other features: skip the first-run tutorial unless a test asks for it
   if (!tutorial) await page.evaluate(() => window.__game.game.tutorial.skip({ forever: true }));
   return errors;

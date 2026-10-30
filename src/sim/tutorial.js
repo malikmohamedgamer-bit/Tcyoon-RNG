@@ -68,6 +68,7 @@ export function stepDone(state, step) {
 function bagCount(state, spec) {
   return state.bag.filter((u) => {
     const it = state.items[u];
+    if (spec.tier != null && it.tier !== spec.tier) return false; // fuse needs same-tier items
     return spec.tpl ? it.tpl === spec.tpl : typeOf(it) === spec.type;
   }).length;
 }
@@ -97,7 +98,7 @@ function runAssist(state, step) {
     const missing = Math.max(0, (spec.n || 1) - bagCount(state, spec));
     for (let i = 0; i < missing; i++) {
       const tpl = spec.tpl || PRACTICE_TPL[spec.type];
-      addToBag(state, { tpl, tier: 0, vs: 0, hy: null, mut: [], practice: true }, { force: true });
+      addToBag(state, { tpl, tier: spec.tier || 0, vs: 0, hy: null, mut: [], practice: true }, { force: true });
     }
     if (missing) emit(state, 'tutorialAssist', { text: `Here ${missing === 1 ? 'is a practice item' : `are ${missing} practice items`} (worth $0).` });
   }

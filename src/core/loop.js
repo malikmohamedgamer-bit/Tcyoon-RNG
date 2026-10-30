@@ -34,13 +34,17 @@ export function createLoop({ update, render, step = 0.05, maxSteps = 10, raf, ca
     if (dtReal > 2 && loop.onGap) {
       loop.onGap(dtReal);
     } else if (!loop.paused) {
+      // Up to 4x the sim runs more fixed steps per frame; beyond that the step itself grows (speed/4 x step)
+      // so the per-frame work stays bounded however fast the player's unlocked speed is. Pure speed scaling:
+      // simulated seconds per real second == speed (until the frame cap), nothing else changes.
+      const stp = step * Math.max(1, loop.speed / 4);
       acc += Math.min(dtReal, step * maxSteps) * loop.speed;
       let n = 0;
-      while (acc >= step && n < maxSteps) {
-        update(step);
+      while (acc >= stp && n < maxSteps) {
+        update(stp, stp / Math.max(loop.speed, 1e-9));
         loop.simSteps++;
-        loop.simTime += step;
-        acc -= step;
+        loop.simTime += stp;
+        acc -= stp;
         n++;
       }
       if (n === maxSteps) acc = 0;
@@ -61,7 +65,7 @@ export function createLoop({ update, render, step = 0.05, maxSteps = 10, raf, ca
   function advance(seconds) {
     const n = Math.max(0, Math.round(seconds / step));
     for (let i = 0; i < n; i++) {
-      update(step);
+      update(step, step);
       loop.simSteps++;
       loop.simTime += step;
     }

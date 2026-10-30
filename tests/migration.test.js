@@ -103,7 +103,7 @@ import { sanitizeSettings, defaultSettings } from '../src/sim/state.js';
 
 test('settings sanitiser: defaults, clamping, enum checks, hostile input, key bindings', () => {
   assert.deepEqual(sanitizeSettings(undefined), sanitizeSettings(defaultSettings()));
-  const bad = sanitizeSettings({ pixelSize: 999, quality: 'ultra', numberFormat: 'hex', accent: 'red', themeOverride: 'lava', uiScale: -5, gameSpeed: 3, volume: { master: 9, sfx: 'x' }, camera: { speed: 100 }, hiddenPanels: [1, 'shop'], hud: { fps: 0, bogus: true }, bindings: { rotate: ['KeyZ'], x: 'no', y: [1] } });
+  const bad = sanitizeSettings({ pixelSize: 999, quality: 'ultra', numberFormat: 'hex', accent: 'red', themeOverride: 'lava', uiScale: -5, gameSpeed: 'fast', volume: { master: 9, sfx: 'x' }, camera: { speed: 100 }, hiddenPanels: [1, 'shop'], hud: { fps: 0, bogus: true }, bindings: { rotate: ['KeyZ'], x: 'no', y: [1] } });
   assert.equal(bad.pixelSize, 16);
   assert.equal(bad.quality, 'medium');
   assert.equal(bad.numberFormat, 'suffix');

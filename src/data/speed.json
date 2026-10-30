@@ -1,0 +1,11 @@
+{
+  "_doc": "Game speed. Speeds at or below 1x are never locked (an accessibility option). Faster speeds are unlocked by progress; `unlocks` lists the hand-made ones, `generated` makes the speed 2^k for every k >= from forever. req.kind: level {value} | rebirths {value: lifetime rebirths} | layerCount {layer, value: prestiges of that layer} | tree {layer, node, level} | upgrade {id, level} (shop upgrades reset on rebirth, so they re-lock). Speed only scales the simulation: never the real clock, saves or offline progress. Add an unlock by adding an object here.",
+  "free": [0.5, 0.75, 1],
+  "default": 1,
+  "unlocks": [
+    { "speed": 2, "req": { "kind": "level", "value": 10 } },
+    { "speed": 4, "req": { "kind": "level", "value": 30 } },
+    { "speed": 8, "req": { "kind": "rebirths", "value": 1 } }
+  ],
+  "generated": { "from": 4, "kind": "rebirths", "base": 2, "step": 1 }
+}

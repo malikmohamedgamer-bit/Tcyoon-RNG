@@ -139,6 +139,44 @@ Display modes: suffixes (K, M, B … aa, ab …), scientific, engineering.
 `core/rng.js` is a seeded sfc32 generator with save/restore and `fork`. Everything random (rolls, fuse, mutations, waves, bosses, rotating shop) derives from the
 world seed in the save, so a run is reproducible.
 
+## Learning the game: tutorial, tips and difficulty
+
+**First run.** A new save first asks for a pace (Relaxed or Standard; changeable any time in Settings), then starts the guided tutorial. The tutorial runs inside the real game:
+16 short steps (`src/data/tutorial.json`, one sentence of at most 20 words each) spotlight the exact button or tile, and each step advances **by itself** when you did the thing
+(roll, open the backpack, place the drill, place the stall, watch money rise, buy an upgrade, use a free roll, inspect rarity, read about luck and mutations, place a turret,
+watch a practice wave, peek at Rebirth, fuse, sell). The spotlight never blocks input and never steals keyboard focus; the card is reachable with Tab; every step is announced to screen readers;
+with reduced motion the ring does not pulse.
+
+* **Skipping asks "Skip the tutorial?"** It lists what you would miss and offers *Keep learning* (default focus, also Esc), *Skip for now* (a Resume chip stays) and *Skip and don't ask again*. The tutorial can be replayed from **Settings → Help and tutorial** at any time.
+* **Resumable**: the step is saved with the game. Old saves and experienced players never get a surprise tutorial.
+* **Assists** (so a step can always be finished): a top-up of roll money (only if you are short, once per save), one free roll (once), **practice items** when the backpack lacks what a step needs (a drill, a market stall, a turret, three belts for fusing), and a **scripted practice wave** (half the monsters of wave 1, no penalty, no wave progress, no rewards). Practice items are worth $0 and cannot be sold for money, so replaying the tutorial can never farm anything. If a step is stuck for 20 seconds, "Skip this step" appears.
+* **Rewards**: a free roll, 2 roll prices of money and 3 roll prices of money + a free roll at three steps; each is paid **exactly once per save** (ledger), also when the tutorial is replayed. Skipping a step pays nothing.
+
+**Tips.** Short one-time hints for new systems (`src/data/tips.json`): backpack full, first mutation, first refiner, first wave, bosses unlocked, first boss, rebirth ready, first rebirth, a new prestige layer, a faster game speed unlocked.
+Each shows once (never while the tutorial runs), has an optional button that opens the right panel, can be turned off in Settings, and is listed with its text on **Settings → Help and tutorial → Tips seen** (unseen ones show as ???).
+
+**Difficulty** (`src/data/difficulty.json`, `src/sim/difficulty.js`). Standard is the reference the simulators were calibrated against. **Relaxed** changes exactly these multipliers, nothing else:
+
+| | Standard | Relaxed |
+|---|---|---|
+| Income from production | ×1 | ×1.15 |
+| Time between waves (also offline waves) | 60 s | 90 s |
+| Enemy health | ×1 | ×0.85 |
+| Money lost when a wave is lost | ×1 | ×0.5 |
+| Free roll every | 120 s | 90 s |
+| Time to beat a boss | ×1 | ×1.25 |
+
+Both modes are checked by the simulators (`npm run sim:economy -- --difficulty relaxed`, `npm run sim:combat -- --difficulty relaxed`): every check passes in Relaxed too, and the standard run adds a check that Relaxed is easier but not trivial.
+Measured honestly: with the bot, Relaxed reaches the third prestige layer 9% sooner (5 h 56 m vs 6 h 30 m); the first rebirths are equal (the bot waits 10 minutes between rebirths in both modes); and the 15% lower enemy health does not change the highest wave a given build beats (the real relief is slower waves, a halved penalty, more boss time and a little more income).
+
+## Game speed
+
+Speed starts at **1×**. Slower speeds (0.5×, 0.75×) are an accessibility option and are never locked. Faster speeds are unlocked by progress; the rules are data in `src/data/speed.json`:
+2× at level 10, 4× at level 30, 8× after your first rebirth, and then 16×, 32×, 64× … forever (2^k needs `k − 2` rebirths from 16× on).
+**Settings → Game speed** lists locked options as locked with their requirement ("unlocks at level 10"), and a locked speed cannot be chosen (the setting is validated in the simulation, not only in the UI).
+Speed scales the simulation only (`core/loop.js`): saves, the real clock and offline progress never see it (offline progress is closed-form from the real elapsed time, so it is identical at every speed, which a unit test checks), and playtime counts real seconds.
+Above 4× the fixed step grows (speed/4 × 0.05 s) so the work per frame stays bounded, and combat is still simulated in steps of at most 0.1 s.
+
 ## Saves
 `localStorage` key `tcyoon-rng:save`: `{ version, savedAt, data }`. Version 2 is current; `MIGRATIONS[1]` upgrades v1 (fixture in `tests/fixtures/save-v1.json`).
 An unreadable save is copied to a backup key and the game starts fresh (the Settings panel says so). **Settings → Save data** exports a `TRNG1.<base64>.<hash>` text, imports it (hash verified, corrupt text refused)

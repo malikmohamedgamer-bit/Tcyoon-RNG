@@ -9,7 +9,7 @@ import { createRenderer } from './render/scene.js';
 import { attachPointerControls } from './render/camera.js';
 import { regionTheme, themeById } from './gen/themes.js';
 import { isWeapon } from './sim/items.js';
-import { makeFmt, toast, confirmDialog, esc } from './ui/dom.js';
+import { makeFmt, toast, confirmDialog, choiceDialog, esc } from './ui/dom.js';
 import { announce, applyA11y, prefersReducedMotion } from './ui/a11y.js';
 import { createShell } from './ui/hud.js';
 import { createRollPanel } from './ui/roll.js';
@@ -24,6 +24,9 @@ import { createSettingsPanel } from './ui/settings.js';
 import { createPlacement } from './ui/placement.js';
 import { createTouchControls } from './ui/touch.js';
 import { createTutorialUI } from './ui/tutorial.js';
+import { effectiveSpeed } from './sim/speed.js';
+import { createTipsUI } from './ui/tips.js';
+import { MODES } from './sim/difficulty.js';
 
 const canvas = document.getElementById('view');
 const game = createGame();
@@ -109,7 +112,7 @@ function applySettings() {
   gfx.cam.speed = s.camera.speed;
   gfx.setQuality(s.quality);
   gfx.setPixelSize(s.pixelSize);
-  loop.speed = s.gameSpeed;
+  loop.speed = effectiveSpeed(gs());
   audio.applyVolumes();
   if (s.music && audio.state === 'running') audio.startMusic();
   else if (!s.music) audio.stopMusic();
@@ -190,6 +193,7 @@ const tutorialUI = createTutorialUI({ game, shell, placement, gfx, root: documen
 document.getElementById('panels').addEventListener('click', (e) => {
   if (e.target.closest('article.item')) game.tutorial.flag('inspect');
 });
+const tipsUI = createTipsUI({ root: document.getElementById('tips'), game, shell });
 const fight = createFightOverlay(document.getElementById('arena-ui'), ctx);
 const touch = createTouchControls({ root: document.getElementById('touch-root'), placement, game, fmt, toast, touchMove, isManual: () => !!(gs()._enc && gs()._enc.manual) });
 
@@ -296,6 +300,9 @@ function handleEvents() {
       case 'toast':
         toast(e.text);
         break;
+      case 'tip':
+        tipsUI.push(e);
+        break;
       case 'tutorialAssist':
         toast(e.text, 4500);
         announce(e.text);
@@ -338,7 +345,7 @@ function pollCameraKeys(dt) {
 // ------------------------------------------------------------------ loop
 let uiAcc = 0;
 const loop = createLoop({
-  update: (dt) => {
+  update: (dt, realDt) => {
     const enc = gs()._enc;
     if (enc && enc.manual) {
       // camera-relative movement: keys and joystick
@@ -351,7 +358,7 @@ const loop = createLoop({
       const r = (input.isDown('moveRight') ? 1 : 0) - (input.isDown('moveLeft') ? 1 : 0) + touchMove.x;
       game.manualInput = { mx: fx * f + rx * r, mz: fz * f + rz * r, ax: aim.x, az: aim.z, dash: flags.dash, nova: flags.nova, shield: flags.shield };
     } else game.manualInput = null;
-    game.step(dt);
+    game.step(dt, realDt);
     flags.dash = flags.nova = flags.shield = false;
   },
   render: (alpha, dt) => {
@@ -398,11 +405,11 @@ window.__game = {
   saveNow: () => game.saveNow(),
   gpuAudit: () => gfx.audit(),
   tutorialUI,
+  tipsUI,
 };
 
 shell.open('roll');
 applySettings();
-if (gs().tutorial.status === 'new') game.tutorial.start(); // first run: begin the guided tutorial
 shell.update(game.income);
 loop.onGap = (gapSeconds) => {
   game.catchUp(Date.now() - gapSeconds * 1000);
@@ -427,3 +434,25 @@ async function showWelcome() {
 }
 if (game.welcome) showWelcome();
 loop.start();
+
+/** First run: choose a pace (Relaxed or Standard; the exact differences come from data/difficulty.json), then the tutorial starts. */
+async function firstRun() {
+  if (gs().tutorial.status !== 'new') return;
+  if (gs().difficulty === null) {
+    const m = MODES.relaxed.mods;
+    const pct = (x) => `${Math.round(Math.abs(x - 1) * 100)}%`;
+    const choice = await choiceDialog({
+      title: 'Choose your pace',
+      html: `<p>You can change this any time in Settings.</p>
+        <p><b>Relaxed</b>: ${esc(MODES.relaxed.tagline)} Concretely: waves every ${Math.round(60 * m.wavePace)} s instead of 60 s, enemies with ${pct(m.enemyHp)} less health, lost waves cost ${pct(m.lossPenalty)} less, ${pct(m.income)} more income, free rolls every ${Math.round(120 * m.freeRollInterval)} s instead of 120 s and ${pct(m.bossTime)} more time against bosses.</p>
+        <p><b>Standard</b>: ${esc(MODES.standard.tagline)}</p>`,
+      choices: [{ id: 'relaxed', label: 'Relaxed (recommended for new players)', primary: true }, { id: 'standard', label: 'Standard' }],
+      focus: 'relaxed',
+      escape: 'relaxed',
+    });
+    game.setDifficulty(choice);
+    game.saveNow();
+  }
+  if (gs().tutorial.status === 'new') game.tutorial.start(); // begin the guided tutorial
+}
+firstRun();

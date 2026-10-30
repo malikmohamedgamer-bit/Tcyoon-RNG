@@ -18,9 +18,11 @@ import { createCombatState } from './combat.js';
 import { createRewardState, createBonus, installRewardHooks } from './rewards.js';
 import { START_SIDE, MAX_SIDE } from './placement.js';
 import { applyDifficultyMods, isMode } from './difficulty.js';
+import { createTipState, sanitizeTips, observe as observeTip } from './tips.js';
 import { createTutorialState, legacyTutorialState, sanitizeTutorial } from './tutorial.js';
 
 export const SAVE_VERSION = 2;
+const TIPS_FOR_LEGACY = ['bagFull', 'firstMutation', 'firstRefiner', 'firstWave', 'firstBoss', 'firstRebirth'];
 
 export function defaultSettings() {
   return {
@@ -35,7 +37,8 @@ export function defaultSettings() {
     contrast: 'normal', // normal | high
     motion: 'auto', // auto (follow the OS) | reduced | full
     colorblind: false, // extra non-colour rarity cues (border styles)
-    gameSpeed: 1,
+    gameSpeed: 1, // faster speeds are unlocked by progress (sim/speed.js); slower ones are always allowed
+    tips: true, // one-time contextual tips
     captions: false,
     muted: false,
     music: false,
@@ -65,7 +68,8 @@ export function sanitizeSettings(raw) {
     contrast: oneOf(r.contrast, ['normal', 'high'], 'normal'),
     motion: oneOf(r.motion, ['auto', 'reduced', 'full'], 'auto'),
     colorblind: !!r.colorblind,
-    gameSpeed: oneOf(Number(r.gameSpeed), [0.5, 1, 2, 4], 1),
+    gameSpeed: clampNum(r.gameSpeed, 0.25, 1e12, 1),
+    tips: r.tips !== false,
     captions: !!r.captions,
     muted: !!r.muted,
     music: !!r.music,
@@ -117,6 +121,7 @@ export function createState(seed = hash32(String(Date.now())), nowMs = Date.now(
     settings: defaultSettings(),
     tutorial: createTutorialState(),
     difficulty: null, // null until chosen on the first run
+    tips: createTipState(),
   };
   // starter kit: one dropper and one seller so the first income needs no luck
   installRewardHooks(state);
@@ -128,6 +133,7 @@ export function createState(seed = hash32(String(Date.now())), nowMs = Date.now(
 
 /** Modifier hooks (layer tree etc.). Transient; reinstalled on create/load. */
 export function installModHooks(state) {
+  state._onEvent = (ev) => observeTip(state, ev);
   state._modFns = [(m) => applyLayerMods(state, m), (m) => applyShopMods(state, m), (m) => applyDifficultyMods(state, m)];
 }
 
@@ -176,6 +182,7 @@ export function serializeState(state, nowMs = Date.now()) {
       settings: state.settings,
       tutorial: state.tutorial,
       difficulty: state.difficulty,
+      tips: state.tips,
     }),
   );
 }
@@ -204,6 +211,9 @@ export function deserializeState(data) {
   s.stats = { ...s.stats, ...(data.stats || {}) };
   s.settings = sanitizeSettings(data.settings);
   s.difficulty = isMode(data.difficulty) ? data.difficulty : null;
+  s.tips = sanitizeTips(data.tips);
+  // an existing save has already seen what it has seen: do not pop old tips for things the player already did
+  if (!data.tips) for (const t of TIPS_FOR_LEGACY) if (s.level > 1 || (s.stats.rolls || 0) > 2) s.tips.seen[t] = 1;
   // saves from before the tutorial existed (or experienced players) do not get a surprise tutorial
   s.tutorial = sanitizeTutorial(data.tutorial) || (s.level > 1 || (s.stats.rolls || 0) > 2 ? legacyTutorialState() : createTutorialState());
   s.base = { side: Math.min(MAX_SIDE, Math.max(START_SIDE, Math.floor(num(data.base?.side, START_SIDE)))), expansions: Math.max(0, Math.floor(num(data.base?.expansions))), mega: Math.max(0, Math.floor(num(data.base?.mega))) };

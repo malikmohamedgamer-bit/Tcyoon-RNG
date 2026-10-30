@@ -5,7 +5,7 @@ import { ONE, ZERO } from '../core/bignum.js';
 import { emit } from '../core/events.js';
 import { tierFromLog, oddsOf, tierInfo, PITY } from '../gen/tiers.js';
 import { generateItem } from '../gen/items.js';
-import { itemTitle } from './items.js';
+import { itemTitle, typeOf } from './items.js';
 import { addToBag, bagFull } from './inventory.js';
 import { luckOf, rollCost, trySpend, freeRollCap, freeRollInterval, modifiers } from './economy.js';
 import { addXp, rollXp } from './leveling.js';
@@ -120,7 +120,7 @@ export function doRoll(state, count = 1) {
     state.stats.rolls = (state.stats.rolls || 0) + 1;
     state.stats.bestTier = Math.max(state.stats.bestTier || 0, item.tier);
     addXp(state, rollXp(state.level, item.tier), state._onLevel);
-    emit(state, 'roll', { uid: item.uid, tier: item.tier, title: itemTitle(item), forced, mutations: item.mut.length, big: item.tier >= 4 });
+    emit(state, 'roll', { uid: item.uid, tpl: item.tpl, itemType: typeOf(item), tier: item.tier, title: itemTitle(item), forced, mutations: item.mut.length, big: item.tier >= 4 });
   }
   if (res.blocked === 'full') emit(state, 'blocked', { reason: 'full' });
   return res;

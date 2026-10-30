@@ -29,6 +29,13 @@ export function createTutorialUI({ game, shell, placement, gfx, root }) {
   const q = (sel) => {
     const el = document.querySelector(sel);
     if (!el) return null;
+    // a target inside a scrolling panel must be on screen: scroll it into view (never smooth: reduced-motion safe)
+    const box = el.closest('.panel');
+    if (box) {
+      const b = box.getBoundingClientRect();
+      const e = el.getBoundingClientRect();
+      if (e.top < b.top || e.bottom > b.bottom) el.scrollIntoView({ block: 'center', behavior: 'instant' });
+    }
     const r = el.getBoundingClientRect();
     return r.width > 0 && r.height > 0 && !el.closest('[hidden]') ? r : null;
   };
@@ -63,7 +70,7 @@ export function createTutorialUI({ game, shell, placement, gfx, root }) {
     if (placement.state.placing != null) return tileRect(tileFor(type));
     const uid = state().bag.find((u) => typeOf(state().items[u]) === type);
     const btn = uid != null && q(`#panels [data-act="place"][data-uid="${uid}"]`);
-    return btn || (shell.openId === 'backpack' ? q('#panels .grid') : dockRect('backpack'));
+    return btn || (shell.openId === 'backpack' ? null : dockRect('backpack')); // panel open but not drawn yet: no vague highlight
   };
   const TARGETS = {
     roll: () => q('#panels [data-tut="roll"]') || dockRect('roll'),
@@ -159,6 +166,7 @@ export function createTutorialUI({ game, shell, placement, gfx, root }) {
     $('[data-tut-act="ack"]').hidden = step.done.kind !== 'ack';
     $('[data-tut-act="step"]').hidden = !(tut.t >= STUCK_SECONDS && step.done.kind !== 'ack');
     card.hidden = false;
+    card.dataset.step = step.id; // the ring below is positioned for this step (tests wait on it)
     const r = (TARGETS[step.target] || (() => null))();
     if (r) {
       ring.hidden = dim.hidden = false;

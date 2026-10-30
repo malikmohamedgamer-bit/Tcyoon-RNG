@@ -4,7 +4,9 @@
 
 export function emit(state, type, data = {}) {
   if (!state._ev) state._ev = [];
-  if (state._ev.length < 200) state._ev.push({ type, ...data });
+  const ev = { type, ...data };
+  if (state._ev.length < 200) state._ev.push(ev);
+  if (state._onEvent) state._onEvent(ev); // e.g. the one-time tips (sim/tips.js)
 }
 
 export function drain(state) {

@@ -155,3 +155,14 @@ Each milestone below lists what was run on that milestone's code. "Not verified"
 | UI: spotlight on the Roll button, input not blocked, skip dialog (3 choices, focus on Keep learning, Esc keeps learning, Tab trapped), Skip for now → Resume survives reload, "don't ask again", replay from Settings, card reachable by Tab and not a trap, no pulse with reduced motion, step announced in the live region | `e2e/f1-tutorial.spec.js` (7 tests) | PASS |
 | Existing e2e suite unchanged in meaning (helper skips the tutorial) | full `npx playwright test`: 63 passed | PASS |
 Not verified: the tutorial on a real phone, with a screen reader, or how long a real first-time player needs (the "about 3 minutes" goal is unmeasured; no one has played it).
+
+## F2 — Tutorial steps, tips, difficulty
+| What | How tested | Result |
+|---|---|---|
+| All 16 steps playable through the real UI (clicks on the spotlighted element; rewards paid once) | `e2e/f2-tutorial-walk.spec.js` (3 consecutive full runs passed after fixing 3 real defects found by it) | PASS |
+| First-run pace dialog lists the exact differences; focus on Relaxed; Standard leaves all multipliers 1 | `e2e/f2-tutorial-walk.spec.js`, `tests/difficulty.test.js` | PASS |
+| Every Relaxed knob verified numerically (income ×1.15, 90 s waves incl. offline, enemy hp ×0.85, penalty ×0.5, free roll 90 s, boss time ×1.25) | `tests/difficulty.test.js` | PASS |
+| Simulators in both modes | `sim:combat --quick` (+ `--difficulty relaxed`) and `sim:economy --quick` (+ `--difficulty relaxed`) | PASS (7/7 combat, 9/9 economy incl. "relaxed easier but not trivial": 9% sooner) |
+| Tips: once only, suppressed in the tutorial and when off, persist, named conditions | `tests/tips.test.js`, e2e tips test | PASS |
+| Speed rules, endless generation, locked speed refused, clamp, loop scaling bounded, offline identical at every speed, playtime real-time | `tests/speed.test.js` | PASS |
+Honest note: the 15% enemy-health reduction does not change the highest wave a build beats in the combat simulator (15 vs 15, 23 vs 23, 33 vs 33); only the slower waves, lower penalty and boss time make Relaxed easier in combat. Whether Relaxed *feels* easier to a person is not measured.

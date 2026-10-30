@@ -3,6 +3,9 @@
 import { esc, confirmDialog } from './dom.js';
 import { ACTIONS, defaultBindings, keyLabel, wouldConflict } from '../core/input.js';
 import { BASE_THEMES } from '../gen/themes.js';
+import { speedOptions, effectiveSpeed } from '../sim/speed.js';
+import { MODES, modeId } from '../sim/difficulty.js';
+import { TIPS, seenTips } from '../sim/tips.js';
 
 const NUMBER_SAMPLES = { suffix: '1.23M · 4.5aa', scientific: '1.23e6 · 4.5e39', engineering: '1.23e6 · 4.5e39' };
 
@@ -28,7 +31,10 @@ export function createSettingsPanel(ctx) {
         ${range('pixelSize', 'Pixel size (1 = sharp)', s.pixelSize, 1, 8, 1)}
         <label>Graphics quality ${sel('quality', [['low', 'Low (fewer effects, chunkier pixels)'], ['medium', 'Medium'], ['high', 'High']], s.quality)}</label>
         <label>Number format ${sel('numberFormat', [['suffix', 'Suffixes (K, M, B … aa, ab)'], ['scientific', 'Scientific (1.23e6)'], ['engineering', 'Engineering (123e3)']], s.numberFormat)}<small class="muted"> e.g. ${NUMBER_SAMPLES[s.numberFormat]}</small></label>
-        <label>Game speed ${sel('gameSpeed', [[0.5, '0.5×'], [1, '1×'], [2, '2×'], [4, '4×']], s.gameSpeed)}</label>
+        <label>Game speed <select data-act="set" data-key="gameSpeed" data-fid="set-gameSpeed" aria-describedby="speed-note">${speedOptions(game.state).map((o) => `<option value="${o.speed}" ${o.unlocked ? '' : 'disabled'} ${Number(effectiveSpeed(game.state)) === o.speed ? 'selected' : ''}>${o.speed}×${o.unlocked ? (o.speed < 1 ? ' (slower)' : '') : ` — locked: ${o.note.replace('Unlocks', 'unlocks')}`}</option>`).join('')}</select></label>
+        <p class="muted" id="speed-note">Slower speeds are always available (an accessibility option). Faster speeds are unlocked by playing and only speed up the game, never your saves or offline progress.</p>
+        <label>Difficulty <select data-act="difficulty" data-fid="set-difficulty">${Object.entries(MODES).map(([id, m]) => `<option value="${id}" ${modeId(game.state) === id ? 'selected' : ''}>${esc(m.name)}</option>`).join('')}</select></label>
+        <small class="muted">${esc(MODES[modeId(game.state)].tagline)}</small>
         <div class="row2"><button data-act="pause">${ctx.isPaused() ? '▶ Resume' : '⏸ Pause'} (P)</button></div>
       </details>
       <details><summary>Theme, colours and skins</summary>
@@ -73,6 +79,10 @@ export function createSettingsPanel(ctx) {
         <p class="muted">Tutorial: ${ctx.tutorialStatus()}</p>
         <div class="row2"><button data-act="tut-replay">${game.state.tutorial.status === 'active' ? 'Restart the tutorial' : 'Replay the tutorial'}</button>${game.state.tutorial.status === 'paused' ? '<button data-act="tut-resume">Resume the tutorial</button>' : ''}</div>
         <p class="muted">Replaying is always safe: its rewards are only paid once.</p>
+        ${chk('tips', 'Show one-time tips when something new happens', s.tips)}
+        <details><summary>Tips seen (${seenTips(game.state).length} of ${TIPS.length})</summary>
+          <ul class="plain">${TIPS.map((t) => (game.state.tips.seen[t.id] ? `<li><b>${esc(t.title)}</b><br><small class="muted">${esc(t.text)}</small></li>` : `<li class="muted">??? <small>(not seen yet)</small></li>`)).join('')}</ul>
+        </details>
       </details>
       <details><summary>Save data</summary>
         <p class="muted">Saves live in this browser (${game.save.usingFallback ? '<b class="bad">storage unavailable: playing from memory, export your save!</b>' : 'localStorage'}). Autosaves every 10 s.</p>
@@ -111,6 +121,10 @@ export function createSettingsPanel(ctx) {
           ctx.setBindings({ ...ctx.getBindings(), [action]: [code] });
           msg(`${ACTIONS[action].label} is now ${keyLabel(code)}.`);
         }); break;
+        case 'difficulty':
+          game.setDifficulty(el.value);
+          ctx.refreshAll();
+          break;
         case 'tut-replay':
           game.tutorial.start({ replay: true });
           ctx.open(null);

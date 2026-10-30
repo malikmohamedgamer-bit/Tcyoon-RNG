@@ -114,10 +114,12 @@ export function evaluate(days, seed, { horizon: horizonDays = 1.5, difficulty = 
   if (compare && !difficulty) {
     // Relaxed mode must be easier than Standard, but not trivially so (same bot, same seed, same horizon)
     const rel = run({ days: horizon, seed, stepScale: 2, difficulty: 'relaxed' });
-    const f1 = base.rebirths.find((x) => x.layer === 0);
-    const f2 = rel.rebirths.find((x) => x.layer === 0);
-    const gain = peak(rel) - peak(base);
-    check('6. relaxed mode is easier but not trivial (first rebirth faster by at most 2x, peak income at most 10^3 higher)', !!f1 && !!f2 && f2.t <= f1.t && f2.t >= f1.t / 2 && gain >= 0 && gain <= 3, f1 && f2 ? `first rebirth standard ${formatDuration(f1.t)} vs relaxed ${formatDuration(f2.t)}; peak income relaxed - standard = 10^${gain.toFixed(2)}` : 'no rebirth');
+    // measured in time, not income: income is exponential, so a ratio of incomes is meaningless. The metric is
+    // when each mode first completes the third prestige layer (the bot rebirths no faster than every 10 minutes,
+    // so the first rebirths are equal by construction).
+    const t1 = base.layerFirst[2]?.t;
+    const t2 = rel.layerFirst[2]?.t;
+    check('6. relaxed mode is easier but not trivial (reaches the third prestige layer no later than Standard, and not more than 2x sooner)', !!t1 && !!t2 && t2 <= t1 && t2 >= t1 / 2, t1 && t2 ? `third layer first reached: standard ${formatDuration(t1)}, relaxed ${formatDuration(t2)} (${((1 - t2 / t1) * 100).toFixed(0)}% sooner)` : 'third layer not reached within the horizon');
   }
   return { r, checks, first, gaps };
 }

@@ -89,3 +89,10 @@ All notable changes, by milestone. Dates are build dates.
 - `ui/tutorial.js`: spotlight ring + one-sentence card. The overlay never blocks input and never steals focus; ring pulse stops with reduced motion; each step is announced to screen readers; "Skip this step" appears when a step is stuck for 20 s.
 - Skipping asks "Skip the tutorial?" with what you would miss and three choices (Keep learning = default focus and Esc, Skip for now, Skip and don't ask again); a Resume chip appears after "Skip for now"; Settings → Help and tutorial replays it.
 - New `choiceDialog` (focus-trapped, any number of choices). e2e helper skips the tutorial by default so older tests keep their meaning.
+
+## F2 — Tutorial steps, tips, Relaxed mode (and the speed engine)
+- All 16 tutorial steps work end to end; `e2e/f2-tutorial-walk.spec.js` plays them with real clicks on what the spotlight shows (found and fixed: the spotlight pointed at a clipped Place button inside a scrolling panel, so targets are now scrolled into view; a fuse assist that could count a higher-tier belt).
+- `data/tips.json` + `sim/tips.js` + `ui/tips.js`: one-time contextual tips, a Tips-seen list, a setting to turn them off. (Found by a test: a tip seen at playtime 0 was stored as `0`, which is falsy, so it could fire again.)
+- `data/difficulty.json` + `sim/difficulty.js`: first-run Relaxed/Standard choice, changeable in Settings; exact differences documented in the README and checked by both simulators (`--difficulty relaxed`).
+- `data/speed.json` + `sim/speed.js`: pure unlock rules (level, rebirths, layer count, tree, upgrade) with endless generated speeds; loop scaling bounded per frame; locked speeds refused in `game.setSetting`; playtime counts real seconds. (UI selector with locked options is in Settings.) An old test that expected `gameSpeed: 3` to reset to 1 was changed: any number is now stored and *clamped to the unlocked speeds at use*.
+- Simulator note: an income-ratio check for Relaxed was meaningless in an exponential economy (10^5.4); replaced by a time-based check (third prestige layer 9% sooner).
