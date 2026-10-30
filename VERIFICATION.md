@@ -201,3 +201,15 @@ Not verified: how very high speeds (hundreds of x) *feel* or perform on a real d
 | Phone, tablet, desktop x 5 themes: no horizontal overflow, Roll button on screen, unobstructed, all menu/Roll targets >= 44 px; 160% text on a phone | `e2e/f5-design.spec.js` | PASS |
 | Visual review loop (4 rounds) with before/after screenshots | `docs/design-review.md`, `docs/compare-*.png` | done by me only |
 Not verified / honest: whether it *looks good* is my judgment from software-rendered headless screenshots; no designer or player reviewed it (see the weak-points list in `docs/design-review.md`: the 3D scene is untouched, stacked messages can crowd a phone, icons are plain). Real devices, other browsers and font rendering on other platforms were not checked.
+
+## F6 — Index
+| What | How tested | Result |
+|---|---|---|
+| Discovery recording (template, rarity, mutations, weapons, practice items ignored, refinery, monsters with counts, bosses and wins), only the first time is an event | `tests/index.test.js` | PASS |
+| Silhouettes reveal only a hint; the hidden name is not in the page | `tests/index.test.js`, `e2e/f6-index.spec.js` | PASS |
+| Endless content: 30,000 generated mutations + 5,000 bosses + 2,000 rarities listed in < 1 s, described lazily; hostile saves capped (50,000 per section) and sanitised | `tests/index.test.js` | PASS |
+| Virtualisation in the browser: 20,000 mutations -> about 15 rows and < 900 DOM nodes in the panel; scrolling to the middle shows entries around #10,000; aria-setsize/posinset | `e2e/f6-index.spec.js` | PASS |
+| Search and every filter in the UI, announced result count | `e2e/f6-index.spec.js` | PASS |
+| Completion rewards: not before reached, exactly once, persisted, `all` reward, dock badge | `tests/index.test.js`, e2e | PASS |
+| Save/load and backfill of old saves (silent) | `tests/index.test.js` | PASS |
+Not verified: the Index with a real player's long-term save (only synthetic data up to 30,000 entries); screen-reader reading of a virtualised list (semantics are set, nothing was listened to); how the completion rewards feel in the economy (they are small and one-time, not run through the economy simulator).

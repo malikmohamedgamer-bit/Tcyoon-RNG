@@ -38,8 +38,10 @@ export function patchHtml(el, html) {
     const k = d.querySelector('summary')?.textContent;
     if (k) el._open.set(k, d.open);
   }
+  const scrolls = new Map([...el.querySelectorAll('[data-scroll]')].map((n) => [n.dataset.scroll, n.scrollTop])); // virtual lists keep their position
   el._html = html;
   el.innerHTML = html;
+  for (const n of el.querySelectorAll('[data-scroll]')) if (scrolls.has(n.dataset.scroll)) n.scrollTop = scrolls.get(n.dataset.scroll);
   for (const d of el.querySelectorAll('details')) {
     const k = d.querySelector('summary')?.textContent;
     if (k && el._open.has(k)) d.open = el._open.get(k);

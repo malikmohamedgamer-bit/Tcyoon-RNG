@@ -101,6 +101,8 @@ test('game speed never touches saves, playtime or offline progress: same offline
   const b = serializeState(mk(4), 0);
   delete a.settings;
   delete b.settings;
+  delete a.index; // the Index stores wall-clock first-found times, which differ between two states built a millisecond apart
+  delete b.index;
   assert.deepEqual(a, b);
 });
 

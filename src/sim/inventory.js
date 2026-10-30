@@ -1,4 +1,5 @@
 // Backpack operations: add, remove, sell, sell duplicates, fuse.
+import { noteItem } from './index.js';
 import ECON from '../data/economy.json' with { type: 'json' };
 import { emit } from '../core/events.js';
 import { itemTitle, templateOf, typeOf } from './items.js';
@@ -16,6 +17,7 @@ export function addToBag(state, item, { force = false } = {}) {
   const it = { uid: state.nextUid++, loc: 'bag', lv: state.level, ...item };
   state.items[it.uid] = it;
   state.bag.push(it.uid);
+  noteItem(state, it); // the Index records what has been found
   return it;
 }
 

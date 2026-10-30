@@ -18,6 +18,7 @@ import { createCombatState } from './combat.js';
 import { createRewardState, createBonus, installRewardHooks } from './rewards.js';
 import { START_SIDE, MAX_SIDE } from './placement.js';
 import { applyDifficultyMods, isMode } from './difficulty.js';
+import { createIndexState, sanitizeIndex, backfillIndex } from './index.js';
 import { createUiState, sanitizeUiState, checkUnlocks } from './disclosure.js';
 import { createTipState, sanitizeTips, observe as observeTip } from './tips.js';
 import { createTutorialState, legacyTutorialState, sanitizeTutorial } from './tutorial.js';
@@ -126,12 +127,14 @@ export function createState(seed = hash32(String(Date.now())), nowMs = Date.now(
     difficulty: null, // null until chosen on the first run
     tips: createTipState(),
     ui: createUiState(),
+    index: createIndexState(),
   };
   // starter kit: one dropper and one seller so the first income needs no luck
   installRewardHooks(state);
   installModHooks(state);
   addToBag(state, { tpl: 'pebble_drill', tier: 0, vs: 0, hy: null, mut: [] }, { force: true });
   addToBag(state, { tpl: 'stall', tier: 0, vs: 0, hy: null, mut: [] }, { force: true });
+  state._ev = []; // the starter kit is not an Index fanfare
   return state;
 }
 
@@ -189,6 +192,7 @@ export function serializeState(state, nowMs = Date.now()) {
       difficulty: state.difficulty,
       tips: state.tips,
       ui: state.ui,
+      index: state.index,
     }),
   );
 }
@@ -219,6 +223,7 @@ export function deserializeState(data) {
   s.difficulty = isMode(data.difficulty) ? data.difficulty : null;
   s.tips = sanitizeTips(data.tips);
   s.ui = sanitizeUiState(data.ui);
+  s.index = sanitizeIndex(data.index);
   // an existing save has already seen what it has seen: do not pop old tips for things the player already did
   if (!data.tips) for (const t of TIPS_FOR_LEGACY) if (s.level > 1 || (s.stats.rolls || 0) > 2) s.tips.seen[t] = 1;
   // saves from before the tutorial existed (or experienced players) do not get a surprise tutorial
@@ -262,6 +267,7 @@ export function deserializeState(data) {
   const inBag = new Set();
   for (const u of order) if (s.items[u] && s.items[u].loc === 'bag' && !inBag.has(u)) { inBag.add(u); s.bag.push(u); }
   for (const it of Object.values(s.items)) if (it.loc === 'bag' && !inBag.has(it.uid)) s.bag.push(it.uid);
+  if (!data.index) backfillIndex(s);
   checkUnlocks(s, { silent: !data.ui }); // an old save: what it already reached is unlocked without a fanfare
   refreshProduction(s);
   return s;

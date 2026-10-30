@@ -24,6 +24,7 @@ import { createRebirthPanel } from './ui/rebirth.js';
 import { createSettingsPanel } from './ui/settings.js';
 import { createIncomePanel } from './ui/income.js';
 import { createHelpPanel } from './ui/help.js';
+import { createIndexPanel } from './ui/indexbook.js';
 import { visiblePanels, visibleChips } from './sim/disclosure.js';
 import { createPlacement } from './ui/placement.js';
 import { createTouchControls } from './ui/touch.js';
@@ -141,6 +142,7 @@ const ctx = {
   game,
   fmt,
   ui,
+  toast,
   placement,
   refreshAll: () => {
     shell.update(game.income);
@@ -239,7 +241,7 @@ const ctx = {
     shell.update(game.income);
   },
 };
-const panels = [createRollPanel(ctx), createBackpackPanel(ctx), createBasePanel(ctx), createShopPanel(ctx), createRewardsPanel(ctx), createCombatPanel(ctx), createRefineryPanel(ctx), createRebirthPanel(ctx), createHelpPanel(ctx), createSettingsPanel(ctx), createIncomePanel(ctx)];
+const panels = [createRollPanel(ctx), createBackpackPanel(ctx), createBasePanel(ctx), createShopPanel(ctx), createRewardsPanel(ctx), createCombatPanel(ctx), createRefineryPanel(ctx), createRebirthPanel(ctx), createIndexPanel(ctx), createHelpPanel(ctx), createSettingsPanel(ctx), createIncomePanel(ctx)];
 const shell = createShell({ game, fmt, panels, onOpen: (id) => {
     document.documentElement.dataset.panel = id || '';
     if (id) game.tutorial.flag('panel:' + id);
@@ -292,6 +294,7 @@ function syncFightCam() {
   }
 }
 
+const discovered = [];
 function handleEvents() {
   for (const e of drain(gs())) {
     switch (e.type) {
@@ -355,6 +358,11 @@ function handleEvents() {
       case 'tip':
         tipsUI.push(e);
         break;
+      case 'discover': {
+        // several discoveries in one frame (a x10 roll) become one toast
+        discovered.push(e.name);
+        break;
+      }
       case 'unlock': {
         const p = panels.find((x) => x.id === e.id);
         if (p) {
@@ -388,6 +396,12 @@ function handleEvents() {
         break;
       default:
     }
+  }
+  if (discovered.length) {
+    const text = discovered.length <= 2 ? `New in the Index: ${discovered.join(' and ')}` : `${discovered.length} new Index entries`;
+    toast(text, 3000);
+    announce(text);
+    discovered.length = 0;
   }
 }
 

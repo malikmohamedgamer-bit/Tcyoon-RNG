@@ -268,3 +268,23 @@ kbd { background: var(--panel-2); border: 1px solid var(--line); border-bottom-w
 }
 #undo-root { width: max-content; max-width: calc(100vw - 1rem); }
 .undo-chip { white-space: nowrap; }
+
+/* ---- Index ---- */
+.tabs { display: flex; flex-wrap: wrap; gap: var(--s1); margin: var(--s2) 0; }
+.tabs .tab { min-height: 2.6rem; padding: .2rem .6rem; gap: .35rem; flex: 1 1 6.5rem; }
+.tabs .tab small { opacity: .8; }
+.tabs .tab[aria-pressed="true"] { background: var(--accent); color: var(--accent-text); border-color: var(--accent-edge); }
+.filters { align-items: flex-end; }
+.filters label { margin-top: 0; flex: 1 1 7rem; font-size: var(--t2); }
+.filters .grow { flex: 2 1 10rem; }
+.vlist { max-height: 22rem; overflow-y: auto; border: var(--bw) solid var(--line); border-radius: var(--radius-sm); background: var(--panel-2); margin: var(--s2) 0; }
+.vspacer { position: relative; }
+.vrow { position: absolute; left: 0; right: 0; }
+.entry { display: grid; grid-template-columns: 3.4rem 1fr; gap: var(--s3); align-items: center; padding: var(--s2) var(--s3); border-bottom: 1px solid var(--line); overflow: hidden; }
+.entry .pic { width: 3.2rem; height: 3.2rem; display: grid; place-items: center; border: var(--bw) solid var(--tc, var(--line)); border-radius: var(--radius-sm); background: var(--panel); color: var(--tc, var(--text)); }
+.entry .pic .ico { width: 2.1rem; height: 2.1rem; }
+.entry .txt { display: grid; gap: 1px; min-width: 0; }
+.entry .txt small { display: block; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.entry.locked .pic { color: var(--muted); border-style: dashed; }
+.entry.locked .pic .ico { filter: brightness(0) invert(.35); opacity: .7; } /* a silhouette */
+.entry.locked b { letter-spacing: .15em; }

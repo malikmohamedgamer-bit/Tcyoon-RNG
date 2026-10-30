@@ -1,0 +1,21 @@
+{
+  "_doc": "The Index (collection book). sections: what each tab collects. `reference` = how many entries count as 100% for sections whose content is endless (rarities beyond the hand-made tiers, generated mutations, bosses are listed as bonus entries once found). `lockedPreview` = how many undiscovered silhouettes to show after the last found entry in an endless section. rewards[section] and rewards.all: each completion step is granted exactly once (ledger state.index.claimed), reward spec = level-reward spec (rollPrices, freeRolls, backpack, luckPct, gear, ...). Add a section by adding it here and teaching sim/index.js how to list it.",
+  "sections": {
+    "items": { "name": "Items", "icon": "backpack", "blurb": "Every kind of item you have owned." },
+    "rarities": { "name": "Rarities", "icon": "gem", "reference": 12, "lockedPreview": 3, "blurb": "Every rarity you have found. They never end." },
+    "mutations": { "name": "Mutations", "icon": "sparkle", "lockedPreview": 3, "blurb": "Every mutation you have seen on an item." },
+    "weapons": { "name": "Weapons", "icon": "weapon", "blurb": "Every weapon you have found." },
+    "monsters": { "name": "Monsters", "icon": "fang", "blurb": "Every kind of monster that attacked your base." },
+    "bosses": { "name": "Bosses", "icon": "crown", "reference": 10, "lockedPreview": 2, "blurb": "Every boss you have faced. New ones forever." }
+  },
+  "steps": [25, 50, 75, 100],
+  "rewards": {
+    "sections": {
+      "25": { "rollPrices": 5 },
+      "50": { "rollPrices": 10, "freeRolls": 1 },
+      "75": { "rollPrices": 20, "luckPct": 2 },
+      "100": { "rollPrices": 40, "backpack": 2, "luckPct": 5 }
+    },
+    "all": { "rollPrices": 100, "luckPct": 10, "gear": 1 }
+  }
+}

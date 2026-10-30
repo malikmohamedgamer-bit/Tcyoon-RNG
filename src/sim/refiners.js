@@ -1,4 +1,5 @@
 // Mutation refinery: re-roll, transfer and combine mutations (money sinks).
+import { noteItem } from './index.js';
 import REF from '../data/refiners.json' with { type: 'json' };
 import { emit } from '../core/events.js';
 import { rollMutations, RULES } from '../gen/mutations.js';
@@ -25,6 +26,7 @@ export function reroll(state, uid, rng = state.rng) {
   if (!trySpend(state, cost)) return { ok: false, reason: 'Not enough money', cost };
   const logLuck = luckOf(state).log10Num();
   it.mut = rollMutations(rng, { tier: it.tier, type: templateOf(it).type, logLuck, boost: REF.ops.reroll.luckBoost });
+  noteItem(state, it); // new mutations are discoveries too
   refreshProduction(state);
   state.stats.refined = (state.stats.refined || 0) + 1;
   emit(state, 'refine', { op: 'reroll', title: itemTitle(it) });
@@ -43,6 +45,7 @@ export function transfer(state, fromUid, toUid, mutId) {
   if (!trySpend(state, cost)) return { ok: false, reason: 'Not enough money', cost };
   removeMutation(a, mutId);
   addMutation(b, mutId, m[1]);
+  noteItem(state, b);
   refreshProduction(state);
   state.stats.refined = (state.stats.refined || 0) + 1;
   emit(state, 'refine', { op: 'transfer', title: itemTitle(b) });

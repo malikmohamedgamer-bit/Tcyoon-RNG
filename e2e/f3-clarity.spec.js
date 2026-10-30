@@ -116,9 +116,9 @@ test('undo: Z (and the Undo chip) reverses placing and selling; the window and t
   await expectNoErrors(errors);
 });
 
-test('progressive disclosure: a new player sees only Roll, Backpack, Base, Help, Settings; Shop appears at level 2 with a NEW badge; Advanced UI shows everything', async ({ page }) => {
+test('progressive disclosure: a new player sees only Roll, Backpack, Base, Index, Help, Settings; Shop appears at level 2 with a NEW badge; Advanced UI shows everything', async ({ page }) => {
   const errors = await openGame(page, { simpleUI: true });
-  expect(await dockNames(page)).toEqual(['Roll', 'Backpack', 'Base', 'Help', 'Settings']);
+  expect(await dockNames(page)).toEqual(['Roll', 'Backpack', 'Base', 'Index', 'Help', 'Settings']);
   await expect(page.locator('#hud [data-chip="luck"]')).toBeHidden();
   await page.evaluate(() => window.__game.game.debug.setLevel(2));
   await page.evaluate(() => window.__game.game.step(1.1)); // the once-a-second unlock check

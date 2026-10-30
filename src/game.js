@@ -21,6 +21,7 @@ import * as quests from './sim/quests.js';
 import { applyOffline, WELCOME_MIN_SECONDS } from './sim/offline.js';
 import * as tutorial from './sim/tutorial.js';
 import * as undo from './sim/undo.js';
+import * as indexBook from './sim/index.js';
 import { checkTips } from './sim/tips.js';
 import { checkUnlocks } from './sim/disclosure.js';
 import { setDifficulty } from './sim/difficulty.js';
@@ -151,6 +152,11 @@ export function createGame({ storage, seed } = {}) {
     rotate: (uid) => placement.rotate(state, uid),
     pickUp: (uid) => undo.pickUpU(state, uid),
     sellPlaced: (uid) => undo.sellPlacedU(state, uid),
+    /** The Index (collection book): see sim/index.js. */
+    index: {
+      claim: (id) => indexBook.claimIndexReward(state, id),
+      summary: () => indexBook.indexSummary(state),
+    },
     /** Re-check which panels are unlocked (also runs once a second inside step()). */
     refreshUnlocks: () => checkUnlocks(state),
     /** Undo the last place / move / pick up / sale (20 s window, see sim/undo.js). */

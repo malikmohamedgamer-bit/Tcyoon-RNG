@@ -20,6 +20,7 @@ import { rngFrom } from '../core/rng.js';
 import { emit } from '../core/events.js';
 import { buildWave, waveHp, enemyTemplate } from '../gen/monsters.js';
 import { diffMods } from './difficulty.js';
+import { noteEncounter, noteBossWin } from './index.js';
 import { bossDef, mechanic } from '../gen/bosses.js';
 import { itemStats, typeOf } from './items.js';
 import { modifiers, rollCost, addMoney, luckOf } from './economy.js';
@@ -542,6 +543,7 @@ export function settleEncounter(state, enc) {
       refreshProduction(state);
       c.bossIndex += 1;
       state.stats.bosses = (state.stats.bosses || 0) + 1;
+      noteBossWin(state, def.n);
       addXp(state, rollXp(state.level, 0).mul(20), state._onLevel);
       r.upgrade = up;
       emit(state, 'boss', { win: true, name: def.name, n: def.n });
@@ -588,6 +590,7 @@ export function startEncounter(state, kind) {
     if (!c.ok) return c;
   } else if (kind !== 'demo' && state.level < WAVE_START_LEVEL) return { ok: false, reason: `Waves start at level ${WAVE_START_LEVEL}` };
   state._enc = createEncounter(state, kind);
+  noteEncounter(state, kind, state._enc.queue, state.combat.bossIndex); // the Index learns the monsters
   if (kind === 'wave') state.combat.timer = waveInterval(state); // waves come every 60 s start-to-start, however long a fight lasts
   emit(state, 'fightStart', { kind, wave: state.combat.wave });
   return { ok: true, enc: state._enc };
