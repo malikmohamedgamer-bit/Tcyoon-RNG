@@ -111,3 +111,13 @@ All notable changes, by milestone. Dates are build dates.
 - HUD speed button (appears with the first faster speed) and the Settings selector with locked options and their requirement; locked speeds are refused in the simulation (`game.setSetting`), and a saved locked speed is clamped on load.
 - Speed scales only the simulation: bounded work per frame at any speed (step grows above 4x, combat sub-stepped at <= 0.1 s), playtime counts real seconds, offline progress and saves are unaffected (tests at every speed).
 - Found and fixed: a hidden-dock-button fallback in the tutorial spotlight (BUGS #36).
+
+## F5 — Design brief and UI redesign
+- `docs/design.md` (written first): goals, what to avoid, spacing/type/radius/elevation/motion scales, colour tokens, layout per breakpoint, icon rules, the five theme personalities.
+- `vendor/fonts` (self-hosted, OFL, 268 KB) + `scripts/vendor-fonts.js` -> `src/ui/fonts.css`: Atkinson Hyperlegible (all text), Barlow Condensed, IM Fell DW Pica, Orbitron, Chakra Petch, Silkscreen (per theme). No external request.
+- `src/ui/icons.js`: ~90 hand-drawn SVG icons on a 24-grid plus tier shapes; legacy emoji ids in data resolve to SVG, unknown ones to a drawn spark; every emoji in the UI replaced. Tests: every icon in the data (and in endless generated tiers, mutations, bosses and layers) resolves; the UI source has no emoji.
+- `src/ui/style.css` rewritten (tokens, layout, components) + `src/ui/themes.css` (five themes with construction, not tints: hazard stripes and rivets / brass double border and gauge bars / HUD brackets and glow / chamfered neon / stepped pixel borders; high contrast overrides all).
+- New layout: single status plate (money largest), left menu rail (bottom bar below 900 px), the **persistent Roll button** (`ui/rolldock.js`; the Roll panel no longer duplicates it), bottom-sheet panels on phones, empty states with a call to action.
+- Contrast bug found and fixed (BUGS #37). `e2e/f5-design.spec.js`: no emoji in any panel of any theme, no external request, contrast ratios per theme (normal and high contrast), focus ring, 44 px targets, no horizontal overflow and an unobstructed Roll button at three sizes and at 160% text, reduced motion.
+- Changed tests (intended UI changes): ghost label assertions look for the check/cross icon instead of the characters; "Auto-roll 🔒 Lv 3" now matches `Auto-roll Lv 3` with an SVG lock; the rebirth tree button name is "Buy 1" (it was "Buy 1 🔄").
+- Review loop and the honest list of what still looks weak: `docs/design-review.md`; before/after: `docs/before/`, `docs/after/`, `docs/compare-*.png`.

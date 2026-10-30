@@ -1,4 +1,5 @@
 // One-time tip cards (data/tips.json). Non-modal, polite, one at a time; never steals focus.
+import { ico } from './icons.js';
 import { esc } from './dom.js';
 import { announce } from './a11y.js';
 
@@ -17,7 +18,7 @@ export function createTipsUI({ root, game, shell }) {
     }
     const t = showing;
     root.innerHTML = `<section class="tip-card" aria-label="Tip: ${esc(t.title)}">
-      <b>💡 ${esc(t.title)}</b><p>${esc(t.text)}</p>
+      <b>${ico('sparkle')} ${esc(t.title)}</b><p>${esc(t.text)}</p>
       <div class="tip-actions">${t.action ? `<button type="button" class="primary" data-tip-act="go">${esc(t.action.label)}</button>` : ''}<button type="button" data-tip-act="ok">Got it</button><button type="button" class="link" data-tip-act="off">Turn tips off</button></div></section>`;
     announce(`Tip: ${t.title}. ${t.text}`);
     timer = setTimeout(next, 25000);

@@ -22,7 +22,8 @@ test('select an item, see a ghost with validity text, click to place; income ris
   // hover a valid tile: label says it is valid (text, not just colour)
   const p0 = await cellScreen(page, 1, 1);
   await page.mouse.move(p0.x, p0.y);
-  await expect(page.locator('#ghost-label')).toContainText('✔ Place here');
+  await expect(page.locator('#ghost-label')).toContainText('Place here');
+  await expect(page.locator('#ghost-label svg.ico-check')).toBeVisible(); // a check mark shape, not only colour
   await page.mouse.click(p0.x, p0.y);
   expect(await placedAt(page, 1, 1)).toEqual({ tpl: 'pebble_drill', dir: 0 });
   expect(await income(page)).toBe(0); // dropper alone: nothing cashes out
@@ -43,7 +44,8 @@ test('invalid placement shows a cross + reason text and does not place', async (
   await page.locator('#panels article.item', { hasText: 'Market Stall' }).getByRole('button', { name: 'Place' }).click();
   const p = await cellScreen(page, 3, 3);
   await page.mouse.move(p.x, p.y);
-  await expect(page.locator('#ghost-label')).toContainText('✖ Cell is occupied');
+  await expect(page.locator('#ghost-label')).toContainText('Cell is occupied');
+  await expect(page.locator('#ghost-label svg.ico-cross')).toBeVisible(); // a cross shape plus the reason text
   await page.mouse.click(p.x, p.y);
   await expect(page.locator('#toasts')).toContainText('Cell is occupied');
   expect(await page.evaluate(() => Object.values(window.__game.state.items).filter((i) => i.loc === 'placed').length)).toBe(1);

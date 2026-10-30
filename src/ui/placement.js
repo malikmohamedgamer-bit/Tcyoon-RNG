@@ -4,6 +4,8 @@
 import { canPlace, itemAt } from '../sim/placement.js';
 import { itemTitle } from '../sim/items.js';
 import { DIR_NAMES } from '../sim/production.js';
+import { ico } from './icons.js';
+import { esc } from './dom.js';
 
 export function createPlacement({ canvas, gfx, game, input, toast, announce, fmt, play, onChange }) {
   const label = document.createElement('div');
@@ -19,10 +21,11 @@ export function createPlacement({ canvas, gfx, game, input, toast, announce, fmt
     return c && c.inside ? c : null;
   };
 
-  function showLabel(text, e) {
+  // `ok` adds a check or a cross icon (shape, not only colour); undefined = neutral text
+  function showLabel(text, e, ok) {
     label.hidden = !text;
     if (!text) return;
-    label.textContent = text;
+    label.innerHTML = (ok === undefined ? '' : ico(ok ? 'check' : 'cross') + ' ') + esc(text);
     label.style.left = Math.min(e.clientX + 14, window.innerWidth - 220) + 'px';
     label.style.top = e.clientY + 14 + 'px';
   }
@@ -42,7 +45,7 @@ export function createPlacement({ canvas, gfx, game, input, toast, announce, fmt
     const chk = canPlace(s, movingUid, st.hover.x, st.hover.y, { swap: true });
     gfx.items.setGhost({ tpl: it.tpl, x: st.hover.x, y: st.hover.y, dir: st.drag?.active ? it.dir || 0 : st.dir, valid: chk.ok, side: side() });
     const verb = st.drag && st.drag.active ? (chk.swap ? 'Swap here' : 'Move here') : 'Place here';
-    showLabel(chk.ok ? `✔ ${verb} · facing ${DIR_NAMES[st.drag?.active ? it.dir || 0 : st.dir]} (R rotates)` : `✖ ${chk.reason}`, e);
+    showLabel(chk.ok ? `${verb} · facing ${DIR_NAMES[st.drag?.active ? it.dir || 0 : st.dir]} (R rotates)` : chk.reason, e, chk.ok);
   }
 
   function select(uid) {
@@ -96,7 +99,7 @@ export function createPlacement({ canvas, gfx, game, input, toast, announce, fmt
       const it = itemAt(game.state, st.hover.x, st.hover.y);
       if (it) {
         const p = game.state._p?.perItem.get(it.uid);
-        showLabel(`${itemTitle(it)}${p && p.type === 'dropper' ? ` · $${fmt(p.out)}/s` : ''}${p?.blocked ? ' · ⚠ blocked' : ''}`, e);
+        showLabel(`${itemTitle(it)}${p && p.type === 'dropper' ? ` · $${fmt(p.out)}/s` : ''}${p?.blocked ? ' · blocked' : ''}`, e);
       } else showLabel('');
     } else showLabel('');
   };

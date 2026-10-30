@@ -50,7 +50,8 @@ export function readableOn(hex) {
     return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
   });
   const L = 0.2126 * ch[0] + 0.7152 * ch[1] + 0.0722 * ch[2];
-  return L > 0.4 ? '#000000' : '#ffffff';
+  // black text beats white text exactly when L > ~0.179 (equal contrast at that luminance); 0.4 was wrong for mid-bright accents
+  return L > 0.179 ? '#000000' : '#ffffff';
 }
 
 /** Does the player (or the OS) want reduced motion? */

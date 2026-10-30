@@ -1,13 +1,14 @@
 // Touch controls: a floating action bar for placement (rotate / pick up / sell / cancel) so the
 // whole game is playable without a keyboard, and a virtual joystick for the arena. All targets
 // are >= 44 px. Placement itself is tap-to-place / drag-to-move through pointer events.
+import { ico } from './icons.js';
 export function createTouchControls({ root, placement, game, fmt, toast, touchMove, isManual }) {
   root.innerHTML = `
     <div class="touch-bar" role="toolbar" aria-label="Placement actions" hidden>
       <button type="button" data-t="rotate" aria-label="Rotate item">⟳ Rotate</button>
-      <button type="button" data-t="pickup" aria-label="Pick up item">🎒 Pick up</button>
-      <button type="button" data-t="sell" aria-label="Sell item">💰 Sell</button>
-      <button type="button" data-t="cancel" aria-label="Cancel">✕ Cancel</button>
+      <button type="button" data-t="pickup" aria-label="Pick up item">${ico('backpack')} Pick up</button>
+      <button type="button" data-t="sell" aria-label="Sell item">${ico('coin')} Sell</button>
+      <button type="button" data-t="cancel" aria-label="Cancel">${ico('cross')} Cancel</button>
     </div>
     <div class="joystick" aria-hidden="true" hidden><div class="stick"></div></div>`;
   const bar = root.querySelector('.touch-bar');

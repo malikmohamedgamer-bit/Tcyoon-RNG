@@ -1,8 +1,9 @@
 // Browser shell: wires the DOM-free game to the renderer, UI, loop, input, audio and settings.
+import { ico } from './ui/icons.js';
 import { createLoop } from './core/loop.js';
 import { drain } from './core/events.js';
 import { createAudio } from './core/audio.js';
-import { createInput, defaultBindings } from './core/input.js';
+import { createInput, defaultBindings, keyLabel as keyName } from './core/input.js';
 import { formatDuration } from './core/time.js';
 import { createGame } from './game.js';
 import { createRenderer } from './render/scene.js';
@@ -10,7 +11,7 @@ import { attachPointerControls } from './render/camera.js';
 import { regionTheme, themeById } from './gen/themes.js';
 import { isWeapon } from './sim/items.js';
 import { makeFmt, toast, confirmDialog, choiceDialog, esc } from './ui/dom.js';
-import { announce, applyA11y, prefersReducedMotion } from './ui/a11y.js';
+import { announce, applyA11y, prefersReducedMotion, readableOn } from './ui/a11y.js';
 import { createShell } from './ui/hud.js';
 import { createRollPanel } from './ui/roll.js';
 import { createBackpackPanel } from './ui/backpack.js';
@@ -30,7 +31,10 @@ import { createTutorialUI } from './ui/tutorial.js';
 import { effectiveSpeed, unlockedSpeeds } from './sim/speed.js';
 import { createTipsUI } from './ui/tips.js';
 import { createTooltips } from './ui/tooltips.js';
+import { createRollDock } from './ui/rolldock.js';
+import { itemTitle } from './sim/items.js';
 import { MODES } from './sim/difficulty.js';
+import ECON from './data/economy.json' with { type: 'json' };
 
 const canvas = document.getElementById('view');
 const game = createGame();
@@ -102,6 +106,10 @@ function syncTheme() {
   if (key === themeKey) return;
   themeKey = key;
   const theme = activeTheme();
+  const rootEl = document.documentElement;
+  rootEl.dataset.theme = theme.base || String(theme.id).split('+')[0];
+  rootEl.style.setProperty('--theme-accent', theme.palette.accent);
+  rootEl.style.setProperty('--theme-accent-text', readableOn(theme.palette.accent));
   gfx.setTheme(theme);
   audio.setFlavour(theme.sfx);
 }
@@ -165,6 +173,21 @@ const ctx = {
     shell.refresh();
   },
   tutorialStatus: () => ({ new: 'not started', active: 'in progress', paused: 'paused', skipped: 'skipped', done: `finished (${gs().tutorial.completed}×)` })[gs().tutorial.status] || 'unknown',
+  keyLabel: (action) => keyName((getBindings()[action] || [''])[0]),
+  /** Roll n times: the one code path for the big Roll button, the Roll panel and the keyboard. */
+  rollNow: (n = 1) => {
+    const r = game.roll(n);
+    for (const it of r.rolled) ui.recent.unshift({ tier: it.tier, title: itemTitle(it) });
+    ui.recent.length = Math.min(ui.recent.length, 6);
+    if (r.blocked === 'full') ui.msg = { text: 'Backpack is full — sell or fuse something first.' };
+    else if (r.blocked === 'money') ui.msg = { text: 'Not enough money for the next roll.' };
+    else if (r.blocked === 'locked') ui.msg = { text: `That roll size unlocks at level ${n >= 100 ? ECON.roll.x100Level : ECON.roll.x10Level}.` };
+    else ui.msg = r.rolled.length > 1 ? { text: `Rolled ${r.rolled.length} items.`, kind: 'ok' } : null;
+    if (r.blocked) play('error');
+    shell.refresh();
+    rollDock.update();
+    return r;
+  },
   /** The HUD speed button: next unlocked speed at or above 1x, wrapping to 1x (slow speeds stay in Settings). */
   cycleSpeed: () => {
     const fast = unlockedSpeeds(gs()).filter((x) => x >= 1);
@@ -217,7 +240,10 @@ const ctx = {
   },
 };
 const panels = [createRollPanel(ctx), createBackpackPanel(ctx), createBasePanel(ctx), createShopPanel(ctx), createRewardsPanel(ctx), createCombatPanel(ctx), createRefineryPanel(ctx), createRebirthPanel(ctx), createHelpPanel(ctx), createSettingsPanel(ctx), createIncomePanel(ctx)];
-const shell = createShell({ game, fmt, panels, onOpen: (id) => id && game.tutorial.flag('panel:' + id), onSpeed: () => ctx.cycleSpeed() });
+const shell = createShell({ game, fmt, panels, onOpen: (id) => {
+    document.documentElement.dataset.panel = id || '';
+    if (id) game.tutorial.flag('panel:' + id);
+  }, onSpeed: () => ctx.cycleSpeed() });
 const tutorialUI = createTutorialUI({ game, shell, placement, gfx, root: document.getElementById('tutorial'), syncLayout: () => syncDisclosure() });
 // the tutorial's "inspect" step: the player looked at (clicked or focused) an item card
 document.getElementById('panels').addEventListener('click', (e) => {
@@ -225,6 +251,7 @@ document.getElementById('panels').addEventListener('click', (e) => {
 });
 const tooltips = createTooltips({ root: document.getElementById('app') });
 const tipsUI = createTipsUI({ root: document.getElementById('tips'), game, shell });
+const rollDock = createRollDock({ root: document.getElementById('roll-dock'), game, fmt, rollNow: (n) => ctx.rollNow(n), keyLabel: (a) => ctx.keyLabel(a) });
 const fight = createFightOverlay(document.getElementById('arena-ui'), ctx);
 const touch = createTouchControls({ root: document.getElementById('touch-root'), placement, game, fmt, toast, touchMove, isManual: () => !!(gs()._enc && gs()._enc.manual) });
 
@@ -242,15 +269,8 @@ input.on('nova', () => (flags.nova = true));
 input.on('shield', () => (flags.shield = true));
 input.on('pause', togglePause);
 input.on('undo', () => ctx.undo());
-input.on('roll', () => {
-  const r = game.roll(1);
-  if (r.blocked) play('error');
-  shell.refresh();
-});
-input.on('roll10', () => {
-  game.roll(10);
-  shell.refresh();
-});
+input.on('roll', () => ctx.rollNow(1));
+input.on('roll10', () => ctx.rollNow(10));
 input.on('resetCam', () => gfx.cam.reset());
 input.on('cancel', () => {
   const enc = gs()._enc;
@@ -434,6 +454,7 @@ const loop = createLoop({
       shell.update(game.income);
       shell.refresh();
       syncDisclosure();
+      rollDock.update();
       updateUndoChip();
     }
   },
@@ -466,9 +487,10 @@ window.__game = {
   tooltips,
 };
 
-shell.open('roll');
+if (window.innerWidth >= 900) shell.open('roll'); // phones and tablets start with a clear view of the base
 applySettings();
 shell.update(game.income);
+rollDock.update();
 loop.onGap = (gapSeconds) => {
   game.catchUp(Date.now() - gapSeconds * 1000);
   showWelcome();
@@ -485,7 +507,7 @@ async function showWelcome() {
   await confirmDialog({
     title: 'Welcome back!',
     html: `<p>You were away for <b>${esc(formatDuration(w.seconds))}</b>.</p>
-      <ul><li>💰 Earned <b>$${esc(fmt(w.money))}</b></li><li>🎟️ Free rolls gained: <b>${w.freeRolls}</b></li>${w.boostersExpired ? `<li>🧪 ${w.boostersExpired} booster(s) ran out</li>` : ''}${w.waves ? `<li>🛡️ ${esc(w.waves.text)}</li>` : ''}</ul>${notes.map((n) => `<p class="muted">${esc(n)}</p>`).join('')}`,
+      <ul><li>${ico('coin')} Earned <b>$${esc(fmt(w.money))}</b></li><li>${ico('ticket')} Free rolls gained: <b>${w.freeRolls}</b></li>${w.boostersExpired ? `<li>${ico('vat')} ${w.boostersExpired} booster(s) ran out</li>` : ''}${w.waves ? `<li>${ico('shield')} ${esc(w.waves.text)}</li>` : ''}</ul>${notes.map((n) => `<p class="muted">${esc(n)}</p>`).join('')}`,
     confirmText: 'Continue',
     cancelText: 'Close',
   });
@@ -501,9 +523,10 @@ async function firstRun() {
     const pct = (x) => `${Math.round(Math.abs(x - 1) * 100)}%`;
     const choice = await choiceDialog({
       title: 'Choose your pace',
-      html: `<p>You can change this any time in Settings.</p>
-        <p><b>Relaxed</b>: ${esc(MODES.relaxed.tagline)} Concretely: waves every ${Math.round(60 * m.wavePace)} s instead of 60 s, enemies with ${pct(m.enemyHp)} less health, lost waves cost ${pct(m.lossPenalty)} less, ${pct(m.income)} more income, free rolls every ${Math.round(120 * m.freeRollInterval)} s instead of 120 s and ${pct(m.bossTime)} more time against bosses.</p>
-        <p><b>Standard</b>: ${esc(MODES.standard.tagline)}</p>`,
+      html: `<p class="muted">You can change this any time in Settings.</p>
+        <p><b>Relaxed</b> is more forgiving:</p>
+        <ul><li>waves every ${Math.round(60 * m.wavePace)} s instead of 60 s</li><li>enemies have ${pct(m.enemyHp)} less health</li><li>a lost wave costs ${pct(m.lossPenalty)} less</li><li>${pct(m.income)} more income</li><li>a free roll every ${Math.round(120 * m.freeRollInterval)} s instead of 120 s</li><li>${pct(m.bossTime)} more time against bosses</li></ul>
+        <p><b>Standard</b> is the intended pace.</p>`,
       choices: [{ id: 'relaxed', label: 'Relaxed (recommended for new players)', primary: true }, { id: 'standard', label: 'Standard' }],
       focus: 'relaxed',
       escape: 'relaxed',

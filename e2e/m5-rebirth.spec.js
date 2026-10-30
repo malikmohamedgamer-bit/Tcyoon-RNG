@@ -39,7 +39,7 @@ test('rebirth: confirm resets the run, grants currency, switches the region them
   await page.waitForTimeout(500);
   const themeAfter = await page.evaluate(() => window.__game.gfx.scene.background.getHexString());
   expect(themeAfter).not.toBe(themeBefore); // new region, new sky colour
-  await page.getByRole('button', { name: /Buy 1 / }).first().click(); // Efficient Drills costs 1
+  await page.getByRole('button', { name: /^Buy 1\b/ }).first().click(); // Efficient Drills costs 1
   expect(await page.evaluate(() => window.__game.state.layers[0].tree['L0-income'])).toBe(1);
   expect(await page.evaluate(() => window.__game.state.layers[0].currency.toNumber())).toBe(1);
   await expectNoErrors(errors);

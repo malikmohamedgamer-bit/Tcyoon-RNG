@@ -1,0 +1,162 @@
+/* The five interface themes (docs/design.md). A theme is not a tint: it sets tokens (colour, radius, fonts, icon stroke)
+   AND decoration (rivets, brackets, chamfers, stepped borders, hazard stripes). Regions beyond the fifth reuse the base
+   theme's construction with a hue-shifted accent (--theme-accent is set from the region palette by main.js). */
+
+/* ================= Factory: a foundry control room (default) ================= */
+:root, :root[data-theme="factory"] {
+  --bg: #14171b;
+  --panel: #23282e; --panel-2: #2d333b; --panel-hi: #38404a;
+  --panel-bg: repeating-linear-gradient(90deg, rgba(255,255,255,.018) 0 1px, transparent 1px 3px), linear-gradient(180deg, #2c323a, #22272d);
+  --panel-edge: #565f6b; --line: #424a54; --track: #14171b;
+  --text: #eef1f4; --muted: #a9b3bf;
+  --accent: var(--theme-accent, #ff8a1f); --accent-text: var(--theme-accent-text, #1a0d00); --accent-edge: #00000066;
+  --good: #5fd98a; --bad: #ff6b5e; --focus: #7cc4ff;
+  --radius: 4px; --radius-sm: 2px; --radius-bar: 1px; --bw: 2px; --press: 2px;
+  --btn-bg: linear-gradient(180deg, #3b434d, #2d343c); --btn-bg-hover: linear-gradient(180deg, #46505b, #353d46); --btn-border: #596370;
+  --shadow-raised: inset 0 1px 0 rgba(255,255,255,.14), inset 0 -3px 0 rgba(0,0,0,.35);
+  --shadow-float: 0 8px 24px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.08);
+  --shadow-roll: inset 0 2px 0 rgba(255,255,255,.35), inset 0 -5px 0 rgba(0,0,0,.4), 0 6px 18px rgba(0,0,0,.5);
+  --font-display: "Barlow Condensed", "Arial Narrow", sans-serif; --font-body: "Atkinson Hyperlegible", system-ui, sans-serif; --font-num: "Barlow Condensed", "Atkinson Hyperlegible", sans-serif;
+  --display-transform: uppercase; --display-track: .07em; --display-weight: 700;
+  --rule: 0; --ico-w: 2.2; --ico-cap: square; --ico-join: miter;
+}
+:root[data-theme="factory"] .panel, :root:not([data-theme]) .panel { background-image: var(--panel-bg), radial-gradient(circle at 9px 9px, #7b8590 0 3px, #2a2f35 3.5px 4.5px, transparent 5px), radial-gradient(circle at calc(100% - 9px) 9px, #7b8590 0 3px, #2a2f35 3.5px 4.5px, transparent 5px); background-repeat: repeat, no-repeat, no-repeat; }
+:root[data-theme="factory"] .panel h2 { border-bottom: 5px solid transparent; border-image: repeating-linear-gradient(-45deg, var(--accent) 0 9px, #15181c 9px 18px) 5; padding-bottom: .4rem; }
+:root[data-theme="factory"] .roll-main { background-image: repeating-linear-gradient(-45deg, rgba(0,0,0,.13) 0 12px, transparent 12px 24px); border-color: #1a0d00; border-width: 3px; }
+:root[data-theme="factory"] .roll-label { text-shadow: 0 1px 0 rgba(255,255,255,.35); }
+:root[data-theme="factory"] .chip b { letter-spacing: .02em; }
+
+/* ================= Steampunk: a brass instrument case ================= */
+:root[data-theme="steampunk"] {
+  --bg: #130d08;
+  --panel: #2a1d13; --panel-2: #362618; --panel-hi: #45321f;
+  --panel-bg: radial-gradient(ellipse at 20% 0%, rgba(214,160,80,.10), transparent 55%), linear-gradient(180deg, #33241a, #251910);
+  --panel-edge: #b8853a; --line: #5d4529; --track: #170f09;
+  --text: #f4e7c9; --muted: #cdb48b;
+  --accent: var(--theme-accent, #d6a04a); --accent-text: var(--theme-accent-text, #1d1205); --accent-edge: #6d4a16;
+  --good: #8fd36b; --bad: #ff7a55; --focus: #ffe08a;
+  --radius: 12px; --radius-sm: 8px; --radius-bar: 999px; --bw: 2px; --press: 2px;
+  --btn-bg: linear-gradient(180deg, #43301f, #2f2217); --btn-bg-hover: linear-gradient(180deg, #54391f, #3a2a1b); --btn-border: #9b7231;
+  --shadow-raised: inset 0 1px 0 rgba(255,221,150,.25), inset 0 -2px 0 rgba(0,0,0,.4);
+  --shadow-float: 0 10px 26px rgba(0,0,0,.55), inset 0 0 0 2px #17100a, inset 0 0 0 3.5px #8a6228;
+  --shadow-roll: inset 0 2px 0 rgba(255,238,190,.55), inset 0 -4px 0 rgba(70,40,5,.55), 0 0 0 2px #17100a, 0 0 0 4px #8a6228, 0 8px 18px rgba(0,0,0,.55);
+  --font-display: "IM Fell DW Pica", Georgia, serif; --font-body: "Atkinson Hyperlegible", system-ui, sans-serif; --font-num: "Atkinson Hyperlegible", system-ui, sans-serif; /* IM Fell has old-style digits: numbers use the clear face */
+  --display-transform: none; --display-track: .03em; --display-weight: 400;
+  --rule: 1px solid #8a6228; --ico-w: 2; --ico-cap: round; --ico-join: round;
+}
+:root[data-theme="steampunk"] .panel h2, :root[data-theme="steampunk"] summary, :root[data-theme="steampunk"] #dock button, :root[data-theme="steampunk"] .roll-label { font-variant: small-caps; }
+:root[data-theme="steampunk"] .panel h2 { font-size: 1.55rem; }
+:root[data-theme="steampunk"] .chip b, :root[data-theme="steampunk"] .roll-label { font-weight: 400; }
+:root[data-theme="steampunk"] .roll-label { font-family: var(--font-num); font-weight: 700; font-size: 1.5rem; letter-spacing: .03em; text-shadow: 0 1px 0 rgba(255,238,190,.5); font-variant: normal; }
+:root[data-theme="steampunk"] button.primary { background: linear-gradient(180deg, #e6b864, #b98529); }
+:root[data-theme="steampunk"] .xpbar { height: 10px; border: 1px solid #8a6228; background-image: repeating-linear-gradient(90deg, transparent 0 11px, rgba(0,0,0,.55) 11px 12px); }
+:root[data-theme="steampunk"] .bar { border: 1px solid #8a6228; height: 10px; }
+:root[data-theme="steampunk"] .panel::after { content: ""; position: absolute; inset: 6px; pointer-events: none; border-radius: 8px; background: radial-gradient(circle at 6px 6px, #c79a45 0 2.5px, transparent 3px) top left / 100% 100% no-repeat, radial-gradient(circle at calc(100% - 6px) 6px, #c79a45 0 2.5px, transparent 3px) no-repeat, radial-gradient(circle at 6px calc(100% - 6px), #c79a45 0 2.5px, transparent 3px) no-repeat, radial-gradient(circle at calc(100% - 6px) calc(100% - 6px), #c79a45 0 2.5px, transparent 3px) no-repeat; }
+
+/* ================= Space: a spaceship HUD ================= */
+:root[data-theme="space"] {
+  --bg: #05070f;
+  --panel: #0a1428; --panel-2: #101e3a; --panel-hi: #162a50;
+  --panel-bg: linear-gradient(180deg, rgba(10,22,46,.92), rgba(6,13,30,.9));
+  --panel-edge: color-mix(in srgb, var(--accent) 55%, #0a1428); --line: #20406b; --track: #07101f;
+  --text: #dcefff; --muted: #94b6d6;
+  --accent: var(--theme-accent, #35e1ff); --accent-text: var(--theme-accent-text, #00131a); --accent-edge: transparent;
+  --good: #52f5b0; --bad: #ff6f8e; --focus: #ffffff;
+  --radius: 4px; --radius-sm: 3px; --radius-bar: 1px; --bw: 1px; --press: 1px;
+  --btn-bg: rgba(53,225,255,.06); --btn-bg-hover: color-mix(in srgb, var(--accent) 16%, transparent); --btn-border: color-mix(in srgb, var(--accent) 60%, transparent);
+  --shadow-raised: none;
+  --shadow-float: 0 0 22px color-mix(in srgb, var(--accent) 22%, transparent), 0 8px 24px rgba(0,0,0,.6);
+  --shadow-roll: 0 0 0 1px var(--accent), 0 0 26px color-mix(in srgb, var(--accent) 55%, transparent), inset 0 0 18px rgba(255,255,255,.18);
+  --font-display: "Orbitron", "Segoe UI", sans-serif; --font-body: "Atkinson Hyperlegible", system-ui, sans-serif; --font-num: "Orbitron", "Atkinson Hyperlegible", sans-serif;
+  --display-transform: uppercase; --display-track: .1em; --display-weight: 600;
+  --rule: 1px solid color-mix(in srgb, var(--accent) 45%, transparent); --ico-w: 1.6; --ico-cap: round; --ico-join: round;
+}
+:root[data-theme="space"] .panel { background-image: var(--panel-bg), linear-gradient(var(--accent), var(--accent)), linear-gradient(var(--accent), var(--accent)), linear-gradient(var(--accent), var(--accent)), linear-gradient(var(--accent), var(--accent)), linear-gradient(var(--accent), var(--accent)), linear-gradient(var(--accent), var(--accent)), linear-gradient(var(--accent), var(--accent)), linear-gradient(var(--accent), var(--accent)); background-size: 100% 100%, 16px 2px, 2px 16px, 16px 2px, 2px 16px, 16px 2px, 2px 16px, 16px 2px, 2px 16px; background-position: 0 0, 0 0, 0 0, 100% 0, 100% 0, 0 100%, 0 100%, 100% 100%, 100% 100%; background-repeat: no-repeat; }
+:root[data-theme="space"] .panel h2 { font-size: 1.05rem; }
+:root[data-theme="space"] button.primary { box-shadow: 0 0 16px color-mix(in srgb, var(--accent) 60%, transparent); }
+:root[data-theme="space"] .roll-label { font-size: 1.3rem; letter-spacing: .16em; }
+:root[data-theme="space"] .chip b { text-shadow: 0 0 10px color-mix(in srgb, var(--accent) 50%, transparent); font-size: 1.05rem; }
+:root[data-theme="space"] .chip.money b { font-size: 1.45rem; }
+:root[data-theme="space"] .xpbar > i, :root[data-theme="space"] .bar > i { box-shadow: 0 0 8px var(--accent); }
+:root[data-theme="space"] #dock button { font-size: .66rem; letter-spacing: .1em; }
+
+/* ================= Sci-Fi: a clean neon lab ================= */
+:root[data-theme="scifi"] {
+  --bg: #0a0c0b;
+  --panel: #141816; --panel-2: #1c211e; --panel-hi: #262d29;
+  --panel-bg: linear-gradient(180deg, #181d1a, #121513);
+  --panel-edge: #2c352f; --line: #2f3a33; --track: #0a0c0b;
+  --text: #f1f6f2; --muted: #a2b0a6;
+  --accent: var(--theme-accent, #b6ff3c); --accent-text: var(--theme-accent-text, #0b1400); --accent-edge: transparent;
+  --good: #6df08f; --bad: #ff5b7a; --focus: #7dd6ff;
+  --radius: 0px; --radius-sm: 0px; --radius-bar: 0px; --bw: 1px; --press: 2px;
+  --btn-bg: #1e2420; --btn-bg-hover: #29312c; --btn-border: #3a463e;
+  --shadow-raised: inset 0 -2px 0 color-mix(in srgb, var(--accent) 45%, transparent);
+  --shadow-float: 0 10px 28px rgba(0,0,0,.6);
+  --shadow-roll: inset 0 -5px 0 rgba(0,0,0,.3), 0 0 22px color-mix(in srgb, var(--accent) 40%, transparent);
+  --font-display: "Chakra Petch", "Segoe UI", sans-serif; --font-body: "Atkinson Hyperlegible", system-ui, sans-serif; --font-num: "Chakra Petch", "Atkinson Hyperlegible", sans-serif;
+  --display-transform: uppercase; --display-track: .06em; --display-weight: 700;
+  --rule: 1px solid #2f3a33; --ico-w: 2; --ico-cap: butt; --ico-join: miter; --cut: 12px;
+}
+:root[data-theme="scifi"] .panel, :root[data-theme="scifi"] #dock, :root[data-theme="scifi"] #hud, :root[data-theme="scifi"] #modal-root .modal, :root[data-theme="scifi"] .tut-card, :root[data-theme="scifi"] .tip-card { clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, var(--cut) 100%, 0 calc(100% - var(--cut))); border-left: 4px solid var(--accent); box-shadow: none; }
+:root[data-theme="scifi"] button { clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px)); }
+:root[data-theme="scifi"] .roll-main { clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 18px 100%, 0 calc(100% - 18px)); }
+:root[data-theme="scifi"] .panel h2 { border-bottom: 2px solid var(--accent); width: fit-content; padding-right: 1.2rem; }
+:root[data-theme="scifi"] .card, :root[data-theme="scifi"] .badge, :root[data-theme="scifi"] .rar { clip-path: none; }
+:root[data-theme="scifi"] #dock button[aria-pressed="true"] { box-shadow: inset 3px 0 0 var(--accent-text); }
+
+/* ================= Pixel: an 8-bit arcade menu ================= */
+:root[data-theme="pixel"] {
+  --bg: #141626;
+  --panel: #262b44; --panel-2: #323859; --panel-hi: #3f4770;
+  --panel-bg: #262b44;
+  --panel-edge: transparent; --line: #4a5285; --track: #0e1020;
+  --text: #f4f4ff; --muted: #b4bbe6;
+  --accent: var(--theme-accent, #ffd23f); --accent-text: var(--theme-accent-text, #1a1400); --accent-edge: #0b0d19;
+  --good: #5ef28c; --bad: #ff6b8b; --focus: #ffffff;
+  --radius: 0px; --radius-sm: 0px; --radius-bar: 0px; --bw: 3px; --press: 3px;
+  --btn-bg: #3f4770; --btn-bg-hover: #4d5688; --btn-border: #0b0d19;
+  --shadow-raised: inset 0 3px 0 rgba(255,255,255,.2), inset 0 -3px 0 rgba(0,0,0,.35);
+  --shadow-float: 0 -4px 0 0 #0b0d19, 0 4px 0 0 #0b0d19, -4px 0 0 0 #0b0d19, 4px 0 0 0 #0b0d19, 8px 8px 0 0 rgba(0,0,0,.5);
+  --shadow-roll: inset 0 4px 0 rgba(255,255,255,.4), inset 0 -4px 0 rgba(0,0,0,.4), 0 -4px 0 0 #0b0d19, 0 4px 0 0 #0b0d19, -4px 0 0 0 #0b0d19, 4px 0 0 0 #0b0d19, 8px 8px 0 0 rgba(0,0,0,.5);
+  --font-display: "Silkscreen", "Courier New", monospace; --font-body: "Atkinson Hyperlegible", system-ui, sans-serif; --font-num: "Silkscreen", "Courier New", monospace;
+  --display-transform: uppercase; --display-track: .04em; --display-weight: 700;
+  --rule: 4px dotted #4a5285; --ico-w: 3; --ico-cap: square; --ico-join: miter;
+}
+:root[data-theme="pixel"] .panel, :root[data-theme="pixel"] #hud, :root[data-theme="pixel"] #dock, :root[data-theme="pixel"] #modal-root .modal, :root[data-theme="pixel"] .tut-card, :root[data-theme="pixel"] .tip-card, :root[data-theme="pixel"] .toast, :root[data-theme="pixel"] #tooltip { border-width: 0; }
+:root[data-theme="pixel"] #hud { margin: 4px; }
+:root[data-theme="pixel"] button { border-width: 3px; }
+:root[data-theme="pixel"] button:active:not(:disabled) { box-shadow: none; }
+:root[data-theme="pixel"] .roll-main { border-width: 4px; }
+:root[data-theme="pixel"] .roll-label { font-size: 1.2rem; }
+:root[data-theme="pixel"] .panel h2 { font-size: 1rem; line-height: 1.5; }
+:root[data-theme="pixel"] .chip b { font-size: .95rem; }
+:root[data-theme="pixel"] .chip.money b { font-size: 1.25rem; }
+:root[data-theme="pixel"] .bar, :root[data-theme="pixel"] .xpbar { height: 10px; box-shadow: inset 0 0 0 2px #0b0d19; }
+:root[data-theme="pixel"] #view { image-rendering: pixelated; }
+:root[data-theme="pixel"] .card.item { border-left-style: solid; }
+:root[data-theme="pixel"] #dock button { font-size: .6rem; }
+
+/* ================= High contrast overrides every theme ================= */
+:root[data-contrast="high"], :root[data-contrast="high"][data-theme] {
+  --bg: #000; --panel: #000; --panel-2: #101010; --panel-hi: #1a1a1a; --panel-bg: #000; --panel-edge: #fff; --line: #fff; --track: #333;
+  --text: #fff; --muted: #e6e6e6; --accent: #ffe14d; --accent-text: #000; --accent-edge: #fff; --focus: #00e5ff;
+  --btn-bg: #000; --btn-bg-hover: #1a1a1a; --btn-border: #fff;
+  --shadow-float: none; --shadow-raised: none; --shadow-roll: 0 0 0 2px #fff;
+}
+:root[data-contrast="high"] .panel, :root[data-contrast="high"] .panel h2, :root[data-contrast="high"] #hud { background-image: none; border-image: none; }
+:root[data-contrast="high"] .panel::after { display: none; }
+:root[data-contrast="high"] .roll-main { background-image: none; }
+
+/* ---- wide display faces need smaller sizes on phones ---- */
+@media (max-width: 639px) {
+  :root[data-theme="space"] .roll-label { font-size: .95rem; letter-spacing: .1em; }
+  :root[data-theme="pixel"] .roll-label { font-size: .9rem; }
+  :root[data-theme="space"] .chip b, :root[data-theme="pixel"] .chip b { font-size: .8rem; }
+  :root[data-theme="space"] .chip.money b, :root[data-theme="pixel"] .chip.money b { font-size: 1rem; }
+  :root[data-theme="space"] #dock button { font-size: .52rem; letter-spacing: .04em; }
+  :root[data-theme="pixel"] #dock button { font-size: .48rem; }
+  :root[data-theme="space"] .panel h2, :root[data-theme="pixel"] .panel h2 { font-size: .85rem; }
+}
+:root[data-theme="space"] #dock button { font-size: .58rem; letter-spacing: .05em; }
+:root[data-theme="pixel"] #dock button { font-size: .52rem; letter-spacing: 0; }

@@ -14,10 +14,16 @@
     "test:soak": "playwright test e2e/soak.spec.js --workers=1",
     "sim:economy": "node scripts/simulate-economy.js",
     "sim:combat": "node scripts/simulate-combat.js",
-    "vendor": "node scripts/vendor-three.js"
+    "vendor": "node scripts/vendor-three.js && node scripts/vendor-fonts.js"
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",
+    "@fontsource/atkinson-hyperlegible": "^5.3.0",
+    "@fontsource/barlow-condensed": "^5.3.0",
+    "@fontsource/chakra-petch": "^5.3.0",
+    "@fontsource/im-fell-dw-pica": "^5.3.0",
+    "@fontsource/orbitron": "^5.3.0",
+    "@fontsource/silkscreen": "^5.3.0",
     "@playwright/test": "1.63.0",
     "eslint": "^9.17.0",
     "globals": "^15.14.0",

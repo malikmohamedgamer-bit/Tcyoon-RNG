@@ -53,7 +53,7 @@ function formulas() {
 export function articles() {
   return HELP.articles.map((a) => {
     const out = { id: a.id, title: a.title, keywords: a.keywords || '', paras: [...a.paras] };
-    if (a.block === 'rarityTable') out.table = { head: ['Rarity', 'Odds at luck ×1', 'Worth'], rows: rarityRows().map((r) => [`${r.icon} ${r.name}`, r.odds, r.value]) };
+    if (a.block === 'rarityTable') out.table = { head: ['Rarity', 'Odds at luck ×1', 'Worth'], rows: rarityRows().map((r) => [r.name, r.odds, r.value]) };
     if (a.block === 'prestigeExample') out.paras.push(...prestigeExample());
     if (a.block === 'formulas') out.paras.push(...formulas());
     return out;

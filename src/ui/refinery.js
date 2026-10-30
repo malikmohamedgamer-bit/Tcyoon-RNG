@@ -1,4 +1,5 @@
 // Mutation refinery panel: re-roll, transfer and combine mutations on owned items.
+import { ico } from './icons.js';
 import { esc } from './dom.js';
 import { itemTitle } from '../sim/items.js';
 import { mutationLabel } from '../sim/mutations.js';
@@ -12,7 +13,7 @@ export function createRefineryPanel(ctx) {
   return {
     id: 'refinery',
     label: 'Refinery',
-    icon: '⚗️',
+    icon: 'flask',
     view() {
       const s = game.state;
       const items = owned(s);
@@ -21,7 +22,7 @@ export function createRefineryPanel(ctx) {
       const muts = a ? a.mut || [] : [];
       const costFor = (op, it) => (it ? `$${fmt(refineCost(s, op, it))}` : '—');
       return `
-      <h2>⚗️ Refinery</h2>
+      <h2>${ico('flask')} Refinery</h2>
       ${ui.rmsg ? `<p class="msg ${ui.rmsg.kind || ''}" role="status">${esc(ui.rmsg.text)}</p>` : ''}
       <p class="muted">Costs scale with the roll price and the number of mutations. Items can be in the backpack or on the base.</p>
       <label>Item A (target / donor source)<br><select data-act="ref-a" data-fid="ref-a"><option value="">— choose —</option>${items.map((it) => opt(it, sel.a)).join('')}</select></label>

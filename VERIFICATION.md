@@ -189,3 +189,15 @@ Not verified: that the explanations are *clear to a new player* (nobody but me h
 | In a real browser at 2x: sim time ~2x real time, playtime stays real-time, HUD button appears at level 10 and cycles, save reloads at 2x | `e2e/f4-speed.spec.js` | PASS |
 | Offline progress identical at every speed (unit: 0.5x ... 64x; e2e: hour away at 1x vs 0.5x) and saves independent of speed | `tests/speed.test.js`, e2e | PASS |
 Not verified: how very high speeds (hundreds of x) *feel* or perform on a real device; I only checked the per-frame step bound in the loop test and that the simulation stays finite.
+
+## F5 — Redesign
+| What | How tested | Result |
+|---|---|---|
+| No emoji in the interface: 11 panels x 5 themes (+ the skip dialog) | `e2e/f5-design.spec.js` | PASS (found and fixed 3 leaks, BUGS #38-#40) |
+| Every icon named in the data and in endless generated content resolves to a drawn SVG; UI source has no emoji | `tests/icons.test.js` | PASS |
+| Fonts ship with the game, nothing is requested from another origin, each theme resolves its own display font | `e2e/f5-design.spec.js` | PASS |
+| WCAG contrast per theme, normal and high contrast: text >= 7, muted >= 4.5, accent text >= 4.5, accent UI >= 3, status colours >= 4.5, focus ring >= 3 | `e2e/f5-design.spec.js`, `tests/a11y.test.js` (all 60 region accents) | PASS (after fixing BUGS #37) |
+| 3 px focus ring on the menu in every theme; reduced motion removes the panel slide | `e2e/f5-design.spec.js` | PASS |
+| Phone, tablet, desktop x 5 themes: no horizontal overflow, Roll button on screen, unobstructed, all menu/Roll targets >= 44 px; 160% text on a phone | `e2e/f5-design.spec.js` | PASS |
+| Visual review loop (4 rounds) with before/after screenshots | `docs/design-review.md`, `docs/compare-*.png` | done by me only |
+Not verified / honest: whether it *looks good* is my judgment from software-rendered headless screenshots; no designer or player reviewed it (see the weak-points list in `docs/design-review.md`: the 3D scene is untouched, stacked messages can crowd a phone, icons are plain). Real devices, other browsers and font rendering on other platforms were not checked.

@@ -134,7 +134,7 @@ export function rotatingOffers(state, nowMs) {
   for (let i = 0; i < 3; i++) {
     const tier = base + 1 + rng.int(3);
     const price = rollCost(state).mul(0.8).mul(oddsOf(tier)).div(luck);
-    offers.push({ idx: offers.length, kind: 'item', tier, seed: rng.u32(), price, label: `${tierInfo(tier).short} item` });
+    offers.push({ idx: offers.length, kind: 'item', tier, seed: rng.u32(), price, label: `${tierInfo(tier).label} item` });
   }
   for (let i = 0; i < 2; i++) {
     const b = rng.pick(BOOSTERS);

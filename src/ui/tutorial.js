@@ -73,7 +73,7 @@ export function createTutorialUI({ game, shell, placement, gfx, root, syncLayout
     return btn || (shell.openId === 'backpack' ? null : dockRect('backpack')); // panel open but not drawn yet: no vague highlight
   };
   const TARGETS = {
-    roll: () => q('#panels [data-tut="roll"]') || dockRect('roll'),
+    roll: () => q('#roll-dock [data-tut="roll"]'),
     'dock:backpack': () => dockRect('backpack'),
     'dock:refinery': () => dockRect('refinery'),
     'dock:rebirth': () => dockRect('rebirth'),

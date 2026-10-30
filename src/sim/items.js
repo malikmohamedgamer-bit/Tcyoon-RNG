@@ -17,7 +17,7 @@ import { variantWord } from '../gen/names.js';
 import { mutationMultipliers } from './mutations.js';
 import { getMutation } from '../gen/mutations.js';
 
-export const TYPES = { ...ITEMS.types, weapon: { weight: 0, icon: '⚔️', main: 'dmg', label: 'Weapon', minLevel: 4 } };
+export const TYPES = { ...ITEMS.types, weapon: { weight: 0, icon: 'weapon', main: 'dmg', label: 'Weapon', minLevel: 4 } };
 export const TEMPLATES = new Map([...ITEMS.templates, ...WEAPONS.templates].map((t) => [t.id, t]));
 export const ITEM_TEMPLATES = ITEMS.templates;
 export const WEAPON_TEMPLATES = WEAPONS.templates;
@@ -122,7 +122,7 @@ export function itemTitle(item) {
 }
 
 export function itemIcon(item) {
-  return templateOf(item)?.icon || '❔';
+  return templateOf(item)?.shape || templateOf(item)?.icon || 'help';
 }
 
 /** Short one-line stats summary for cards/tooltips. */

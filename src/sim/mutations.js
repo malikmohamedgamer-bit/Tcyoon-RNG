@@ -46,7 +46,7 @@ export function removeMutation(item, id) {
 export const mutationLabel = (m) => {
   const def = getMutation(m[0]);
   if (!def) return m[0];
-  return m[1] > 1 ? `${def.icon} ${def.name} ${m[1]}` : `${def.icon} ${def.name}`;
+  return m[1] > 1 ? `${def.name} ${m[1]}` : def.name; // the icon is drawn by the UI (ui/icons.js)
 };
 
 /** Sum of mutation levels (used for sell value bonuses). */

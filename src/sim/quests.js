@@ -144,9 +144,9 @@ export function claimMilestone(state, id) {
 
 // ------------------------------------------------------------------ rotating chests
 const CHESTS = [
-  { name: 'Wooden chest', icon: '📦', weight: 6, reward: { rollPrices: 3 }, tierAdd: -1 },
-  { name: 'Silver chest', icon: '🧰', weight: 3, reward: { rollPrices: 8, freeRolls: 1 }, tierAdd: 0 },
-  { name: 'Golden chest', icon: '👑', weight: 1, reward: { rollPrices: 20, freeRolls: 2 }, tierAdd: 1 },
+  { name: 'Wooden chest', icon: 'box', weight: 6, reward: { rollPrices: 3 }, tierAdd: -1 },
+  { name: 'Silver chest', icon: 'chest', weight: 3, reward: { rollPrices: 8, freeRolls: 1 }, tierAdd: 0 },
+  { name: 'Golden chest', icon: 'crown', weight: 1, reward: { rollPrices: 20, freeRolls: 2 }, tierAdd: 1 },
 ];
 
 /** The chests of the current 6-hour block (same for everyone with the same seed; rotate by time). */

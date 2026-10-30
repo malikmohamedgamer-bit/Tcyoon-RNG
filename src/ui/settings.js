@@ -1,5 +1,6 @@
 // Settings panel: display, theme/accent/skins, camera, numbers, UI layout, accessibility, sound,
 // remappable controls (with conflict detection) and save export/import/reset.
+import { ico } from './icons.js';
 import { esc, confirmDialog } from './dom.js';
 import { ACTIONS, defaultBindings, keyLabel, wouldConflict } from '../core/input.js';
 import { BASE_THEMES } from '../gen/themes.js';
@@ -17,7 +18,7 @@ export function createSettingsPanel(ctx) {
   return {
     id: 'settings',
     label: 'Settings',
-    icon: '⚙️',
+    icon: 'gear',
     view() {
       const s = game.state.settings;
       const b = ctx.getBindings();
@@ -25,7 +26,7 @@ export function createSettingsPanel(ctx) {
       const keyRows = Object.entries(ACTIONS)
         .map(([a, def]) => `<tr><td>${esc(def.label)}</td><td>${(b[a] || []).map((k) => `<kbd>${esc(keyLabel(k))}</kbd>`).join(' ') || '—'}</td><td><button data-act="rebind" data-id="${a}" aria-label="Rebind ${esc(def.label)}">${ui.rebinding === a ? 'Press a key…' : 'Rebind'}</button></td></tr>`)
         .join('');
-      return `<h2>⚙️ Settings</h2>
+      return `<h2>${ico('gear')} Settings</h2>
       ${ui.setMsg ? `<p class="msg ${ui.setMsg.kind || ''}" role="status">${esc(ui.setMsg.text)}</p>` : ''}
       <details open><summary>Display</summary>
         ${range('pixelSize', 'Pixel size (1 = sharp)', s.pixelSize, 1, 8, 1)}
@@ -38,7 +39,7 @@ export function createSettingsPanel(ctx) {
         <div class="row2"><button data-act="pause">${ctx.isPaused() ? '▶ Resume' : '⏸ Pause'} (P)</button></div>
       </details>
       <details><summary>Theme, colours and skins</summary>
-        <label>Region theme ${sel('themeOverride', [['', 'Automatic (follows your region)'], ...BASE_THEMES.map((t) => [t.id, `${t.icon} ${t.name}`])], s.themeOverride || '')}</label>
+        <label>Region theme ${sel('themeOverride', [['', 'Automatic (follows your region)'], ...BASE_THEMES.map((t) => [t.id, t.name])], s.themeOverride || '')}</label>
         <label>Base floor skin ${sel('floorSkin', [['', 'Theme default'], ['plates', 'Plates'], ['rivets', 'Rivets'], ['hex', 'Hex'], ['circuit', 'Circuit'], ['checker', 'Checker']], s.floorSkin || '')}</label>
         <label>Accent colour <input type="color" data-act="set" data-key="accent" data-fid="set-accent" value="${s.accent || '#ffb020'}" aria-label="Accent colour"></label>
         <div class="row2"><button data-act="reset-accent">Reset accent</button></div>
@@ -53,7 +54,7 @@ export function createSettingsPanel(ctx) {
       <details><summary>Interface layout</summary>
         ${chk('advancedUI', 'Advanced UI: show every menu and status from the start (otherwise they appear as you unlock them)', s.advancedUI)}
         <p class="muted">Show or hide menu panels and status chips.</p>
-        ${panelsList.map((p) => chk('panel:' + p.id, `${p.icon} ${p.label}`, !s.hiddenPanels.includes(p.id))).join('')}
+        ${panelsList.map((p) => chk('panel:' + p.id, `${ico(p.icon)} ${p.label}`, !s.hiddenPanels.includes(p.id))).join('')}
         ${Object.keys(s.hud).map((k) => chk('hud.' + k, `Status chip: ${k}`, s.hud[k])).join('')}
       </details>
       <details open><summary>Accessibility</summary>

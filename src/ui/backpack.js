@@ -1,4 +1,5 @@
 // Backpack panel: items, per-item sell, multi-select fuse with documented odds, sell duplicates, upgrade.
+import { ico } from './icons.js';
 import { esc } from './dom.js';
 import { itemCard } from './itemcard.js';
 import { sellValue, backpackCapacity, backpackCost } from '../sim/economy.js';
@@ -21,7 +22,7 @@ export function createBackpackPanel(ctx) {
   return {
     id: 'backpack',
     label: 'Backpack',
-    icon: '🎒',
+    icon: 'backpack',
     view() {
       const s = game.state;
       const cap = backpackCapacity(s);
@@ -39,7 +40,7 @@ export function createBackpackPanel(ctx) {
         })
         .join('');
       return `
-      <h2>🎒 Backpack <span class="muted" style="font-size:.85rem">${s.bag.length}/${cap}</span></h2>
+      <h2>${ico('backpack')} Backpack <span class="muted" style="font-size:.85rem">${s.bag.length}/${cap}</span></h2>
       <div class="bar" role="progressbar" aria-label="Backpack fullness" aria-valuemin="0" aria-valuemax="${cap}" aria-valuenow="${s.bag.length}"><i style="width:${Math.min(100, (s.bag.length / cap) * 100)}%"></i></div>
       ${ui.bmsg ? `<p class="msg ${ui.bmsg.kind || ''}" role="status">${esc(ui.bmsg.text)}</p>` : ''}
       <div class="row2" style="margin:.4rem 0">
@@ -58,7 +59,7 @@ export function createBackpackPanel(ctx) {
         ${sel.length && chk && !chk.ok ? `<small class="bad">${esc(chk.reason)}</small> <button data-act="auto-select">Select matching items for me</button>` : ''}
         ${!sel.length && !fusable(s) ? `<small class="muted">You need ${ECON.fuse.min} items of the same tier to fuse.</small>` : !sel.length ? `<button data-act="auto-select">Select ${ECON.fuse.min}+ matching items for me</button>` : ''}
       </div>
-      <div class="grid" style="margin-top:.5rem">${cards || '<p class="muted">Your backpack is empty. Roll for items!</p>'}</div>`;
+      <div class="grid" style="margin-top:.5rem">${cards || `<div class="empty">${ico('backpack')}<b>Your backpack is empty.</b><span>Items you roll wait here until you place, sell or fuse them.</span><button class="primary" data-act="roll-one">Roll an item</button></div>`}</div>`;
     },
     act(name, el) {
       const uid = Number(el.dataset.uid);
@@ -79,6 +80,9 @@ export function createBackpackPanel(ctx) {
           ui.bmsg = g.length ? { text: `Selected ${g.length} items of the same tier. Press Fuse.`, kind: 'ok' } : { text: `You do not have ${ECON.fuse.min} items of the same tier yet. Roll more, then try again.` };
           break;
         }
+        case 'roll-one':
+          ctx.rollNow(1);
+          break;
         case 'clear-sel':
           ui.selected.clear();
           break;

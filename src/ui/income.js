@@ -1,5 +1,6 @@
 // "Why is my income this?": opened by clicking the Income number. A plain list: which line earns what,
 // what each item on it does, then every multiplier in the order it is applied (sim/explain.js).
+import { ico } from './icons.js';
 import { esc, term } from './dom.js';
 import { explainIncome } from '../sim/explain.js';
 
@@ -9,7 +10,7 @@ export function createIncomePanel(ctx) {
   return {
     id: 'income',
     label: 'Income',
-    icon: '$',
+    icon: 'coin',
     hidden: true, // opened from the Income number, not from the dock
     view() {
       const s = game.state;
@@ -23,7 +24,7 @@ export function createIncomePanel(ctx) {
         .join('');
       const mults = e.multipliers.map((m, i) => `<li><span class="muted">${i + 1}.</span> ${esc(m.label)} <b>${esc(m.text)}</b></li>`).join('');
       const problems = [...e.blocked.map((b) => ({ ...b, bad: true })), ...e.idle.map((b) => ({ ...b, bad: false }))]
-        .map((b) => `<li class="${b.bad ? 'bad' : 'muted'}">⚠ ${esc(b.title)} ${esc(b.why)}. ${sel(b.uid)}</li>`)
+        .map((b) => `<li class="${b.bad ? 'bad' : 'muted'}">${ico('warning')} ${esc(b.title)} ${esc(b.why)}. ${sel(b.uid)}</li>`)
         .join('');
       return `<h2>$ Why is my income this?</h2>
       <p>Your base earns <b class="money">$${fmt(e.total)}/s</b> (${term('income', 'income', { focus: false })}).</p>

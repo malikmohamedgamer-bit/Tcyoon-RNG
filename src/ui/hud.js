@@ -1,5 +1,6 @@
 // HUD chips, dock buttons and the open-panel manager. Frequently changing numbers use
 // [data-bind] elements updated in place; panels re-render through patchHtml (focus-safe).
+import { ico } from './icons.js';
 import { Big } from '../core/bignum.js';
 import { esc, patchHtml, delegate, textInput, term } from './dom.js';
 import { levelProgress } from '../sim/leveling.js';
@@ -16,13 +17,13 @@ export function createShell({ game, fmt, panels, onOpen, onSpeed }) {
   let bodyEl = null;
 
   hudEl.innerHTML = `
-    <div class="chip money" data-chip="money"><small>${term('money', 'Money')}</small><b data-bind="money">0</b></div>
-    <button type="button" class="chip" data-chip="income" data-act-income aria-label="Income per second. Open the income breakdown"><small>${term('income', 'Income', { focus: false })}</small><b data-bind="income">$0/s</b></button>
-    <div class="chip" data-chip="level"><small>${term('level', 'Level')} <span data-bind="level">1</span></small><b data-bind="xp">0%</b><div class="xpbar"><i data-bind="xpbar" style="width:0"></i></div></div>
-    <div class="chip" data-chip="luck"><small>${term('luck', 'Luck')}</small><b data-bind="luck">×1</b></div>
-    <div class="chip" data-chip="region"><small>${term('region', 'Region')}</small><b data-bind="region">1</b></div>
-    <button type="button" class="chip" data-chip="speed" data-act-speed aria-label="Game speed. Press to switch to the next unlocked speed" hidden><small>${term('speed', 'Speed', { focus: false })}</small><b data-bind="speed">1×</b></button>
-    <div class="chip" data-chip="fps"><small>${term('fps', 'FPS')}</small><b data-bind="fps">--</b></div>`;
+    <div class="chip money" data-chip="money"><small>${ico('coin')}${term('money', 'Money')}</small><b data-bind="money">0</b></div>
+    <button type="button" class="chip" data-chip="income" data-act-income aria-label="Income per second. Open the income breakdown"><small>${ico('bolt')}${term('income', 'Income', { focus: false })}</small><b data-bind="income">$0/s</b></button>
+    <div class="chip" data-chip="level"><small>${ico('star')}${term('level', 'Level')} <span data-bind="level">1</span></small><b data-bind="xp">0%</b><div class="xpbar"><i data-bind="xpbar" style="width:0"></i></div></div>
+    <div class="chip" data-chip="luck"><small>${ico('clover')}${term('luck', 'Luck')}</small><b data-bind="luck">×1</b></div>
+    <div class="chip" data-chip="region"><small>${ico('globe')}${term('region', 'Region')}</small><b data-bind="region">1</b></div>
+    <button type="button" class="chip" data-chip="speed" data-act-speed aria-label="Game speed. Press to switch to the next unlocked speed" hidden><small>${ico('gauge')}${term('speed', 'Speed', { focus: false })}</small><b data-bind="speed">1×</b></button>
+    <div class="chip" data-chip="fps"><small>${ico('pulse')}${term('fps', 'FPS')}</small><b data-bind="fps">--</b></div>`;
   hudEl.querySelector('[data-act-income]').addEventListener('click', () => toggle('income'));
   hudEl.querySelector('[data-act-speed]').addEventListener('click', () => onSpeed && onSpeed());
   const refs = {};
@@ -30,7 +31,7 @@ export function createShell({ game, fmt, panels, onOpen, onSpeed }) {
 
   dock.innerHTML = panels
     .filter((p) => !p.hidden)
-    .map((p) => `<button type="button" data-panel="${p.id}" aria-pressed="false" aria-controls="panels"><span aria-hidden="true">${p.icon}</span> ${esc(p.label)}<span class="badge-n" data-badge="${p.id}" hidden></span></button>`)
+    .map((p) => `<button type="button" data-panel="${p.id}" aria-pressed="false" aria-controls="panels">${ico(p.icon)}<span class="lbl">${esc(p.label)}</span><span class="badge-n" data-badge="${p.id}" hidden></span></button>`)
     .join('');
   dock.addEventListener('click', (e) => {
     const b = e.target.closest('[data-panel]');
@@ -53,7 +54,7 @@ export function createShell({ game, fmt, panels, onOpen, onSpeed }) {
       panelEl.setAttribute('aria-label', p.label);
       panelEl.tabIndex = -1;
       bodyEl = document.createElement('div');
-      panelEl.innerHTML = '<button type="button" class="close" data-close aria-label="Close panel" style="float:right">✕</button>';
+      panelEl.innerHTML = `<button type="button" class="close" data-close aria-label="Close panel">${ico('cross')}</button>`;
       panelEl.appendChild(bodyEl);
       host.appendChild(panelEl);
       panelEl.querySelector('[data-close]').addEventListener('click', () => open(null));
