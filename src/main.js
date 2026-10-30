@@ -16,6 +16,7 @@ import { createRefineryPanel } from './ui/refinery.js';
 import { createPlacement } from './ui/placement.js';
 import { createRebirthPanel } from './ui/rebirth.js';
 import { createShopPanel } from './ui/shop.js';
+import { createCombatPanel, createFightOverlay } from './ui/combat-ui.js';
 import { createRewardsPanel } from './ui/rewards.js';
 import { confirmDialog, esc } from './ui/dom.js';
 import { formatDuration } from './core/time.js';
@@ -32,7 +33,7 @@ gfx.setTheme(regionTheme(gs().region, gs().seed));
 gfx.setBaseSide(gs().base.side);
 
 const bindings = defaultBindings();
-const input = createInput(window, { getBindings: () => bindings, getContext: () => 'base' });
+const input = createInput(window, { getBindings: () => bindings, getContext: () => (gs()._enc && gs()._enc.manual ? 'arena' : 'base') });
 const placement = createPlacement({
   canvas,
   gfx,
@@ -52,6 +53,16 @@ const ctx = {
   ui,
   placement,
   open: (id) => shell.open(id),
+  toggleManual: () => {
+    const enc = gs()._enc;
+    if (!enc) {
+      toast('Manual control is available during a fight');
+      return;
+    }
+    game.setManual(!enc.manual);
+    announce(enc.manual ? 'Manual control on. Move with WASD, aim with the mouse.' : 'Manual control off. Your defences fight automatically.');
+  },
+  ability: (name) => { flags[name] = true; },
   placeButton: (it) => (it.loc === 'bag' && !isWeapon(it) ? `<button data-act="place" data-uid="${it.uid}">Place</button>` : ''),
   backpackAct: (name, el) => {
     if (name === 'place') {
@@ -60,10 +71,42 @@ const ctx = {
     }
   },
 };
-const panels = [createRollPanel(ctx), createBackpackPanel(ctx), createBasePanel(ctx), createShopPanel(ctx), createRewardsPanel(ctx), createRefineryPanel(ctx), createRebirthPanel(ctx)];
+const panels = [createRollPanel(ctx), createBackpackPanel(ctx), createBasePanel(ctx), createShopPanel(ctx), createRewardsPanel(ctx), createCombatPanel(ctx), createRefineryPanel(ctx), createRebirthPanel(ctx)];
+const touchMove = { x: 0, z: 0 };
+const flags = { dash: false, nova: false, shield: false };
+const aim = { x: 0, z: -10 };
+canvas.addEventListener('pointermove', (e) => {
+  const c = gfx.pickCell(e.clientX, e.clientY);
+  if (c) {
+    aim.x = c.wx;
+    aim.z = c.wz;
+  }
+});
 const shell = createShell({ game, fmt, panels });
-panels.forEach((p, i) => input.on(`panel${['Roll', 'Backpack', 'Base'][i] || ''}`, () => shell.toggle(p.id)));
+for (const [action, id] of [['panelRoll', 'roll'], ['panelBackpack', 'backpack'], ['panelBase', 'base'], ['panelShop', 'shop'], ['panelRebirth', 'rebirth'], ['panelCombat', 'combat'], ['panelRewards', 'rewards']]) input.on(action, () => shell.toggle(id));
+input.on('manual', () => ctx.toggleManual());
+input.on('dash', () => (flags.dash = true));
+input.on('nova', () => (flags.nova = true));
+input.on('shield', () => (flags.shield = true));
+input.on('pause', () => {
+  loop.paused = !loop.paused;
+  toast(loop.paused ? 'Paused (P to resume)' : 'Resumed');
+  announce(loop.paused ? 'Game paused' : 'Game resumed');
+});
+const fight = createFightOverlay(document.getElementById('arena-ui'), ctx);
 input.on('roll', () => { game.roll(1); shell.refresh(); });
+
+let fightCam = null;
+function syncFightCam() {
+  const enc = gs()._enc;
+  if (enc && !fightCam) {
+    fightCam = { dist: gfx.cam.dist };
+    gfx.cam.dist = Math.max(gfx.cam.dist, 34);
+  } else if (!enc && fightCam) {
+    gfx.cam.dist = fightCam.dist;
+    fightCam = null;
+  }
+}
 
 let themeRegion = gs().region;
 function syncTheme() {
@@ -83,6 +126,15 @@ function handleEvents() {
     } else if (e.type === 'level') {
       toast(`Level ${e.level}!`);
       announce(`Level up! You are now level ${e.level}`);
+    } else if (e.type === 'wave') {
+      if (e.win) announce(`Wave ${e.wave} defended`);
+      else {
+        toast(`Wave ${e.wave} lost${e.lost && !e.lost.isZero() ? ` (−$${fmt(e.lost)})` : ''}`);
+        announce(`Wave ${e.wave} lost. The base was damaged.`);
+      }
+    } else if (e.type === 'boss') {
+      toast(e.win ? `Boss defeated: ${e.name}!` : `${e.name} won this time`, 5000);
+      announce(e.win ? `Boss defeated: ${e.name}` : `Boss fight lost: ${e.name}`, { urgent: true });
     } else if (e.type === 'prestige') {
       toast(`Region ${e.region + 1} reached!`, 4000);
       announce(`Prestige complete. Welcome to region ${e.region + 1}`, { urgent: true });
@@ -109,7 +161,21 @@ input.on('resetCam', () => gfx.cam.reset());
 
 let uiAcc = 0;
 const loop = createLoop({
-  update: (dt) => game.step(dt),
+  update: (dt) => {
+    const enc = gs()._enc;
+    if (enc && enc.manual) {
+      const yaw = gfx.cam.yaw;
+      const fx = -Math.sin(yaw);
+      const fz = -Math.cos(yaw);
+      const rx = Math.cos(yaw);
+      const rz = -Math.sin(yaw);
+      const f = (input.isDown('moveUp') ? 1 : 0) - (input.isDown('moveDown') ? 1 : 0);
+      const r = (input.isDown('moveRight') ? 1 : 0) - (input.isDown('moveLeft') ? 1 : 0);
+      game.manualInput = { mx: fx * f + rx * r + (touchMove.x || 0), mz: fz * f + rz * r + (touchMove.z || 0), ax: aim.x, az: aim.z, dash: flags.dash, nova: flags.nova, shield: flags.shield };
+    } else game.manualInput = null;
+    game.step(dt);
+    flags.dash = flags.nova = flags.shield = false;
+  },
   render: (alpha, dt) => {
     gfx.render(dt, gs());
     placement.validate();
@@ -117,6 +183,8 @@ const loop = createLoop({
     shell.frame();
     handleEvents();
     syncTheme();
+    syncFightCam();
+    fight.update(gs());
     uiAcc += dt;
     if (uiAcc >= 0.25) {
       uiAcc = 0;

@@ -58,6 +58,9 @@ All notable changes, by milestone. Dates are build dates.
 - Save format stays **v2** (new fields are additive with defaults).
 - Shop and Rewards panels (badge for claimable rewards).
 
-## M7 (in progress) — Combat core
-- `gen/monsters.js`, `gen/bosses.js`, `data/enemies.json`, `data/bosses.json`: endless seeded waves and bosses (mechanics: shield, summon, enrage, shockwave, regeneration, plating, swiftness).
-- `sim/combat.js`: pure deterministic combat (turrets + equipped weapons, 6 damage types with resistances, crit/splash/chain/pierce/slow/burn, manual avatar with dash/nova/shield, boss mechanics and drops incl. unique mutation `boss:<n>`), closed-form wave forecast and offline waves, loss penalty min(2% money, 30 s income).
+## M7 — Combat, weapons, bosses, combat simulator
+- `gen/monsters.js`, `gen/bosses.js`, `data/enemies.json`, `data/bosses.json`: endless seeded waves and bosses (mechanics: phase shield, summoner, enrage, shockwave, regeneration, plating, swiftness; every 5th boss adds one more mechanic).
+- `sim/combat.js`: pure deterministic combat (seeded; no DOM/Three/clock): turrets on the grid + equipped weapons fighting automatically, 5 damage types with resistances/weaknesses, crit / splash / chain / pierce / slow / burn, manual avatar (move, aim, dash, nova, shield, weapons +50%), boss mechanics and drops (weapon with unique mutation `boss:<n>`, money, a free upgrade level), rush ("arena") waves, closed-form wave forecast and offline wave resolution, loss penalty min(2% money, 30 s income) that never touches items or the save.
+- `scripts/simulate-combat.js`: proves a reasonable tier-t build beats waves up to ≥3t and loses before 3t+18 (never impossible, never trivial), bosses sit in their intended band, hp/numbers are finite forever, manual play beats waves auto play cannot.
+- Render: pooled instanced enemies with hp bars (cap by quality), capped effects (tracers/pops/nova rings, none flashing with reduced motion), fight camera; UI: Combat panel (forecast, gear slots, boss details, arena rush), fight overlay with touch-sized ability buttons.
+- `M` toggles manual control; WASD/arrows move, mouse aims, Shift dash, Q nova, E shield, Esc leaves.

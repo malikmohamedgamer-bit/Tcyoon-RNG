@@ -8,6 +8,8 @@ import { createPixelPipeline } from './pixelate.js';
 import { createCameraController } from './camera.js';
 import { createBase, worldToCell, cellToWorld, MAX_SIDE } from './base.js';
 import { createItemsRenderer } from './items.js';
+import { createEnemiesRenderer } from './enemies.js';
+import { createEffects } from './effects.js';
 
 export const QUALITY = {
   low: { props: 4, effects: 40, pixelMin: 3 },
@@ -32,6 +34,8 @@ export function createRenderer({ canvas, quality = 'medium', pixelSize = 4, redu
 
   const base = createBase({ scene, res, quality });
   const items = createItemsRenderer({ scene, res, getSide: () => base.side, quality });
+  const enemies = createEnemiesRenderer({ scene, res, quality });
+  const effects = createEffects({ scene, res, quality, reducedMotion });
   const raycaster = new THREE.Raycaster();
   const ground = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
   const hit = new THREE.Vector3();
@@ -57,6 +61,8 @@ export function createRenderer({ canvas, quality = 'medium', pixelSize = 4, redu
     res,
     base,
     items,
+    enemies,
+    effects,
     pixel,
     setTheme(theme) {
       base.setTheme(theme, q);
@@ -76,6 +82,7 @@ export function createRenderer({ canvas, quality = 'medium', pixelSize = 4, redu
     setReducedMotion(on) {
       motion = on ? 0 : 1;
       cam.sway = !on;
+      effects.setReducedMotion(on);
     },
     resize,
     /** Convert a pointer position (client px) to a grid cell on the y=0 plane. */
@@ -98,13 +105,23 @@ export function createRenderer({ canvas, quality = 'medium', pixelSize = 4, redu
       cam.update(dt);
       base.update(dt, motion);
       clock += dt;
-      if (state) items.update(state, clock, motion);
+      if (state) {
+        items.update(state, clock, motion);
+        const enc = state._enc || null;
+        enemies.update(enc, clock, motion);
+        if (enc) {
+          if (enc.ev.length) effects.push(enc.ev.splice(0));
+        } else if (state._lastEnc && state._lastEnc.ev.length) effects.push(state._lastEnc.ev.splice(0));
+      }
+      effects.update(dt);
       pixel.render(scene, camera);
     },
     audit() {
       return gpuAudit(renderer, res);
     },
     dispose() {
+      effects.dispose();
+      enemies.dispose();
       items.dispose();
       base.dispose();
       pixel.dispose();

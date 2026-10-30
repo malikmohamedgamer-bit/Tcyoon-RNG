@@ -15,6 +15,7 @@ export const ACTIONS = {
   panelRewards: { label: 'Open Rewards', ctx: 'global', keys: ['Digit7'] },
   panelSettings: { label: 'Open Settings', ctx: 'global', keys: ['Digit8'] },
   pause: { label: 'Pause', ctx: 'global', keys: ['KeyP'] },
+  manual: { label: 'Take / release manual control in a fight', ctx: 'global', keys: ['KeyM'] },
   cancel: { label: 'Cancel / close / leave arena', ctx: 'global', keys: ['Escape'] },
   rotate: { label: 'Rotate item', ctx: 'base', keys: ['KeyR'] },
   sellSel: { label: 'Sell selected item', ctx: 'base', keys: ['KeyX'] },
