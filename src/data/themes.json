@@ -1,0 +1,35 @@
+{
+  "_doc": "Five hand-made themes. gen/themes.js remixes them forever (hue shift + prop order + sfx transpose) so region N always has a theme. Colours are CSS hex.",
+  "themes": [
+    {
+      "id": "factory", "name": "Factory", "icon": "🏭",
+      "palette": { "tileA": "#4a4f58", "tileB": "#41454d", "edge": "#2a2d33", "locked": "#23262b", "accent": "#ffb020", "sky": "#1d2229", "fog": "#1d2229", "prop1": "#8a8f98", "prop2": "#d0642a", "prop3": "#5b6068" },
+      "floor": "plates", "props": ["gear", "pipe", "chimney", "crate"],
+      "sfx": { "wave": "square", "base": 110, "scale": [0, 3, 5, 7, 10], "noise": "clank" }
+    },
+    {
+      "id": "steampunk", "name": "Steampunk", "icon": "⚙️",
+      "palette": { "tileA": "#6b4a2f", "tileB": "#5c3f28", "edge": "#3a2616", "locked": "#2e2014", "accent": "#d9a441", "sky": "#3a2a1e", "fog": "#3a2a1e", "prop1": "#b8863b", "prop2": "#7a4a2a", "prop3": "#c9b99a" },
+      "floor": "rivets", "props": ["gear", "boiler", "tank", "chimney"],
+      "sfx": { "wave": "sawtooth", "base": 98, "scale": [0, 2, 4, 7, 9], "noise": "steam" }
+    },
+    {
+      "id": "space", "name": "Space", "icon": "🚀",
+      "palette": { "tileA": "#1b2340", "tileB": "#151c36", "edge": "#0a0e20", "locked": "#0b0f1f", "accent": "#6ee7ff", "sky": "#04050d", "fog": "#04050d", "prop1": "#8fa3d6", "prop2": "#e06bff", "prop3": "#ffd36e" },
+      "floor": "hex", "props": ["planet", "crystal", "antenna", "ring"],
+      "sfx": { "wave": "sine", "base": 146, "scale": [0, 2, 4, 6, 8, 10], "noise": "whoosh" }
+    },
+    {
+      "id": "scifi", "name": "Sci-Fi", "icon": "🤖",
+      "palette": { "tileA": "#17434a", "tileB": "#12363c", "edge": "#0a1f23", "locked": "#0b1a1d", "accent": "#39ffb3", "sky": "#07181c", "fog": "#07181c", "prop1": "#4de0c0", "prop2": "#2a8fb0", "prop3": "#d6fff4" },
+      "floor": "circuit", "props": ["pylon", "hologram", "server", "ring"],
+      "sfx": { "wave": "triangle", "base": 130, "scale": [0, 3, 5, 8, 10], "noise": "zap" }
+    },
+    {
+      "id": "pixel", "name": "Pixel", "icon": "👾",
+      "palette": { "tileA": "#40407a", "tileB": "#36366a", "edge": "#22224a", "locked": "#1c1c3c", "accent": "#ff6b9d", "sky": "#8ec5ff", "fog": "#8ec5ff", "prop1": "#6bdc6b", "prop2": "#ffd95e", "prop3": "#c58bff" },
+      "floor": "checker", "props": ["cube", "tree", "stair", "heart"],
+      "sfx": { "wave": "square", "base": 164, "scale": [0, 2, 4, 5, 7, 9, 11], "noise": "blip" }
+    }
+  ]
+}

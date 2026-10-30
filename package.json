@@ -1,0 +1,26 @@
+{
+  "name": "tcyoon-rng",
+  "version": "0.1.0",
+  "description": "Endless 3D roll-and-place RNG tycoon (vanilla JS, Three.js vendored, no build step)",
+  "type": "module",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "dev": "node scripts/serve.js",
+    "start": "node scripts/serve.js",
+    "lint": "eslint .",
+    "test": "node --test \"tests/**/*.test.js\"",
+    "test:e2e": "playwright test",
+    "test:soak": "playwright test e2e/soak.spec.js --workers=1",
+    "sim:economy": "node scripts/simulate-economy.js",
+    "sim:combat": "node scripts/simulate-combat.js",
+    "vendor": "node scripts/vendor-three.js"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.17.0",
+    "@playwright/test": "1.63.0",
+    "eslint": "^9.17.0",
+    "globals": "^15.14.0",
+    "three": "0.170.0"
+  }
+}
