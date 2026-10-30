@@ -1,0 +1,140 @@
+// Item model: templates, stat computation (tier scaling + variant + hybrid + mutations).
+//
+// An item is plain data: { uid, tpl, tier, vs, hy, mut, loc, x, y, dir }.
+//   tpl  template id (data/items.json or data/weapons.json)
+//   tier rarity tier (number, endless)
+//   vs   variant seed (0 = plain template). Variants jitter each stat 0.8x..1.3x and get a name.
+//   hy   hybrid secondary effect: 'mult' | 'add' | 'refine' | 'sell' | null
+//   mut  [[mutationId, level], ...]
+// itemStats() derives everything else and caches it on the object (non-serialised `_c`).
+
+import ITEMS from '../data/items.json' with { type: 'json' };
+import WEAPONS from '../data/weapons.json' with { type: 'json' };
+import { Big, ONE } from '../core/bignum.js';
+import { Rng, hash32 } from '../core/rng.js';
+import { valueOf, logValue, tierInfo } from '../gen/tiers.js';
+import { variantWord } from '../gen/names.js';
+import { mutationMultipliers } from './mutations.js';
+import { getMutation } from '../gen/mutations.js';
+
+export const TYPES = { ...ITEMS.types, weapon: { weight: 0, icon: '⚔️', main: 'dmg', label: 'Weapon', minLevel: 4 } };
+export const TEMPLATES = new Map([...ITEMS.templates, ...WEAPONS.templates].map((t) => [t.id, t]));
+export const ITEM_TEMPLATES = ITEMS.templates;
+export const WEAPON_TEMPLATES = WEAPONS.templates;
+export const HYBRID_BASE = { mult: 0.12, add: 0.25, refine: 0.2, sell: 0.1 };
+export const HYBRID_FACTOR = 0.4;
+export const HYBRID_TYPES = ['dropper', 'conveyor', 'multiplier', 'refiner', 'seller', 'upgrader'];
+
+/** Exponent of V (tier value) per stat: how strongly each stat grows with tier. */
+export const SCALE_EXP = { rate: 0.25, value: 0.75, cap: 0.3, rcap: 0.3, scap: 0.3, add: 0.9, mult: 0.5, refine: 0.5, sell: 0.6, aura: 0.4, luck: 0.4, xp: 0.4, dmg: 1 };
+/** Stats stored as "1 + extra" (extra scales with tier and mutations). */
+const EXTRA_STATS = new Set(['mult', 'refine', 'sell', 'aura', 'luck', 'xp']);
+const RANGE_LOG_FACTOR = 0.03;
+const RANGE_MAX_MULT = 3;
+const ROF_MAX = 20;
+
+export const templateOf = (item) => TEMPLATES.get(item.tpl);
+export const typeOf = (item) => templateOf(item)?.type || 'dropper';
+export const isWeapon = (item) => typeOf(item) === 'weapon';
+export const mainStat = (type) => TYPES[type]?.main || 'value';
+
+function variantFactor(vs, key) {
+  return 0.8 + new Rng(hash32(`vf|${vs}|${key}`)).next() * 0.5;
+}
+
+/** Computes (and caches) the final stats of an item. */
+export function itemStats(item) {
+  const key = `${item.tier}|${item.vs || 0}|${item.hy || ''}|${(item.mut || []).map((m) => m[0] + m[1]).join(',')}`;
+  if (item._c && item._c.key === key) return item._c.stats;
+  const stats = computeStats(item);
+  Object.defineProperty(item, '_c', { value: { key, stats }, enumerable: false, writable: true, configurable: true });
+  return stats;
+}
+
+function computeStats(item) {
+  const tpl = templateOf(item);
+  if (!tpl) return {};
+  const V = valueOf(item.tier);
+  const logV = logValue(item.tier);
+  const mm = mutationMultipliers(item.mut);
+  const main = mainStat(tpl.type);
+  const raw = {}; // stat -> Big (extra form for EXTRA_STATS)
+  const base = { ...tpl.base };
+  if (item.hy && HYBRID_BASE[item.hy] && !(item.hy in base) && !(item.hy === 'sell' && tpl.type === 'seller')) {
+    base[item.hy] = HYBRID_BASE[item.hy] * HYBRID_FACTOR;
+    if (item.hy === 'refine') base.rcap = 3;
+    if (item.hy === 'sell') base.scap = 4;
+  }
+  for (const [k, b] of Object.entries(base)) {
+    if (k === 'range' || k === 'rof') continue;
+    const e = SCALE_EXP[k];
+    let v = e == null ? Big.fromNumber(b) : V.pow(e).mul(b);
+    if (item.vs) v = v.mul(variantFactor(item.vs, k));
+    raw[k] = v;
+  }
+  // mutations: 'main' maps to the principal stat; others by name
+  const applyMut = (k, v) => {
+    let m = mm[k];
+    if (k === main && mm.main) m = m ? m.mul(mm.main) : mm.main;
+    return m ? v.mul(m) : v;
+  };
+  const stats = {};
+  for (const [k, v0] of Object.entries(raw)) {
+    const v = applyMut(k, v0);
+    stats[k] = EXTRA_STATS.has(k) ? ONE.add(v) : v;
+  }
+  if (tpl.base.range != null) {
+    let r = tpl.base.range * Math.min(RANGE_MAX_MULT, Math.pow(10, RANGE_LOG_FACTOR * Math.min(logV, 100)));
+    r *= Number.isFinite(mm.range?.toNumber()) && mm.range ? Math.min(2, mm.range.toNumber()) : 1;
+    stats.range = r;
+  }
+  if (tpl.base.rof != null) {
+    let r = tpl.base.rof;
+    if (mm.rof) r *= Math.min(10, mm.rof.toNumber());
+    stats.rof = Math.min(ROF_MAX, r);
+  }
+  if (tpl.dtype) stats.dtype = tpl.dtype;
+  if (tpl.special) {
+    let amt = tpl.special.amount;
+    if (tpl.special.kind === 'slow' && mm.slow) amt = Math.min(0.9, amt * mm.slow.toNumber());
+    stats.special = { kind: tpl.special.kind, amount: amt };
+  }
+  // an 'output' mutation on a dropper is already folded into `value` via the 'value' effect
+  return stats;
+}
+
+/** Human readable name: "Rare Pebble Drill «Zorvath»". */
+export function itemTitle(item) {
+  const tpl = templateOf(item);
+  const ti = tierInfo(item.tier);
+  const variant = item.vs ? ` «${variantWord(item.vs)}»` : '';
+  return `${ti.name} ${tpl ? tpl.name : item.tpl}${variant}`;
+}
+
+export function itemIcon(item) {
+  return templateOf(item)?.icon || '❔';
+}
+
+/** Short one-line stats summary for cards/tooltips. */
+export function statLines(item, fmt) {
+  const s = itemStats(item);
+  const out = [];
+  const f = (b) => fmt(b);
+  if (s.rate) out.push(`Rate ${f(s.rate)}/s`);
+  if (s.value) out.push(`Value ${f(s.value)}/unit`);
+  if (s.cap) out.push(`Throughput ${f(s.cap)}/s`);
+  if (s.add) out.push(`+${f(s.add)} per unit`);
+  if (s.mult) out.push(`×${f(s.mult)} value`);
+  if (s.refine) out.push(`Refine ×${f(s.refine)} (≤${f(s.rcap)}/s)`);
+  if (s.sell) out.push(`Sell ×${f(s.sell)} (≤${f(s.scap)}/s)`);
+  if (s.aura) out.push(`Neighbours ×${f(s.aura)} speed`);
+  if (s.luck) out.push(`Luck ×${f(s.luck)}`);
+  if (s.xp) out.push(`XP ×${f(s.xp)}`);
+  if (s.dmg) out.push(`Damage ${f(s.dmg)} ${s.dtype || ''}`.trim());
+  if (s.rof) out.push(`${Number(s.rof.toFixed(2))} shots/s · range ${Number((s.range || 0).toFixed(1))}`);
+  if (s.special) out.push(`${s.special.kind} ${s.special.amount}`);
+  return out;
+}
+
+export const mutationList = (item) => (item.mut || []).map((m) => getMutation(m[0])).filter(Boolean);
+

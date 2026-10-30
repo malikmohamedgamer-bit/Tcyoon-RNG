@@ -1,0 +1,12 @@
+{
+  "_doc": "Weapon (gear) templates. Weapons are rolled like items, live in the backpack and are equipped into limited gear slots. dmg scales with the tier value; range in world units; rof = shots per second. special.kind: pierce | splash | chain | slow | burn | crit. Add a weapon by appending here.",
+  "templates": [
+    { "id": "bolt_rifle",    "type": "weapon", "name": "Bolt Rifle",    "icon": "🔫", "weight": 10, "shape": "weapon", "base": { "dmg": 6,  "range": 13, "rof": 1.2 }, "dtype": "physical" },
+    { "id": "scatter_gun",   "type": "weapon", "name": "Scatter Gun",   "icon": "💥", "weight": 8,  "shape": "weapon", "base": { "dmg": 9,  "range": 7,  "rof": 0.9 }, "dtype": "physical", "special": { "kind": "splash", "amount": 1.6 } },
+    { "id": "plasma_pistol", "type": "weapon", "name": "Plasma Pistol", "icon": "🔥", "weight": 7,  "shape": "weapon", "base": { "dmg": 5,  "range": 10, "rof": 1.8 }, "dtype": "fire",     "special": { "kind": "burn", "amount": 0.4 } },
+    { "id": "cryo_gun",      "type": "weapon", "name": "Cryo Gun",      "icon": "❄️", "weight": 7,  "shape": "weapon", "base": { "dmg": 4,  "range": 10, "rof": 1.5 }, "dtype": "ice",      "special": { "kind": "slow", "amount": 0.45 } },
+    { "id": "tesla_wand",    "type": "weapon", "name": "Tesla Wand",    "icon": "🪄", "weight": 6,  "shape": "weapon", "base": { "dmg": 5,  "range": 9,  "rof": 1.2 }, "dtype": "electric", "special": { "kind": "chain", "amount": 3 } },
+    { "id": "void_lance",    "type": "weapon", "name": "Void Lance",    "icon": "🗡️", "weight": 4,  "shape": "weapon", "base": { "dmg": 14, "range": 12, "rof": 0.6 }, "dtype": "void",     "special": { "kind": "pierce", "amount": 3 } },
+    { "id": "crit_dagger",   "type": "weapon", "name": "Fate Dagger",   "icon": "🔪", "weight": 4,  "shape": "weapon", "base": { "dmg": 4,  "range": 5,  "rof": 3.0 }, "dtype": "physical", "special": { "kind": "crit", "amount": 0.25 } }
+  ]
+}

@@ -80,3 +80,25 @@ input[type="checkbox"] { width: 1.4rem; height: 1.4rem; }
   #hud { gap: .3rem; padding: .35rem; }
   .chip { min-width: 4.6rem; }
 }
+
+/* ---- item cards ---- */
+.card.item { border-left: var(--bw, 3px) solid var(--tc, var(--line)); display: grid; gap: .25rem; }
+.card.item.selected { outline: 2px solid var(--accent); }
+.card.item header { display: grid; grid-template-columns: auto 1fr auto; gap: .5rem; align-items: center; }
+.card.item .ico { font-size: 1.6rem; }
+.rar { font-size: .75rem; white-space: nowrap; padding: 1px 6px; border: 1px solid var(--tc); border-radius: 999px; }
+.badges { display: flex; flex-wrap: wrap; gap: .25rem; }
+.badge { font-size: .72rem; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 0 5px; }
+.stats { margin: 0; padding-left: 1.1rem; font-size: .8rem; color: var(--muted); }
+.big-btn { width: 100%; font-size: 1.1rem; min-height: 3rem; }
+.msg { padding: .35rem .5rem; border-radius: 8px; border: 1px solid var(--bad); }
+.msg.ok { border-color: var(--good); }
+details > summary { cursor: pointer; min-height: var(--touch); display: flex; align-items: center; }
+table.odds { width: 100%; border-collapse: collapse; font-size: .8rem; }
+table.odds td, table.odds th { padding: 2px 4px; text-align: right; border-bottom: 1px solid var(--line); }
+table.odds td:first-child, table.odds th:first-child { text-align: left; }
+.bar { height: 8px; background: var(--line); border-radius: 4px; overflow: hidden; }
+.bar > i { display: block; height: 100%; background: var(--accent); }
+ul.plain { list-style: none; margin: 0; padding: 0; display: grid; gap: .25rem; font-size: .85rem; }
+.panel:focus { outline: none; }
+.panel h2 { margin-right: 3rem; }

@@ -1,0 +1,27 @@
+{
+  "_doc": "Mutations are data-driven. effects: [{stat, mul}] multiply a stat of the item they sit on (stat 'main' = the item type's principal stat; see items.json types[].main). scope 'output' multiplies the value of the units a dropper produces (same as 'value'). chance = base probability per roll; luck raises it (README). group: only one mutation per group on an item. applies: item types it can appear on (omitted = any). Add a mutation by appending here. Mutations beyond this list are generated endlessly by gen/mutations.js (ids 'g:<stage>').",
+  "rules": {
+    "baseMax": 1,
+    "tiersPerExtraSlot": 4,
+    "maxLevel": 5,
+    "luckChanceBonus": 0.5,
+    "luckChanceCap": 25,
+    "chanceCeiling": 0.6,
+    "generated": { "baseChance": 0.01, "perTier": 0.5, "stageSpread": 3, "mulLog10Base": 0.35, "mulLog10PerStage": 0.15 }
+  },
+  "mutations": [
+    { "id": "shiny",       "name": "Shiny",       "icon": "✨", "chance": 0.08,  "group": "sheen", "effects": [{ "stat": "main", "mul": 1.5 }] },
+    { "id": "golden",      "name": "Golden",      "icon": "🥇", "chance": 0.02,  "group": "sheen", "minTier": 1, "effects": [{ "stat": "main", "mul": 3 }] },
+    { "id": "rainbow",     "name": "Rainbow",     "icon": "🌈", "chance": 0.005, "group": "sheen", "minTier": 3, "effects": [{ "stat": "main", "mul": 6 }, { "stat": "rate", "mul": 1.5 }] },
+    { "id": "cursed",      "name": "Cursed",      "icon": "💀", "chance": 0.01,  "group": "curse", "minTier": 1, "effects": [{ "stat": "main", "mul": 6 }, { "stat": "rate", "mul": 0.5 }] },
+    { "id": "swift",       "name": "Swift",       "icon": "💨", "chance": 0.06,  "group": "speed", "applies": ["dropper", "turret", "weapon"], "effects": [{ "stat": "rate", "mul": 1.6 }, { "stat": "rof", "mul": 1.3 }] },
+    { "id": "overclocked", "name": "Overclocked", "icon": "⚙️", "chance": 0.004, "group": "speed", "minTier": 2, "applies": ["dropper", "turret", "weapon"], "effects": [{ "stat": "rate", "mul": 3 }, { "stat": "rof", "mul": 2 }] },
+    { "id": "sturdy",      "name": "Sturdy",      "icon": "🛡️", "chance": 0.06,  "group": "build", "applies": ["conveyor", "refiner", "seller"], "effects": [{ "stat": "cap", "mul": 2 }, { "stat": "rcap", "mul": 2 }, { "stat": "scap", "mul": 2 }] },
+    { "id": "radiant",     "name": "Radiant",     "icon": "☀️", "chance": 0.015, "group": "glow",  "applies": ["dropper"], "scope": "output", "effects": [{ "stat": "value", "mul": 2 }] },
+    { "id": "lucky",       "name": "Lucky",       "icon": "🍀", "chance": 0.03,  "group": "fortune", "applies": ["generator"], "effects": [{ "stat": "luck", "mul": 1.5 }] },
+    { "id": "frozen",      "name": "Frozen",      "icon": "🧊", "chance": 0.03,  "group": "element", "applies": ["turret", "weapon"], "effects": [{ "stat": "dmg", "mul": 1.3 }, { "stat": "slow", "mul": 1.5 }] },
+    { "id": "molten",      "name": "Molten",      "icon": "🌋", "chance": 0.015, "group": "element", "minTier": 1, "applies": ["turret", "weapon"], "effects": [{ "stat": "dmg", "mul": 1.8 }] },
+    { "id": "voidborn",    "name": "Voidborn",    "icon": "🌌", "chance": 0.002, "group": "sheen", "minTier": 4, "effects": [{ "stat": "main", "mul": 12 }] },
+    { "id": "bossbane",    "name": "Bossbane",    "icon": "👑", "chance": 0,     "group": "boss",  "applies": ["turret", "weapon"], "effects": [{ "stat": "dmg", "mul": 4 }], "note": "Dropped by bosses only." }
+  ]
+}

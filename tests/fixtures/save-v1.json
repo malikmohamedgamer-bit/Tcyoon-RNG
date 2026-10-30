@@ -1,0 +1,160 @@
+{
+  "v": 1,
+  "seed": 20260101,
+  "rngState": [
+    1613084395,
+    3584631659,
+    2019909506,
+    4214241370
+  ],
+  "createdAt": 1767225600000,
+  "savedAt": 1767312000000,
+  "playtime": 1234,
+  "money": "b1,0,1.2114462417664003,4",
+  "runMoney": "b0,0,0,0",
+  "totalMoney": "b0,0,0,0",
+  "xp": "b1,0,3.045495403519998,1",
+  "level": 6,
+  "region": 0,
+  "items": [
+    {
+      "uid": 1,
+      "tpl": "pebble_drill",
+      "tier": 0,
+      "vs": 0,
+      "hy": null,
+      "mut": []
+    },
+    {
+      "uid": 2,
+      "tpl": "stall",
+      "tier": 0,
+      "vs": 0,
+      "hy": null,
+      "mut": []
+    },
+    {
+      "uid": 3,
+      "tpl": "cryo_gun",
+      "tier": 0,
+      "vs": 0,
+      "hy": null,
+      "mut": []
+    },
+    {
+      "uid": 4,
+      "tpl": "amp",
+      "tier": 1,
+      "vs": 237652747,
+      "hy": null,
+      "mut": []
+    },
+    {
+      "uid": 5,
+      "tpl": "belt",
+      "tier": 0,
+      "vs": 0,
+      "hy": null,
+      "mut": []
+    },
+    {
+      "uid": 6,
+      "tpl": "stall",
+      "tier": 3,
+      "vs": 1749196797,
+      "hy": null,
+      "mut": []
+    },
+    {
+      "uid": 7,
+      "tpl": "amp",
+      "tier": 1,
+      "vs": 968647863,
+      "hy": null,
+      "mut": []
+    },
+    {
+      "uid": 8,
+      "tpl": "polisher",
+      "tier": 1,
+      "vs": 0,
+      "hy": null,
+      "mut": []
+    },
+    {
+      "uid": 9,
+      "tpl": "auction",
+      "tier": 3,
+      "vs": 84269594,
+      "hy": null,
+      "mut": []
+    },
+    {
+      "uid": 10,
+      "tpl": "void_lance",
+      "tier": 0,
+      "vs": 265510760,
+      "hy": null,
+      "mut": []
+    },
+    {
+      "uid": 11,
+      "tpl": "gem_forge",
+      "tier": 0,
+      "vs": 0,
+      "hy": "mult",
+      "mut": []
+    },
+    {
+      "uid": 12,
+      "tpl": "frost_spire",
+      "tier": 0,
+      "vs": 0,
+      "hy": null,
+      "mut": [
+        [
+          "swift",
+          1
+        ]
+      ]
+    },
+    {
+      "uid": 13,
+      "tpl": "void_cannon",
+      "tier": 0,
+      "vs": 0,
+      "hy": null,
+      "mut": []
+    },
+    {
+      "uid": 14,
+      "tpl": "cryo_gun",
+      "tier": 1,
+      "vs": 0,
+      "hy": null,
+      "mut": []
+    }
+  ],
+  "nextUid": 15,
+  "backpackTier": 0,
+  "autoRoll": false,
+  "pity": {
+    "soft": 0,
+    "hard": 12
+  },
+  "freeRoll": {
+    "progress": 0,
+    "count": 0
+  },
+  "fusePity": 0,
+  "stats": {
+    "rolls": 37,
+    "sold": 0,
+    "fused": 0,
+    "bestTier": 3
+  },
+  "settings": {
+    "pixelSize": 4,
+    "quality": "medium"
+  }
+}

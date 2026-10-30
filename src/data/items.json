@@ -1,0 +1,49 @@
+{
+  "_doc": "Item templates. To add an item by data only: append an object here (id unique, type one of the types below, base = stats before tier scaling). 'weight' is its share within its type. 'minLevel' gates rolling. Stat meanings are in README (Formulas > item stats).",
+  "types": {
+    "dropper":    { "weight": 28, "icon": "⛏️", "main": "value", "label": "Dropper" },
+    "conveyor":   { "weight": 12, "icon": "➡️", "main": "cap",   "label": "Conveyor" },
+    "multiplier": { "weight": 13, "icon": "✖️", "main": "mult",  "label": "Multiplier" },
+    "refiner":    { "weight": 9,  "icon": "🔥", "main": "refine","label": "Refiner" },
+    "seller":     { "weight": 10, "icon": "💰", "main": "sell",  "label": "Seller" },
+    "upgrader":   { "weight": 9,  "icon": "⬆️", "main": "add",   "label": "Upgrader" },
+    "generator":  { "weight": 7,  "icon": "⚡", "main": "aura",  "label": "Generator" },
+    "turret":     { "weight": 8,  "icon": "🎯", "main": "dmg",   "label": "Turret", "minLevel": 4 }
+  },
+  "templates": [
+    { "id": "pebble_drill", "type": "dropper", "name": "Pebble Drill", "icon": "⛏️", "weight": 10, "shape": "drill",  "base": { "rate": 1,    "value": 1 } },
+    { "id": "ore_pump",     "type": "dropper", "name": "Ore Pump",     "icon": "🛢️", "weight": 8,  "shape": "pump",   "base": { "rate": 2,    "value": 0.5 } },
+    { "id": "gem_forge",    "type": "dropper", "name": "Gem Forge",    "icon": "💎", "weight": 6,  "shape": "forge",  "base": { "rate": 0.5,  "value": 2.2 } },
+    { "id": "slime_vat",    "type": "dropper", "name": "Slime Vat",    "icon": "🧪", "weight": 5,  "shape": "vat",    "base": { "rate": 3,    "value": 0.35 } },
+    { "id": "star_mine",    "type": "dropper", "name": "Star Mine",    "icon": "🌟", "weight": 3,  "shape": "mine",   "base": { "rate": 0.25, "value": 4.5 } },
+
+    { "id": "belt",         "type": "conveyor", "name": "Belt",        "icon": "➡️", "weight": 10, "shape": "belt",   "base": { "cap": 12 } },
+    { "id": "roller",       "type": "conveyor", "name": "Roller Line", "icon": "⏩", "weight": 6,  "shape": "belt",   "base": { "cap": 20 } },
+    { "id": "hyperlane",    "type": "conveyor", "name": "Hyperlane",   "icon": "🚄", "weight": 2,  "shape": "belt",   "base": { "cap": 40 } },
+
+    { "id": "amp",          "type": "multiplier", "name": "Amplifier", "icon": "📈", "weight": 10, "shape": "ring",   "base": { "mult": 0.25 } },
+    { "id": "prism",        "type": "multiplier", "name": "Prism",     "icon": "🔷", "weight": 4,  "shape": "prism",  "base": { "mult": 0.4 } },
+    { "id": "gilder",       "type": "multiplier", "name": "Gilder",    "icon": "🏅", "weight": 6,  "shape": "ring",   "base": { "mult": 0.15 } },
+
+    { "id": "smelter",      "type": "refiner", "name": "Smelter",      "icon": "🔥", "weight": 8,  "shape": "furnace","base": { "refine": 0.6,  "rcap": 4 } },
+    { "id": "polisher",     "type": "refiner", "name": "Polisher",     "icon": "✨", "weight": 6,  "shape": "furnace","base": { "refine": 0.35, "rcap": 10 } },
+    { "id": "crucible",     "type": "refiner", "name": "Crucible",     "icon": "⚗️", "weight": 3,  "shape": "furnace","base": { "refine": 1.0,  "rcap": 2 } },
+
+    { "id": "stall",        "type": "seller", "name": "Market Stall",  "icon": "🏪", "weight": 8,  "shape": "stall",  "base": { "sell": 0.3, "scap": 6 } },
+    { "id": "bazaar",       "type": "seller", "name": "Bazaar",        "icon": "🏬", "weight": 4,  "shape": "stall",  "base": { "sell": 0.15, "scap": 16 } },
+    { "id": "auction",      "type": "seller", "name": "Auction House", "icon": "🔨", "weight": 3,  "shape": "stall",  "base": { "sell": 0.8, "scap": 3 } },
+
+    { "id": "tuner",        "type": "upgrader", "name": "Tuner",       "icon": "🔧", "weight": 8,  "shape": "tuner",  "base": { "add": 0.6 } },
+    { "id": "enchanter",    "type": "upgrader", "name": "Enchanter",   "icon": "🪄", "weight": 3,  "shape": "tuner",  "base": { "add": 1.5 } },
+
+    { "id": "dynamo",       "type": "generator", "name": "Dynamo",     "icon": "⚡", "weight": 8,  "shape": "dynamo", "base": { "aura": 0.2 }, "note": "Adjacent droppers produce faster." },
+    { "id": "clover",       "type": "generator", "name": "Clover Shrine", "icon": "🍀", "weight": 6, "shape": "shrine", "base": { "luck": 0.1 }, "note": "Multiplies your global luck while placed." },
+    { "id": "lamp",         "type": "generator", "name": "Scholar Lamp", "icon": "💡", "weight": 4, "shape": "shrine", "base": { "xp": 0.1 }, "note": "Multiplies XP gain while placed." },
+
+    { "id": "gun_turret",   "type": "turret", "name": "Gun Turret",    "icon": "🔫", "weight": 8,  "shape": "turret", "base": { "dmg": 4, "range": 7, "rof": 2 },   "dtype": "physical" },
+    { "id": "flame_tower",  "type": "turret", "name": "Flame Tower",   "icon": "🔥", "weight": 6,  "shape": "tower",  "base": { "dmg": 3, "range": 5, "rof": 3 },   "dtype": "fire",     "special": { "kind": "burn", "amount": 0.4 } },
+    { "id": "frost_spire",  "type": "turret", "name": "Frost Spire",   "icon": "❄️", "weight": 6,  "shape": "tower",  "base": { "dmg": 2, "range": 6, "rof": 2 },   "dtype": "ice",      "special": { "kind": "slow", "amount": 0.4 } },
+    { "id": "arc_coil",     "type": "turret", "name": "Arc Coil",      "icon": "🌩️", "weight": 5,  "shape": "tower",  "base": { "dmg": 3, "range": 6, "rof": 1.5 }, "dtype": "electric", "special": { "kind": "chain", "amount": 3 } },
+    { "id": "void_cannon",  "type": "turret", "name": "Void Cannon",   "icon": "🕳️", "weight": 3,  "shape": "turret", "base": { "dmg": 9, "range": 9, "rof": 0.5 }, "dtype": "void",     "special": { "kind": "splash", "amount": 2 } }
+  ]
+}

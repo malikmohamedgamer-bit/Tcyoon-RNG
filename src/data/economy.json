@@ -1,0 +1,11 @@
+{
+  "_doc": "All economy tuning knobs in one place. Formulas are documented in README.md ('Formulas').",
+  "roll": { "baseCost": 10, "levelGrowth": 1.16, "autoInterval": 0.6, "x10Level": 5, "x100Level": 15, "autoLevel": 3 },
+  "freeRoll": { "interval": 120, "baseCap": 3 },
+  "backpack": { "baseSlots": 20, "perTier": 8, "tierExp": 1.4, "baseCost": 400, "costGrowth": 3.2 },
+  "sell": { "maxFraction": 0.5, "perTier": 0.04, "perMutation": 0.1 },
+  "fuse": { "min": 3, "max": 10, "baseChance": 0.3, "perExtra": 0.1, "identicalBonus": 0.15, "maxChance": 0.9, "pityStep": 0.05, "pityMax": 0.3, "failMutationBoost": 3 },
+  "xp": { "base": 10, "growth": 1.16, "levelLinear": 8, "rollXp": 1, "tierBonus": 0.25, "sellXp": 0.5 },
+  "luck": { "perLevel": 0.03 },
+  "start": { "money": 100, "gearSlots": 2 }
+}

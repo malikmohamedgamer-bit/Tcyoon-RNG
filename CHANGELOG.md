@@ -15,3 +15,15 @@ All notable changes, by milestone. Dates are build dates.
 - `render/resources.js`: shared resource tracker + GPU audit hook (`window.__game.gpuAudit()`), unit tested.
 - Tooling: ESLint flat config, node:test, Playwright (SwiftShader WebGL), Pages workflow.
 - Placeholder: money ticks +1/s until production lands in M3.
+
+## M2 — Rolling, items, backpack
+- Data: `tiers.json` (12 hand tiers + endless generated tiers), `items.json` (24 templates, 8 types), `weapons.json` (7), `mutations.json` (13), `economy.json` (every tuning knob).
+- `gen/tiers.js`: closed-form endless tier maths (quadratic extension), tier names/icons/colours (colour-blind safe + icon + name).
+- `sim/rolling.js`: luck-scaled tier draw `P(tier >= t) = min(1, luck/odds_t)`, two-level pity, closed-form free-roll accrual, x10/x100/auto-roll unlocks, odds table.
+- `sim/items.js`: item stat model (tier scaling, variants, hybrids, mutation stacking) — added as a separate module because production, combat and UI all share it.
+- `sim/inventory.js`: backpack limits, sell (<= 50% of roll price), sell duplicates, fuse with documented odds + pity.
+- `sim/leveling.js`: endless XP curve; `sim/economy.js`: price formulas and the single `modifiers()` hook.
+- `src/game.js` (new, DOM-free controller used by UI, tests and the debug hook), `core/events.js` (transient event queue).
+- UI: HUD, dock, roll panel (odds table, pity bars), backpack panel (sell, fuse with live odds, sell duplicates, bigger backpack), throttled ARIA announcements.
+- Save format **v1** frozen at the end of this milestone (fixture `tests/fixtures/save-v1.json` was produced by the real v1 serializer).
+- First level now takes ~11 rolls (xp base 10) so the first minute has a reward.

@@ -1,0 +1,22 @@
+{
+  "_doc": "Hand-written rarity tiers. odds = 1-in-N at luck 1 for 'tier >= t'. value = production/price multiplier. Beyond the last tier gen/tiers.js extends log10(odds) and log10(value) with a quadratic, so there is always a rarer tier. Colours are Okabe-Ito (colour-blind safe); rarity is also shown by name and icon.",
+  "tiers": [
+    { "id": "common",    "name": "Common",    "odds": 1,          "value": 1,         "icon": "●", "color": "#9aa0a6" },
+    { "id": "uncommon",  "name": "Uncommon",  "odds": 4,          "value": 3,         "icon": "◆", "color": "#009e73" },
+    { "id": "rare",      "name": "Rare",      "odds": 15,         "value": 9,         "icon": "▲", "color": "#56b4e9" },
+    { "id": "epic",      "name": "Epic",      "odds": 60,         "value": 27,        "icon": "★", "color": "#cc79a7" },
+    { "id": "legendary", "name": "Legendary", "odds": 300,        "value": 95,        "icon": "✦", "color": "#e69f00" },
+    { "id": "mythic",    "name": "Mythic",    "odds": 2000,       "value": 440,       "icon": "✪", "color": "#d55e00" },
+    { "id": "divine",    "name": "Divine",    "odds": 15000,      "value": 2200,      "icon": "❖", "color": "#f0e442" },
+    { "id": "celestial", "name": "Celestial", "odds": 150000,     "value": 12000,     "icon": "✹", "color": "#a6d8ff" },
+    { "id": "cosmic",    "name": "Cosmic",    "odds": 2000000,    "value": 110000,    "icon": "☄", "color": "#8f7bff" },
+    { "id": "eternal",   "name": "Eternal",   "odds": 30000000,   "value": 970000,    "icon": "♾", "color": "#ff8fb1" },
+    { "id": "infinite",  "name": "Infinite",  "odds": 500000000,  "value": 9000000,   "icon": "∞", "color": "#ffffff" },
+    { "id": "omega",     "name": "Omega",     "odds": 10000000000,"value": 100000000, "icon": "Ω", "color": "#ff5d5d" }
+  ],
+  "generated": { "a": 1.3, "b": 0.05, "valueExponent": 0.8, "icons": ["⬢", "⬣", "✺", "❂", "⌘", "☸", "⚝", "✵"] },
+  "pity": [
+    { "id": "soft", "every": 30,  "x": 8 },
+    { "id": "hard", "every": 200, "x": 120 }
+  ]
+}
