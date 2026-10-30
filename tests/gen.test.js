@@ -17,7 +17,8 @@ test('names are deterministic and pronounceable; collisions across thousands of 
   assert.equal(layerName(1), 'Ascension');
   assert.equal(layerName(40), layerName(40));
   assert.notEqual(layerName(40), layerName(41));
-  assert.ok(bossName(5).length > 5 && bossName(5) === bossName(5));
+  assert.ok(bossName(5).length > 5);
+  assert.equal(bossName(5), bossName(5));
   assert.ok(monsterName('Slime', 3).endsWith('Slime'));
 });
 

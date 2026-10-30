@@ -35,3 +35,10 @@ All notable changes, by milestone. Dates are build dates.
 - Save format **v2** with a real v1→v2 migration, tested against the v1 fixture; hostile/corrupt v2 data is sanitised.
 - 3D: instanced items per shape (merged primitives), direction arrows, rarity gems, mutation halos, blocked markers, flow dots, placement ghost (ring = valid, cross = invalid) + text label, ray-cast grid picking.
 - `core/input.js`: action-based input, remappable bindings, conflict detection. UI: placement controller (click/tap, drag to move/swap, R/X/Delete/Esc), Base panel (income per item, inspector, presets, expansion), Refinery panel.
+
+## M4 — Levels and procedural generation
+- `sim/rewards.js` + `data/rewards.json`: hand-written level rewards (2–20 with gaps) and a documented generation formula for every level forever (money in roll prices, free rolls, backpack slots, luck, free expansion, gear slots, free-roll cap, tier-scaled items). Ledger `rewards.levelClaimed` guarantees each level pays exactly once, including across reloads.
+- Permanent bonuses (`state.bonus`) feed `economy.modifiers()`: backpack slots, luck, gear slots, free-roll cap.
+- Burst safety: thousands of level-ups at once stay fast; surplus items convert to money instead of flooding the backpack.
+- Generation tests: names (determinism, uniqueness), every template generates finite stats at every tier, variants/hybrids rates, endless generated mutations/tiers/themes.
+- UI: level reward toasts + next-level reward preview.
