@@ -143,3 +143,10 @@ All notable changes, by milestone. Dates are build dates.
 - Saves: Settings explains "this browser, for this web address", shows the version, one-time backup reminders (30 min of play, first rebirth, level 75); export/import verified across two origins.
 - Workflows: `pages.yml` (test, e2e, deploy via stamp, `smoke-live` after every deploy), `smoke-daily.yml` (daily, opens an issue on failure). `e2e/live/smoke.spec.js` + `playwright.live.config.js` (`npm run smoke:live`).
 - Tests: `tests/updates.test.js`, `tests/stamp.test.js` (staged layout, no absolute paths, every referenced file exists, bad version/cname refused), `e2e/subpath.spec.js` (staged site under `/Tcyoon-RNG/`: every request 200 from the versioned folder, fonts, OG image, roll, 404, nothing outside the base, cross-origin save import, version banner).
+
+## F9 — New-player run, soak, final review
+- `e2e/f9-new-player.spec.js`: a brand-new player follows only what the interface shows (tutorial spotlight, tips, dialogs, status bar) to the first rebirth; time passing is a browser-clock jump that exercises the real offline-progress path. `tests/newplayer-meta.test.js` checks the spec never uses internal hooks or the tutorial-skipping helper.
+- `e2e/soak.spec.js` also plays rolls, reveals, the Index and Help; checks that the reveal overlay's DOM stays bounded (< 200 nodes) and empties when idle.
+- Final numbers: lint clean, 304 unit tests, 114 e2e tests, 5-minute soak PASS (1,512 actions, heap 7.0 -> 11.2 MB, 0 errors).
+- Docs: VERIFICATION.md F8 and F9 sections and the follow-up requirements review (gaps listed, not hidden); BUGS #41-43; the Obsidian notes in `docs/vault/`.
+- Open: GitHub Pages is not enabled and the first deploy was refused (BUGS #43); the live URL has not been fetched.

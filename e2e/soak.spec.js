@@ -10,7 +10,7 @@ import { openGame } from './helpers.js';
 const MINUTES = Number(process.env.SOAK_MINUTES || 5);
 const BAD = /NaN|Infinity|undefined|\[object/;
 
-const PANEL_KEYS = ['Digit1', 'Digit2', 'Digit3', 'Digit4', 'Digit5', 'Digit6', 'Digit7', 'Digit8', 'Escape'];
+const PANEL_KEYS = ['Digit1', 'Digit2', 'Digit3', 'Digit4', 'Digit5', 'Digit6', 'Digit7', 'Digit8', 'Digit9', 'Escape'];
 const OTHER_KEYS = ['Space', 'KeyT', 'KeyP', 'KeyR', 'KeyX', 'KeyW', 'KeyA', 'KeyS', 'KeyD', 'KeyQ', 'KeyE', 'KeyM', 'Equal', 'Minus', 'Home'];
 
 async function sample(page) {
@@ -24,6 +24,8 @@ async function sample(page) {
       geometries: a.renderer.geometries,
       textures: a.renderer.textures,
       programs: a.renderer.programs,
+      reveal: !!window.__game.reveal.active,
+      revealNodes: document.querySelectorAll('#reveal *').length,
       tracked: JSON.stringify(a.tracked),
       dom: document.getElementsByTagName('*').length,
       frames: g.loop.frames,
@@ -41,7 +43,7 @@ test('random-input soak: no errors, no leaks, no NaN, frame loop alive', async (
   const rnd = () => { seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0; return seed / 4294967296; };
   const pick = (a) => a[Math.floor(rnd() * a.length)];
 
-  await page.evaluate(() => { const d = window.__game.game.debug; d.grantMoney(1e6); d.setLevel(12); });
+  await page.evaluate(() => { const d = window.__game.game.debug; d.grantMoney(1e6); d.setLevel(12); window.__game.set('advancedUI', true); });
   const samples = [];
   const t0 = Date.now();
   let lastSample = 0;
@@ -62,12 +64,15 @@ test('random-input soak: no errors, no leaks, no NaN, frame loop alive', async (
         await page.mouse.click(200 + rnd() * 500, 150 + rnd() * 400);
       } else if (r < 0.82) {
         await page.evaluate((v) => { const g = window.__game; g.game.roll(v); }, pick([1, 10, 100]));
+        if (rnd() < 0.5) await page.keyboard.press(pick(['Escape', 'Enter', 'Space']));
       } else if (r < 0.88) {
+        // rare results go through the reveal machines: reels, summaries and full cutscenes, skipped or not
+        await page.evaluate(([t, n, skip]) => { const rv = window.__game.reveal; rv.push(Array.from({ length: n }, (_, i) => ({ uid: 1e6 + i, tier: t, icon: 'gem', label: 'Soak', color: '#d96bff', title: 'Soak item', isNew: i === 0 })), { source: n > 1 ? 'auto' : 'manual' }); if (skip) rv.skip(); }, [pick([2, 6, 9, 14, 40]), pick([1, 1, 10, 30]), rnd() < 0.5]);
         await page.evaluate(() => { const g = window.__game.game; g.debug.grantMoney(1e9); g.autoPlace && g.autoPlace(); });
       } else if (r < 0.93) {
         await page.evaluate((s) => window.__game.game.debug.advance(s), pick([5, 30, 120, 600]));
       } else if (r < 0.96) {
-        await page.evaluate((q) => window.__game.set('quality', q), pick(['low', 'medium', 'high']));
+        await page.evaluate(([q, th]) => { window.__game.set('quality', q); window.__game.set('themeOverride', th); }, [pick(['low', 'medium', 'high']), pick([null, 'factory', 'steampunk', 'space', 'scifi', 'pixel'])]);
       } else if (r < 0.98) {
         await page.evaluate(() => window.__game.game.startRush());
       } else {
@@ -92,6 +97,7 @@ test('random-input soak: no errors, no leaks, no NaN, frame loop alive', async (
   console.log('dom nodes:', samples.map((s) => s.dom).join(' '));
   console.log('geometries/textures/programs:', samples.map((s) => `${s.geometries}/${s.textures}/${s.programs}`).join(' '));
   console.log('level/region at end:', last.level, last.region);
+  console.log('reveal DOM nodes:', samples.map((s) => s.revealNodes).join(' '));
 
   // frame loop alive: frames strictly increase between samples
   for (let i = 1; i < samples.length; i++) expect(samples[i].frames).toBeGreaterThan(samples[i - 1].frames);
@@ -110,6 +116,11 @@ test('random-input soak: no errors, no leaks, no NaN, frame loop alive', async (
     const half = Math.floor(h.length / 2);
     expect(med(h.slice(half)) - med(h.slice(0, half)), 'heap growth between halves (bytes)').toBeLessThan(40 * 1048576);
   }
+  // the reveal overlay is bounded while a 30-result summary is up (about 140 nodes) and empties afterwards
+  expect(Math.max(...samples.map((s) => s.revealNodes)), 'reveal DOM bounded').toBeLessThan(200);
+  await page.evaluate(() => { window.__game.reveal.skip(); window.__game.reveal.skip(); window.__game.reveal.fastForward(30); });
+  await page.waitForTimeout(500); // the overlay is redrawn on the next frame
+  expect(await page.evaluate(() => document.querySelectorAll('#reveal *').length), 'reveal DOM empties when nothing is playing').toBeLessThan(10);
   expect(errors, errors.join('\n')).toEqual([]);
 });
 
@@ -134,8 +145,9 @@ test('long-numbers soak: huge values never break formatting, panels or the loop'
     for (let i = 0; i < 12; i++) g.game.debug.giveItem('pebble_drill', 3000 + i * 500);
     g.game.autoPlace && g.game.autoPlace();
   });
-  const panels = ['Roll', 'Backpack', 'Base', 'Shop', 'Rewards', 'Combat', 'Refinery', 'Rebirth', 'Settings'];
-  for (const fmtMode of ['suffix', 'scientific', 'engineering']) {
+  const panels = ['Roll', 'Backpack', 'Base', 'Shop', 'Rewards', 'Combat', 'Refinery', 'Rebirth', 'Index', 'Help', 'Settings'];
+  await page.evaluate(() => window.__game.set('advancedUI', true));
+  for (const fmtMode of ['friendly', 'suffix', 'scientific', 'engineering']) {
     await page.evaluate((m) => window.__game.set('numberFormat', m), fmtMode);
     for (const p of panels) {
       await page.getByRole('button', { name: new RegExp(p) }).first().click();
