@@ -119,6 +119,7 @@ test('random-input soak: no errors, no leaks, no NaN, frame loop alive', async (
   // the reveal overlay is bounded while a 30-result summary is up (about 140 nodes) and empties afterwards
   expect(Math.max(...samples.map((s) => s.revealNodes)), 'reveal DOM bounded').toBeLessThan(200);
   await page.evaluate(() => { window.__game.reveal.skip(); window.__game.reveal.skip(); window.__game.reveal.fastForward(30); });
+  await page.waitForTimeout(500); // the overlay is redrawn on the next frame
   expect(await page.evaluate(() => document.querySelectorAll('#reveal *').length), 'reveal DOM empties when nothing is playing').toBeLessThan(10);
   expect(errors, errors.join('\n')).toEqual([]);
 });
