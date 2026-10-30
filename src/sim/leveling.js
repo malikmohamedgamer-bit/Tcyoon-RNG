@@ -23,6 +23,10 @@ export function sellXp(level) {
   return Big.fromNumber(ECON.xp.sellXp).mul(Big.fromNumber(ECON.xp.growth).pow(Math.max(0, level - 1)));
 }
 
+/** Levels are capped far beyond anything reachable in play so that `level` stays an exactly representable integer
+ * and absurd XP (towers such as 10^^5) cannot make the closed-form search run forever. */
+export const MAX_LEVEL = 1e12;
+
 const PER_LEVEL_STEPS = 64; // level-ups beyond this in one call are resolved in closed form
 
 /** Sum of xpForLevel(l) for l in [L, M): geometric-series closed form (a*g^(l-1)*(1+l/k)). */
@@ -42,10 +46,15 @@ export function xpBetween(L, M) {
 /** Highest level M >= L reachable with `xp` starting at level L (binary search over the closed form). */
 export function levelReachable(L, xp) {
   let lo = L;
+  if (L >= MAX_LEVEL) return MAX_LEVEL;
   const growth = Math.log(ECON.xp.growth);
   const rough = Math.max(1, Math.ceil(xp.div(xpForLevel(L)).log10Num() * Math.LN10 / growth) + 2);
-  let hi = L + rough + 4;
-  while (xpBetween(L, hi).lte(xp)) hi = L + (hi - L) * 2; // safety: widen if the estimate was low
+  if (!Number.isFinite(rough) || L + rough + 4 >= MAX_LEVEL) {
+    if (xpBetween(L, MAX_LEVEL).lte(xp)) return MAX_LEVEL;
+    lo = L;
+  }
+  let hi = Math.min(MAX_LEVEL, Number.isFinite(rough) ? L + rough + 4 : MAX_LEVEL);
+  while (hi < MAX_LEVEL && xpBetween(L, hi).lte(xp)) hi = Math.min(MAX_LEVEL, L + (hi - L) * 2); // safety: widen if the estimate was low
   while (hi - lo > 1) {
     const mid = Math.floor((lo + hi) / 2);
     if (xpBetween(L, mid).lte(xp)) lo = mid;
@@ -68,7 +77,7 @@ export function addXp(state, amount, onLevel = state._onLevel) {
   // Rewards for levels gained by this XP are priced at the roll price from BEFORE the jump,
   // otherwise a huge XP multiplier would pay level-264 prices for a level-1 roll (arbitrage).
   state._refPrice = rollCost(state);
-  while (gained < PER_LEVEL_STEPS) {
+  while (gained < PER_LEVEL_STEPS && state.level < MAX_LEVEL) {
     const need = xpForLevel(state.level);
     if (state.xp.lt(need)) break;
     state.xp = state.xp.sub(need).nonNeg();
@@ -77,7 +86,7 @@ export function addXp(state, amount, onLevel = state._onLevel) {
     emit(state, 'level', { level: state.level });
     if (onLevel) onLevel(state.level);
   }
-  if (gained === PER_LEVEL_STEPS && state.xp.gte(xpForLevel(state.level))) {
+  if (gained === PER_LEVEL_STEPS && state.level < MAX_LEVEL && state.xp.gte(xpForLevel(state.level))) {
     const from = state.level + 1;
     const M = levelReachable(state.level, state.xp);
     if (M > state.level) {

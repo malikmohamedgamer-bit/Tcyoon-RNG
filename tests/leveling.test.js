@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { big } from '../src/core/bignum.js';
 import { createState } from '../src/sim/state.js';
-import { xpForLevel, addXp, levelProgress, rollXp } from '../src/sim/leveling.js';
+import { xpForLevel, addXp, levelProgress, rollXp, MAX_LEVEL } from '../src/sim/leveling.js';
 import { drain } from '../src/core/events.js';
 
 test('xp requirement grows geometrically and is finite forever', () => {
@@ -85,4 +85,18 @@ test('a mass level-up is closed form: 10^300 xp is instant, rewards are granted 
   const bonus = s.bonus.backpack;
   addXp(s, big(1)); // nothing is re-granted
   assert.equal(s.bonus.backpack, bonus);
+});
+
+test('tower-sized xp (10^^5) terminates instantly and stops at MAX_LEVEL with finite state', () => {
+  const s = createState(3, 0);
+  const tower = (h) => { let b = big(10); for (let i = 0; i < h; i++) b = big(10).pow(b); return b; };
+  const t = performance.now();
+  addXp(s, tower(5));
+  assert.ok(performance.now() - t < 500, `${performance.now() - t} ms`);
+  assert.equal(s.level, MAX_LEVEL);
+  assert.ok(Number.isSafeInteger(s.level));
+  assert.ok(s.xp.isFinite() && !s.xp.isNegative());
+  addXp(s, tower(5)); // already capped: still instant, no growth in level
+  assert.equal(s.level, MAX_LEVEL);
+  assert.ok(Number.isFinite(levelProgress(s)));
 });

@@ -2,6 +2,8 @@ import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
   testDir: './e2e',
+  // the 5-minute soak only runs when asked for by name (`npm run test:soak`)
+  testIgnore: process.argv.some((a) => a.includes('soak')) ? [] : ['**/soak.spec.js'],
   timeout: 60_000,
   expect: { timeout: 8_000 },
   fullyParallel: false,
