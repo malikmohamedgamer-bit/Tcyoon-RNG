@@ -281,13 +281,29 @@ bosses sit in their intended band, that numbers stay finite, and that manual pla
 
 The game exposes `window.__game` (state, debug hooks such as `game.debug.grantMoney`/`advance`, `gpuAudit()`) for tests and the soak; normal play never uses it.
 
-## Deploying to GitHub Pages
+## Hosting: GitHub Pages, online 24/7 (free static hosting)
 
-`.github/workflows/pages.yml` runs lint + unit tests + both simulators (`--quick`) on every push and pull request; on a push to `main` it also stages
-`index.html`, `src/` and `vendor/` into `_site` and deploys it with the official Pages actions. In the repository settings choose
-**Settings → Pages → Source: GitHub Actions**. The site works from a sub-path because every URL is relative (`./src/main.js`, the import map points to `./vendor/three/…`).
-Any static host works too: copy `index.html`, `src/` and `vendor/`.
-Browser requirements: ES modules, import maps and JSON import attributes (`import … with { type: 'json' }`), i.e. current Chrome/Edge/Firefox/Safari releases.
+**What this is, honestly:** the game is a static website. GitHub Pages keeps it reachable around the clock for free, but there is **no server running your game**. Progress while the tab is closed comes from *offline progress* (closed-form, computed from the time you were away when you come back, capped at 10 years), not from anything running in the cloud. There are no accounts, no leaderboards and no cloud saves.
+
+**Where your save lives.** In your browser's storage, **for this web address**. It never leaves your device. A different browser, device, private window or web address (for example the GitHub Pages address versus `localhost`) starts a new game unless you move the save: **Settings -> Save data -> Export save text**, then **Import from text** in the other place. The export is a plain text (`TRNG1....`) that works between addresses (a test exports from the dev address and imports into the sub-path site). The game tells you this in Settings and gently reminds you to export (a one-time tip after 30 minutes of play, after your first rebirth and at level 75).
+
+**How it deploys** (`.github/workflows/pages.yml`):
+1. `test`: lint, unit tests, both simulators (Standard and Relaxed). `e2e`: the Playwright suite (reported separately; it does not gate deploys because software-rendered browser tests on shared runners can be slow or flaky).
+2. On every push to `main`, `deploy` stages the site with `node scripts/stamp.js --version <package version>-<commit> --out _site --site-url <pages url>` and publishes it with the official Pages actions. There is still **no build step**: files are copied.
+3. `smoke-live` then opens the **live URL** in a real browser (`e2e/live/smoke.spec.js`): HTTP 200, the 3D view renders (not blank), no console error and no failed request, the version the page runs equals the published `version.json`, a roll works through the UI, the save is written, and the 404 page exists. A failure turns the run red.
+4. `.github/workflows/smoke-daily.yml` runs the same smoke test every day (05:17 UTC) and opens an issue if the live site is broken. Run it by hand: `LIVE_URL=https://<user>.github.io/<repo>/ npm run smoke:live`.
+
+**One-time setup:** repository **Settings -> Pages -> Build and deployment -> Source: GitHub Actions**. (The deploy job cannot switch Pages on by itself with the default token.)
+
+**Versioning and stale caches.** `src/version.js` holds the version (`dev` in a checkout; the deploy stamps it). Each deploy lives in its own folder, `v/<version>/`, that is never overwritten; `index.html` (the only unversioned entry) points at it, so a browser holding an old cached `index.html` still gets a complete, consistent set of files. If those files are gone it recovers by reloading once with a fresh URL. A running game checks `version.json` (no cache) 20 s after start, every 10 minutes and whenever the tab becomes visible, and shows **"A new version is available" with a Reload button** (it saves first). The check is off in dev builds.
+
+**Sub-path.** Project pages live at `https://<user>.github.io/<repo>/`. Nothing in the shipped site uses an absolute path (a unit test scans the staged html/css/js; an e2e test runs the staged site under `/Tcyoon-RNG/` with a server that behaves like Pages: nothing exists outside the base path, unknown paths return `404.html`). The 404 page links back to the game.
+
+**Other files:** social preview tags (`og:*`, `twitter:*`) with an image drawn from code (`npm run og` -> `assets/og.png`), a favicon drawn as inline SVG, `404.html`, `.nojekyll`.
+
+**Custom domain:** set the repository variable `CUSTOM_DOMAIN` (Settings -> Secrets and variables -> Actions -> Variables) to your domain; the deploy then writes a `CNAME` file into the site (`stamp.js --cname`). Also set the domain under Settings -> Pages, add a DNS `CNAME` record pointing to `<user>.github.io` (or the four GitHub `A` records for an apex domain) and enable "Enforce HTTPS". A custom domain serves the game from `/`; everything keeps working because all paths are relative, and the 404 page detects `github.io` versus a custom domain. Saves are per address, so moving to a custom domain means exporting from the old address and importing at the new one.
+
+Any other static host works: run `node scripts/stamp.js --out _site` and upload `_site/`. Browser requirements: ES modules, import maps and JSON import attributes (`import ... with { type: 'json' }`), i.e. current Chrome/Edge/Firefox/Safari releases.
 
 ## Project layout
 

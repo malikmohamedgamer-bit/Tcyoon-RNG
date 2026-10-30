@@ -33,6 +33,8 @@ import { effectiveSpeed, unlockedSpeeds } from './sim/speed.js';
 import { createTipsUI } from './ui/tips.js';
 import { createTooltips } from './ui/tooltips.js';
 import { createRollDock } from './ui/rolldock.js';
+import { VERSION } from './version.js';
+import { createUpdateChecker } from './core/updates.js';
 import { createRevealUI } from './ui/reveal.js';
 import { createRevealManager, cutsceneParams } from './sim/reveal.js';
 import { luckOf } from './sim/economy.js';
@@ -533,8 +535,33 @@ window.addEventListener('pagehide', () => game.saveNow());
 window.addEventListener('beforeunload', () => game.saveNow());
 if (window.matchMedia) window.matchMedia('(prefers-reduced-motion: reduce)').addEventListener?.('change', applySettings);
 
+// ------------------------------------------------------------------ "a new version is available"
+const banner = document.getElementById('update-banner');
+const updates = createUpdateChecker({
+  current: VERSION,
+  fetchJson: () => fetch(`./version.json?t=${Date.now()}`, { cache: 'no-store' }).then((r) => (r.ok ? r.json() : Promise.reject(new Error('version.json ' + r.status)))),
+  onNewer: (v) => {
+    banner.hidden = false;
+    banner.innerHTML = `A new version is available (${esc(v)}). <button type="button" class="primary" data-reload>Reload</button> <button type="button" class="link" data-dismiss>Later</button>`;
+    announce('A new version is available. Use the Reload button when you are ready.');
+  },
+});
+banner.addEventListener('click', (e) => {
+  if (e.target.closest('[data-reload]')) {
+    game.saveNow(); // never lose progress to a reload
+    location.reload();
+  } else if (e.target.closest('[data-dismiss]')) banner.hidden = true;
+});
+updates.start();
+setTimeout(() => updates.check(), 20000);
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') updates.check();
+});
+
 window.__game = {
   game,
+  version: VERSION,
+  updates,
   set: (path, value) => ctx.set(path, value),
   get state() {
     return gs();

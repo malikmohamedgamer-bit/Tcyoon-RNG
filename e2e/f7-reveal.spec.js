@@ -178,6 +178,7 @@ test('captions: the reel stop and the sting are captioned, the tick is not', asy
   await openGame(page);
   await page.evaluate(() => window.__game.set('captions', true));
   await rollOnce(page);
+  await expect(R(page)).toBeVisible(); // the reveal starts on the next frame: wait for it, then for it to finish
   await page.waitForFunction(() => !window.__game.reveal.active, null, { timeout: 8000 });
   const seen = await page.evaluate(() => window.__game.audio.stats.captions);
   expect(seen).toBeGreaterThan(0);

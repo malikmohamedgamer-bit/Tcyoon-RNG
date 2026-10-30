@@ -4,6 +4,7 @@ import { ico } from './icons.js';
 import { esc, confirmDialog } from './dom.js';
 import { ACTIONS, defaultBindings, keyLabel, wouldConflict } from '../core/input.js';
 import { BASE_THEMES } from '../gen/themes.js';
+import { VERSION } from '../version.js';
 import { speedOptions, effectiveSpeed } from '../sim/speed.js';
 import { MODES, modeId } from '../sim/difficulty.js';
 import { TIPS, seenTips } from '../sim/tips.js';
@@ -90,7 +91,8 @@ export function createSettingsPanel(ctx) {
         </details>
       </details>
       <details><summary>Save data</summary>
-        <p class="muted">Saves live in this browser (${game.save.usingFallback ? '<b class="bad">storage unavailable: playing from memory, export your save!</b>' : 'localStorage'}). Autosaves every 10 s.</p>
+        <p class="muted"><b>Where is my game?</b> It is saved in <b>this browser, for this web address</b> (${esc(location.host || 'this page')}). It never leaves your device and is not on a server. A different browser, device, private window or web address starts a new game unless you <b>Export</b> here and <b>Import</b> there.</p>
+        <p class="muted">Version ${esc(VERSION)}. Saves live in this browser (${game.save.usingFallback ? '<b class="bad">storage unavailable: playing from memory, export your save!</b>' : 'localStorage'}). Autosaves every 10 s.</p>
         <div class="row2"><button data-act="export">Export save text</button><button data-act="save-now">Save now</button></div>
         <label>Save text <textarea data-act="save-text" data-fid="save-text" spellcheck="false" aria-label="Save text to import or copy">${esc(ui.saveText || '')}</textarea></label>
         <div class="row2"><button data-act="import">Import from text</button><button class="danger" data-act="reset-game">Reset everything…</button></div>

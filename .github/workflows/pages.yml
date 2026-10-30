@@ -13,7 +13,7 @@ permissions:
 
 concurrency:
   group: pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   test:
@@ -27,27 +27,81 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm test
-      - name: Economy and combat simulators
+      - name: Economy and combat simulators (Standard and Relaxed)
         run: |
           npm run sim:economy -- --quick
+          npm run sim:economy -- --quick --difficulty relaxed
           npm run sim:combat -- --quick
+          npm run sim:combat -- --quick --difficulty relaxed
+
+  e2e:
+    # Browser tests (headless Chromium with software WebGL). Reported on every push and pull request.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npx playwright test
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: e2e-results
+          path: test-results
 
   deploy:
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     needs: test
     runs-on: ubuntu-latest
+    outputs:
+      page_url: ${{ steps.deployment.outputs.page_url }}
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
-      - name: Stage static site (no build step, relative paths only)
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - id: pages
+        uses: actions/configure-pages@v5
+      - name: "Stage the static site (no build step, files are copied into a versioned folder)"
         run: |
-          mkdir _site
-          cp -r index.html src vendor _site/
-      - uses: actions/configure-pages@v5
+          VERSION="$(node -p "require('./package.json').version")-${GITHUB_SHA::7}"
+          CNAME_ARG=""
+          if [ -n "${{ vars.CUSTOM_DOMAIN }}" ]; then CNAME_ARG="--cname ${{ vars.CUSTOM_DOMAIN }}"; fi
+          node scripts/stamp.js --version "$VERSION" --out _site --site-url "${{ steps.pages.outputs.base_url }}" $CNAME_ARG
+          echo "Deploying version $VERSION"
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site
       - id: deployment
         uses: actions/deploy-pages@v4
+
+  smoke-live:
+    # After every deploy: load the LIVE site with a real browser, check it renders, a roll works and the save is written.
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Smoke test the deployed site
+        env:
+          LIVE_URL: ${{ needs.deploy.outputs.page_url }}
+        run: |
+          echo "Smoke testing $LIVE_URL"
+          npm run smoke:live
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: smoke-live-results
+          path: test-results

@@ -43,6 +43,8 @@ const CONDS = {
   layer1Ready: (s) => s.layers.length > 1 && canPrestige(s, 1),
   bossUnlocked: (s) => canFightBoss(s).ok,
   speedUnlocked: (s) => unlockedSpeeds(s).some((x) => x > 1),
+  played30m: (s) => s.playtime >= 1800,
+  level75: (s) => s.level >= 75,
 };
 
 /** Named-condition tips; cheap, call about once a second. */

@@ -135,3 +135,11 @@ All notable changes, by milestone. Dates are build dates.
 - Audio: `tick`, `stop`, `sting1-3`, `newEntry` (all captioned except the tick). `doRoll` reports `auto` so auto-roll uses the short version. Settings: Roll animation and Rare-item cutscenes. Reveal results feed the Roll panel's recent list only when they land (no spoilers).
 - `e2e/f7-reveal.spec.js` (12): reel spins/decelerates/lands on the decided item, skip by Esc/Enter/click/Space, cutscene overlay + lines + captions + camera/lights restored, first-time flourish, flash rate <= 3/s measured in the browser, reduced motion, settings off, x10/x100, auto-roll quick only, GPU/DOM leak check after 25 cutscenes.
 - Changed test: the audio caption test exempts the tick (no caption on purpose).
+
+## F8 — Hosting, CI smoke tests, versioning
+- `scripts/stamp.js`: stages the site (no build step) into an immutable `v/<version>/` folder with a rewritten `index.html`, `404.html`, `version.json`, `.nojekyll`, optional `CNAME`; `scripts/serve.js` can serve a staged folder under a base path and returns `404.html` (behaves like Pages). `index.html` recovers once by reloading if a cached page points at files a newer deploy removed.
+- `src/version.js`, `src/core/updates.js`: version string, "A new version is available - Reload" banner (checks 20 s after start, every 10 min, on tab focus; saves before reloading; off in dev).
+- Social tags, favicon drawn as SVG, `assets/og.png` drawn from code (`npm run og`), `404.html`.
+- Saves: Settings explains "this browser, for this web address", shows the version, one-time backup reminders (30 min of play, first rebirth, level 75); export/import verified across two origins.
+- Workflows: `pages.yml` (test, e2e, deploy via stamp, `smoke-live` after every deploy), `smoke-daily.yml` (daily, opens an issue on failure). `e2e/live/smoke.spec.js` + `playwright.live.config.js` (`npm run smoke:live`).
+- Tests: `tests/updates.test.js`, `tests/stamp.test.js` (staged layout, no absolute paths, every referenced file exists, bad version/cname refused), `e2e/subpath.spec.js` (staged site under `/Tcyoon-RNG/`: every request 200 from the versioned folder, fonts, OG image, roll, 404, nothing outside the base, cross-origin save import, version banner).

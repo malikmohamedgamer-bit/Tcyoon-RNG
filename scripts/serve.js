@@ -5,7 +5,9 @@ import { readFile, stat } from 'node:fs/promises';
 import { extname, join, normalize, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const root = resolve(fileURLToPath(new URL('..', import.meta.url)));
+// ROOT_DIR serves another folder (a staged site); BASE_PATH serves it under a sub-path like GitHub project pages (/<repo>/).
+const root = process.env.ROOT_DIR ? resolve(process.env.ROOT_DIR) : resolve(fileURLToPath(new URL('..', import.meta.url)));
+const base = (process.env.BASE_PATH || '').replace(/\/$/, '');
 const port = Number(process.env.PORT) || 5173;
 const MIME = {
   '.html': 'text/html; charset=utf-8',
@@ -14,6 +16,8 @@ const MIME = {
   '.json': 'application/json; charset=utf-8',
   '.css': 'text/css; charset=utf-8',
   '.svg': 'image/svg+xml',
+  '.png': 'image/png',
+  '.woff2': 'font/woff2',
   '.txt': 'text/plain; charset=utf-8',
   '.md': 'text/plain; charset=utf-8',
 };
@@ -22,6 +26,10 @@ export function createServer() {
   return http.createServer(async (req, res) => {
     try {
       let p = decodeURIComponent(new URL(req.url, 'http://x').pathname);
+      if (base) {
+        if (p !== base && !p.startsWith(base + '/')) throw new Error('outside the base path'); // like GitHub Pages: nothing exists outside /<repo>/
+        p = p.slice(base.length) || '/';
+      }
       if (p.endsWith('/')) p += 'index.html';
       const file = normalize(join(root, p));
       if (!file.startsWith(root)) {
@@ -34,7 +42,12 @@ export function createServer() {
       res.writeHead(200, { 'content-type': MIME[extname(file)] || 'application/octet-stream', 'cache-control': 'no-store' });
       res.end(body);
     } catch {
-      res.writeHead(404, { 'content-type': 'text/plain' }).end('not found');
+      try {
+        const page = await readFile(join(root, '404.html')); // Pages serves the site's 404.html
+        res.writeHead(404, { 'content-type': 'text/html; charset=utf-8' }).end(page);
+      } catch {
+        res.writeHead(404, { 'content-type': 'text/plain' }).end('not found');
+      }
     }
   });
 }
