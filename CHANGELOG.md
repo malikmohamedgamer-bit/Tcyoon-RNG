@@ -105,3 +105,9 @@ All notable changes, by milestone. Dates are build dates.
 - `data/disclosure.json` + `sim/disclosure.js` + `sim/unlock.js`: progressive disclosure with unlock toasts and NEW badges; Settings -> Advanced UI shows everything. The speed unlock rules now share `sim/unlock.js`.
 - Friendly default number format (`12,345`), larger default text on phones, "Need $X more" and one-click fixes for blocked actions.
 - Changed tests (intended UI/behaviour changes): `tests/input.test.js` rebinding used `KeyZ`, which is now Undo; `tests/migration.test.js` default number format is now `friendly`; the e2e helper turns on the Advanced UI (older tests click every panel from level 1) and answers the first-run pace dialog.
+
+## F4 — Game speed is unlocked, not given
+- Rules in `data/speed.json` (2x at level 10, 4x at level 30, 8x after the first rebirth, then 16x, 32x, 64x ... forever from rebirth counts), requirement shared with disclosure in `sim/unlock.js`; slow speeds (0.5x, 0.75x) are never locked and the Settings text explains the difference.
+- HUD speed button (appears with the first faster speed) and the Settings selector with locked options and their requirement; locked speeds are refused in the simulation (`game.setSetting`), and a saved locked speed is clamped on load.
+- Speed scales only the simulation: bounded work per frame at any speed (step grows above 4x, combat sub-stepped at <= 0.1 s), playtime counts real seconds, offline progress and saves are unaffected (tests at every speed).
+- Found and fixed: a hidden-dock-button fallback in the tutorial spotlight (BUGS #36).

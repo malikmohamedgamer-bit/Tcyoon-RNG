@@ -4,6 +4,7 @@ import D from '../data/disclosure.json' with { type: 'json' };
 import { requirementMet, describeReq } from './unlock.js';
 import { emit } from '../core/events.js';
 import { STEPS } from './tutorial.js';
+import { unlockedSpeeds } from './speed.js';
 
 export const PANEL_RULES = D.panels;
 export const CHIP_RULES = D.chips;
@@ -39,7 +40,9 @@ export function visiblePanels(state) {
 
 export function visibleChips(state) {
   const adv = state.settings.advancedUI;
-  return new Set(Object.keys(D.chips).filter((id) => adv || (D.chips[id] !== 'advanced' && met(state, D.chips[id]))));
+  const out = new Set(Object.keys(D.chips).filter((id) => adv || (D.chips[id] !== 'advanced' && met(state, D.chips[id]))));
+  if (adv || unlockedSpeeds(state).some((s) => s > 1)) out.add('speed'); // the speed control appears with the first faster speed
+  return out;
 }
 
 export const unlockHint = (id) => (D.panels[id] && D.panels[id] !== 'advanced' ? describeReq(D.panels[id]) : '');

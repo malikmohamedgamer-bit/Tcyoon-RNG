@@ -27,7 +27,7 @@ import { visiblePanels, visibleChips } from './sim/disclosure.js';
 import { createPlacement } from './ui/placement.js';
 import { createTouchControls } from './ui/touch.js';
 import { createTutorialUI } from './ui/tutorial.js';
-import { effectiveSpeed } from './sim/speed.js';
+import { effectiveSpeed, unlockedSpeeds } from './sim/speed.js';
 import { createTipsUI } from './ui/tips.js';
 import { createTooltips } from './ui/tooltips.js';
 import { MODES } from './sim/difficulty.js';
@@ -165,6 +165,15 @@ const ctx = {
     shell.refresh();
   },
   tutorialStatus: () => ({ new: 'not started', active: 'in progress', paused: 'paused', skipped: 'skipped', done: `finished (${gs().tutorial.completed}×)` })[gs().tutorial.status] || 'unknown',
+  /** The HUD speed button: next unlocked speed at or above 1x, wrapping to 1x (slow speeds stay in Settings). */
+  cycleSpeed: () => {
+    const fast = unlockedSpeeds(gs()).filter((x) => x >= 1);
+    const cur = effectiveSpeed(gs());
+    const next = fast[(fast.indexOf(cur) + 1) % fast.length] ?? 1;
+    ctx.set('gameSpeed', next);
+    toast(`Game speed ${next}×`, 1800);
+    announce(`Game speed ${next} times`);
+  },
   undo: () => {
     const r = game.undo();
     if (r.ok) {
@@ -208,7 +217,7 @@ const ctx = {
   },
 };
 const panels = [createRollPanel(ctx), createBackpackPanel(ctx), createBasePanel(ctx), createShopPanel(ctx), createRewardsPanel(ctx), createCombatPanel(ctx), createRefineryPanel(ctx), createRebirthPanel(ctx), createHelpPanel(ctx), createSettingsPanel(ctx), createIncomePanel(ctx)];
-const shell = createShell({ game, fmt, panels, onOpen: (id) => id && game.tutorial.flag('panel:' + id) });
+const shell = createShell({ game, fmt, panels, onOpen: (id) => id && game.tutorial.flag('panel:' + id), onSpeed: () => ctx.cycleSpeed() });
 const tutorialUI = createTutorialUI({ game, shell, placement, gfx, root: document.getElementById('tutorial'), syncLayout: () => syncDisclosure() });
 // the tutorial's "inspect" step: the player looked at (clicked or focused) an item card
 document.getElementById('panels').addEventListener('click', (e) => {

@@ -179,3 +179,13 @@ Honest note: the 15% enemy-health reduction does not change the highest wave a b
 | Friendly numbers, larger text on phones | `tests/bignum.test.js`, e2e | PASS |
 | Whole e2e suite after F3 | 74 + 1 passed (the boss test was fixed, see BUGS #35) | PASS |
 Not verified: that the explanations are *clear to a new player* (nobody but me has read them); screen-reader output of the tooltips and the income list; that Tab order through item lists is comfortable (stat labels in long lists are deliberately not tab stops).
+
+## F4 — Unlockable game speed
+| What | How tested | Result |
+|---|---|---|
+| Rules from data, endless generated speeds, requirement text, locked option listing | `tests/speed.test.js` | PASS |
+| A locked speed cannot be chosen (disabled option, direct set refused, clamped on load), slow speeds always available | `tests/speed.test.js`, `e2e/f4-speed.spec.js` | PASS |
+| Pure scaling in the loop (0.5x-4x correct, 64x bounded steps per frame) | `tests/speed.test.js` | PASS |
+| In a real browser at 2x: sim time ~2x real time, playtime stays real-time, HUD button appears at level 10 and cycles, save reloads at 2x | `e2e/f4-speed.spec.js` | PASS |
+| Offline progress identical at every speed (unit: 0.5x ... 64x; e2e: hour away at 1x vs 0.5x) and saves independent of speed | `tests/speed.test.js`, e2e | PASS |
+Not verified: how very high speeds (hundreds of x) *feel* or perform on a real device; I only checked the per-frame step bound in the loop test and that the simulation stays finite.

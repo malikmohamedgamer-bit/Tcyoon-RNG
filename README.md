@@ -184,7 +184,7 @@ Measured honestly: with the bot, Relaxed reaches the third prestige layer 9% soo
 
 Speed starts at **1×**. Slower speeds (0.5×, 0.75×) are an accessibility option and are never locked. Faster speeds are unlocked by progress; the rules are data in `src/data/speed.json`:
 2× at level 10, 4× at level 30, 8× after your first rebirth, and then 16×, 32×, 64× … forever (2^k needs `k − 2` rebirths from 16× on).
-**Settings → Game speed** lists locked options as locked with their requirement ("unlocks at level 10"), and a locked speed cannot be chosen (the setting is validated in the simulation, not only in the UI).
+A **Speed** button appears in the status bar as soon as the first faster speed is unlocked (or with Advanced UI): it cycles through your unlocked speeds from 1×. **Settings → Game speed** lists locked options as locked with their requirement ("unlocks at level 10"), and a locked speed cannot be chosen (the setting is validated in the simulation, not only in the UI).
 Speed scales the simulation only (`core/loop.js`): saves, the real clock and offline progress never see it (offline progress is closed-form from the real elapsed time, so it is identical at every speed, which a unit test checks), and playtime counts real seconds.
 Above 4× the fixed step grows (speed/4 × 0.05 s) so the work per frame stays bounded, and combat is still simulated in steps of at most 0.1 s.
 

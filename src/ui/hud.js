@@ -5,8 +5,9 @@ import { esc, patchHtml, delegate, textInput, term } from './dom.js';
 import { levelProgress } from '../sim/leveling.js';
 import { luckOf } from '../sim/economy.js';
 import { PANEL_RULES } from '../sim/disclosure.js';
+import { effectiveSpeed } from '../sim/speed.js';
 
-export function createShell({ game, fmt, panels, onOpen }) {
+export function createShell({ game, fmt, panels, onOpen, onSpeed }) {
   const hudEl = document.getElementById('hud');
   const dock = document.getElementById('dock');
   const host = document.getElementById('panels');
@@ -20,8 +21,10 @@ export function createShell({ game, fmt, panels, onOpen }) {
     <div class="chip" data-chip="level"><small>${term('level', 'Level')} <span data-bind="level">1</span></small><b data-bind="xp">0%</b><div class="xpbar"><i data-bind="xpbar" style="width:0"></i></div></div>
     <div class="chip" data-chip="luck"><small>${term('luck', 'Luck')}</small><b data-bind="luck">×1</b></div>
     <div class="chip" data-chip="region"><small>${term('region', 'Region')}</small><b data-bind="region">1</b></div>
+    <button type="button" class="chip" data-chip="speed" data-act-speed aria-label="Game speed. Press to switch to the next unlocked speed" hidden><small>${term('speed', 'Speed', { focus: false })}</small><b data-bind="speed">1×</b></button>
     <div class="chip" data-chip="fps"><small>${term('fps', 'FPS')}</small><b data-bind="fps">--</b></div>`;
   hudEl.querySelector('[data-act-income]').addEventListener('click', () => toggle('income'));
+  hudEl.querySelector('[data-act-speed]').addEventListener('click', () => onSpeed && onSpeed());
   const refs = {};
   hudEl.querySelectorAll('[data-bind]').forEach((n) => (refs[n.dataset.bind] = n));
 
@@ -120,6 +123,7 @@ export function createShell({ game, fmt, panels, onOpen }) {
       refs.xpbar.style.width = p * 100 + '%';
       refs.luck.textContent = '×' + fmt(luckOf(s));
       refs.region.textContent = String(s.region + 1);
+      refs.speed.textContent = `${effectiveSpeed(s)}×`;
     },
   };
 }
