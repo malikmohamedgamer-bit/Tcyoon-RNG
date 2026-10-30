@@ -22,6 +22,16 @@
       "block": "rarityTable"
     },
     {
+      "id": "reveal",
+      "title": "Roll animations and rare cutscenes",
+      "keywords": "animation reel slot cutscene skip reduced motion",
+      "paras": [
+        "Every roll plays a slot-machine reel that slows down and lands on your item. The result was decided the moment you pressed Roll: the animation is only for show and can never change what you get, and skipping it never loses the item.",
+        "Rolling ten or a hundred at once shows a fast multi-reel and a summary with your best item highlighted. Auto-roll uses a short reel.",
+        "The rarer the result is for you (compared with your luck), the bigger the moment: nothing, a flash, a short cutscene or a full cutscene. Your first find of something new in the Index always gets at least a flash. Tap, press Esc or Enter to skip any animation; Space skips and rolls again. Settings let you shorten or turn off cutscenes and reels, and reduced motion turns the reel into a still result and cutscenes into a short text card."
+      ]
+    },
+    {
       "id": "base",
       "title": "Building your base",
       "keywords": "place dropper seller conveyor flow income blocked arrow",

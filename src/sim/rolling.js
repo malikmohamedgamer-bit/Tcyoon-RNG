@@ -92,7 +92,7 @@ export const autoRollUnlocked = (state) => state.level >= ECON.roll.autoLevel;
  * backpack is full or the money runs out; only rolls actually performed are charged.
  * @returns {{rolled:object[], blocked:null|'full'|'money'|'locked', spent:Big, freeUsed:number}}
  */
-export function doRoll(state, count = 1) {
+export function doRoll(state, count = 1, opts = {}) {
   const res = { rolled: [], blocked: null, spent: ZERO, freeUsed: 0 };
   if (count > maxBatch(state)) {
     res.blocked = 'locked';
@@ -120,7 +120,7 @@ export function doRoll(state, count = 1) {
     state.stats.rolls = (state.stats.rolls || 0) + 1;
     state.stats.bestTier = Math.max(state.stats.bestTier || 0, item.tier);
     addXp(state, rollXp(state.level, item.tier), state._onLevel);
-    emit(state, 'roll', { uid: item.uid, tpl: item.tpl, itemType: typeOf(item), tier: item.tier, title: itemTitle(item), forced, mutations: item.mut.length, big: item.tier >= 4 });
+    emit(state, 'roll', { auto: !!opts.auto, uid: item.uid, tpl: item.tpl, itemType: typeOf(item), tier: item.tier, title: itemTitle(item), forced, mutations: item.mut.length, big: item.tier >= 4 });
   }
   if (res.blocked === 'full') emit(state, 'blocked', { reason: 'full' });
   return res;
@@ -138,7 +138,7 @@ export function stepAutoRoll(state, dt) {
       state._autoT = 0;
       break;
     }
-    const r = doRoll(state, 1);
+    const r = doRoll(state, 1, { auto: true });
     if (r.blocked) break;
     n++;
   }

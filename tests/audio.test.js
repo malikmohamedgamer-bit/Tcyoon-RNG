@@ -8,7 +8,7 @@ const flavour = (t) => ({ wave: t.sfx.wave, base: t.sfx.base, scale: t.sfx.scale
 test('every sound has a caption (except the silent UI tick), a category and note events', () => {
   for (const [name, def] of Object.entries(SOUNDS)) {
     assert.ok(def.cat === 'sfx', name);
-    if (name !== 'ui') assert.match(def.caption, /^\[.+\]$/, name);
+    if (name !== 'ui' && name !== 'tick') assert.match(def.caption, /^\[.+\]$/, name); // the UI click and the reel tick have no caption on purpose (it would spam)
     const ev = soundDef(name, { tier: 3, flavour: flavour(BASE_THEMES[0]) });
     assert.ok(ev.length >= 1, name);
     for (const e of ev) {

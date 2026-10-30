@@ -1,0 +1,28 @@
+{
+  "_doc": "Roll reveals and rare-item cutscenes. A cutscene level is picked by how SURPRISING the result is for the player: surprise = log10(odds of the tier) - log10(luck), i.e. log10 of 'one in N' for you. That is a formula over the endless tier ladder, so it works for every generated rarity, and as your luck grows the same rarity stops being special. levels (ascending): minSurprise threshold, seconds (length), camera (zoom amount 0..1), burst (particle count), flashes (screen flashes; never more than maxFlashesPerSecond), banner (themed text). lengthCaps maps the 'Cutscenes' setting (full | short | off) to the levels it still allows. reel: seconds of the slot-machine spin (normal for a manual roll; quick for auto-roll and when a cutscene follows; static for reduced motion). A result that is a first-time Index entry is lifted to at least firstFlourishLevel.",
+  "maxFlashesPerSecond": 3,
+  "firstFlourishLevel": "flash",
+  "levels": [
+    { "id": "none", "minSurprise": -1000000000, "seconds": 0, "camera": 0, "burst": 0, "flashes": 0 },
+    { "id": "flash", "minSurprise": 1.7, "seconds": 0.9, "camera": 0.06, "burst": 18, "flashes": 0 },
+    { "id": "short", "minSurprise": 3.0, "seconds": 2.4, "camera": 0.14, "burst": 48, "flashes": 2 },
+    { "id": "full", "minSurprise": 4.5, "seconds": 4.0, "camera": 0.22, "burst": 96, "flashes": 3 }
+  ],
+  "lengthCaps": { "full": ["none", "flash", "short", "full"], "short": ["none", "flash", "short"], "off": ["none"] },
+  "reel": {
+    "normal": { "spin": 0.5, "decel": 1.1, "hold": 0.25, "sps": 16 },
+    "quick": { "spin": 0.1, "decel": 0.3, "hold": 0.1, "sps": 22 },
+    "static": { "spin": 0, "decel": 0, "hold": 0.6, "sps": 0 },
+    "batchReels": 5,
+    "batchStagger": 0.1,
+    "counterSeconds": 0.8,
+    "summaryHold": 1.8
+  },
+  "themedText": {
+    "factory": ["FORGED!", "Straight off the line."],
+    "steampunk": ["WONDROUS!", "Brass and brilliance."],
+    "space": ["SIGNAL ACQUIRED", "Unknown object detected."],
+    "scifi": ["ANOMALY DETECTED", "Sample secured."],
+    "pixel": ["RARE DROP!", "New high score!"]
+  }
+}

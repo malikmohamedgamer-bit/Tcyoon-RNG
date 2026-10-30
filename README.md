@@ -191,6 +191,17 @@ A panel (`Index`, with a badge when a completion reward is waiting) that records
 * **Rewards:** 25 / 50 / 75 / 100% per section (`index.json`: money in roll prices, free rolls, luck, backpack space) and one for 100% of everything (gear slot); each is claimed with a button and paid **exactly once** (ledger in the save).
 * **Old saves** are backfilled from what they prove (items owned, bosses beaten, waves reached) without fanfare.
 
+## Roll animations and rare cutscenes
+
+* **The outcome comes first.** `doRoll` decides and stores the item (seeded game RNG) before any animation exists. The reveal (`src/sim/reveal.js`) is a set of **pure state machines driven by the fixed-step loop**, with their own seeded RNG for the filler symbols, so an animation can never change a result (a unit test checks the game RNG state and the next roll are identical with and without animations). Skipping never loses an item.
+* **Reel:** every roll plays a vertical slot reel: spin (0.5 s) then a quadratic ease-out deceleration (1.1 s) that stops exactly on the result, a tick per symbol that thins out as it slows, a stop sound and a short hold. Fast versions (0.1 s + 0.3 s) are used for auto-roll, by the *Quick spin* setting, and whenever a cutscene follows.
+* **x10 / x100:** up to five fast staggered mini-reels (landing on the best results) then a summary that highlights the best item and lists counts per rarity; more than ten results use a counter instead of a hundred reels. The first skip jumps to the summary, the second closes it.
+* **Cutscenes by formula** (`src/data/cutscenes.json`): the level is chosen by how surprising the result is *for you*: `surprise = log10(odds of the tier) - log10(your luck)`, i.e. log10 of "one in N" for you. Thresholds: flash >= 1.7 (about 1 in 50), short >= 3.0 (1 in 1,000), full >= 4.5 (1 in 30,000). It is a formula over the endless tier ladder, so it works for every generated rarity, and as luck grows the same rarity stops being special. A first-time Index find is lifted to at least a flash. A cutscene is a short camera push-in, a light tint, a particle burst, a sting, themed text per region theme (and "NEW in your Index!"). Lengths: flash 0.9 s (a highlight, no overlay), short 2.4 s, full 4.0 s.
+* **Always skippable and never blocking for long:** tap/click, Esc, Enter or the Skip button; Space skips and rolls again. A rare moment is at most 0.4 s of quick reel + 4 s of cutscene. Several results arriving while one plays become **one summary** (only the best gets a scene); auto-roll never triggers a full-screen cutscene.
+* **Settings:** Roll animation (slot spin / quick / off) and Rare-item cutscenes (full / short / off). With **reduced motion** the reel does not spin or blur, cutscenes become a still text card (at most 1.6 s) with no camera movement, no particles and no flashes.
+* **Safety:** a cutscene flashes at most 3 times per second (flashes are scheduled at least 0.4 s apart and are a 28%-white veil for 110 ms, tested), captions exist for the stop and the stings, and the result is announced once to screen readers when the reel lands.
+* **Cleanup:** the 3D part (`src/render/reveal3d.js`) creates its particles in `begin()` and disposes them in `end()`, restoring camera and lights exactly (an e2e test runs 25 cutscenes and compares the GPU audit before and after).
+
 ## Game speed
 
 Speed starts at **1×**. Slower speeds (0.5×, 0.75×) are an accessibility option and are never locked. Faster speeds are unlocked by progress; the rules are data in `src/data/speed.json`:

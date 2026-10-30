@@ -4,6 +4,7 @@
 
 import * as THREE from 'three';
 import { Resources, gpuAudit } from './resources.js';
+import { createReveal3D } from './reveal3d.js';
 import { createPixelPipeline } from './pixelate.js';
 import { createCameraController } from './camera.js';
 import { createBase, worldToCell, cellToWorld, MAX_SIDE } from './base.js';
@@ -64,6 +65,7 @@ export function createRenderer({ canvas, quality = 'medium', pixelSize = 4, redu
     items,
     enemies: createEnemiesRenderer({ scene, res, quality }),
     effects: createEffects({ scene, res, quality, reducedMotion }),
+    reveal: createReveal3D({ scene, cam, hemi, sun, res, quality }),
     pixel,
     setTheme(theme) {
       lastTheme = theme;
@@ -87,6 +89,7 @@ export function createRenderer({ canvas, quality = 'medium', pixelSize = 4, redu
       api.enemies = createEnemiesRenderer({ scene, res, quality: q });
       api.effects = createEffects({ scene, res, quality: q, reducedMotion: reduced });
       items.setQuality(q);
+      api.reveal.setQuality(q);
       if (lastTheme) base.setTheme(lastTheme, q);
       pixel.setPixelSize(Math.max(userPixel, QUALITY[q].pixelMin));
     },

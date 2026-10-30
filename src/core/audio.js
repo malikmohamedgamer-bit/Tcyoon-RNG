@@ -24,6 +24,13 @@ export const SOUNDS = {
   kill: { caption: '[enemy defeated]', cat: 'sfx', limit: 5 },
   nova: { caption: '[nova blast]', cat: 'sfx' },
   ui: { caption: '', cat: 'sfx', limit: 10 },
+  // roll reveals: the tick has no caption (it would spam); the stop and the stings do
+  tick: { caption: '', cat: 'sfx', limit: 12 },
+  stop: { caption: '[reel stops]', cat: 'sfx' },
+  sting1: { caption: '[rare item sting]', cat: 'sfx' },
+  sting2: { caption: '[epic item sting]', cat: 'sfx' },
+  sting3: { caption: '[legendary item sting]', cat: 'sfx' },
+  newEntry: { caption: '[new Index entry chime]', cat: 'sfx' },
 };
 
 const semitone = (base, n) => base * Math.pow(2, n / 12);
@@ -75,6 +82,18 @@ export function soundDef(name, ctx) {
       return [ev(0, 0.1, 0, { noise: true, gain: 0.1 })];
     case 'nova':
       return [ev(0, 0.5, note(-5), { wave: 'sawtooth', gain: 0.25, slide: note(4) }), ev(0, 0.35, 0, { noise: true, gain: 0.12 })];
+    case 'tick': // pitch rises a little with the reel speed: tier carries the speed 0..40
+      return [ev(0, 0.025, note(8 + (tier % 6)), { wave: 'square', gain: 0.07 }), ev(0, 0.02, 0, { noise: true, gain: 0.03 })];
+    case 'stop':
+      return [ev(0, 0.12, note(-4), { wave: 'triangle', gain: 0.32, slide: note(-9) }), ev(0, 0.05, 0, { noise: true, gain: 0.12 })];
+    case 'sting1':
+      return [0, 4, 7].map((k, i) => ev(i * 0.06, 0.2, note(k + 7), { gain: 0.2 }));
+    case 'sting2':
+      return [0, 4, 7, 12, 16].map((k, i) => ev(i * 0.07, 0.24, note(k + 5), { gain: 0.22 })).concat([ev(0, 0.5, note(-5), { wave: 'sawtooth', gain: 0.12 })]);
+    case 'sting3':
+      return [0, 4, 7, 12, 16, 19, 24].map((k, i) => ev(i * 0.08, 0.3, note(k + 5), { gain: 0.22 })).concat([ev(0, 1.0, note(-8), { wave: 'sawtooth', gain: 0.18, slide: note(-1) }), ev(0.5, 0.8, note(12), { gain: 0.16 })]);
+    case 'newEntry':
+      return [ev(0, 0.1, note(12), { gain: 0.2 }), ev(0.09, 0.1, note(16), { gain: 0.2 }), ev(0.18, 0.3, note(19), { gain: 0.22 })];
     default:
       return [ev(0, 0.03, note(4), { wave: 'sine', gain: 0.1 })];
   }

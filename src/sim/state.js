@@ -41,6 +41,8 @@ export function defaultSettings() {
     colorblind: false, // extra non-colour rarity cues (border styles)
     gameSpeed: 1, // faster speeds are unlocked by progress (sim/speed.js); slower ones are always allowed
     tips: true, // one-time contextual tips
+    cutscenes: 'full', // rare-item cutscenes: full | short | off
+    reels: 'on', // slot-machine reel on every roll: on | quick | off
     advancedUI: false, // false: panels and chips appear as they are unlocked; true: everything is visible from the start
     captions: false,
     muted: false,
@@ -73,6 +75,8 @@ export function sanitizeSettings(raw) {
     colorblind: !!r.colorblind,
     gameSpeed: clampNum(r.gameSpeed, 0.25, 1e12, 1),
     tips: r.tips !== false,
+    cutscenes: oneOf(r.cutscenes, ['full', 'short', 'off'], 'full'),
+    reels: oneOf(r.reels, ['on', 'quick', 'off'], 'on'),
     advancedUI: !!r.advancedUI,
     captions: !!r.captions,
     muted: !!r.muted,

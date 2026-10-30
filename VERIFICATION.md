@@ -213,3 +213,17 @@ Not verified / honest: whether it *looks good* is my judgment from software-rend
 | Completion rewards: not before reached, exactly once, persisted, `all` reward, dock badge | `tests/index.test.js`, e2e | PASS |
 | Save/load and backfill of old saves (silent) | `tests/index.test.js` | PASS |
 Not verified: the Index with a real player's long-term save (only synthetic data up to 30,000 entries); screen-reader reading of a virtualised list (semantics are set, nothing was listened to); how the completion rewards feel in the economy (they are small and one-time, not run through the economy simulator).
+
+## F7 — Roll animation and cutscenes
+| What | How tested | Result |
+|---|---|---|
+| Reel lands exactly on its result (50 seeds x 2 modes), decelerates monotonically, ticks thin out, skip lands too | `tests/reveal.test.js` | PASS |
+| The animation can never change an outcome (game RNG untouched, next roll identical) | `tests/reveal.test.js` | PASS |
+| Cutscene level formula: monotone in rarity, falls with luck, finite up to tier 10^15, caps by setting, first-time lift | `tests/reveal.test.js` | PASS |
+| Deterministic timeline; each text/sting/burst once; <= 4 s; curves 0 at both ends | `tests/reveal.test.js` | PASS |
+| Flash rule: <= 3 flashes in any second for every level (schedule), and measured in the browser in a real cutscene | `tests/reveal.test.js`, `e2e/f7-reveal.spec.js` | PASS |
+| Reduced motion: static reel, no blur, no flashes/particles/camera, <= 1.6 s card | tests + e2e | PASS |
+| Queueing: 30 results during a scene -> one summary, one cutscene; auto-roll quick only, no overlay | tests + e2e | PASS |
+| Skip at every stage (Esc, Enter, click, Space), item never lost, camera/lights restored | e2e | PASS |
+| 25 cutscenes + 40 auto reveals: GPU audit (geometries, textures, tracked counts) and DOM unchanged | e2e | PASS |
+Not verified: how it *feels* (timing, weight, the sting sounds were never heard), on a real GPU or phone; screen-reader behaviour of the announcements; that the camera push and particle burst look good in all themes (I looked at one cutscene in the Factory theme only).

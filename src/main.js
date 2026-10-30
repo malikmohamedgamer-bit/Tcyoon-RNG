@@ -33,7 +33,11 @@ import { effectiveSpeed, unlockedSpeeds } from './sim/speed.js';
 import { createTipsUI } from './ui/tips.js';
 import { createTooltips } from './ui/tooltips.js';
 import { createRollDock } from './ui/rolldock.js';
-import { itemTitle } from './sim/items.js';
+import { createRevealUI } from './ui/reveal.js';
+import { createRevealManager, cutsceneParams } from './sim/reveal.js';
+import { luckOf } from './sim/economy.js';
+import { tierInfo } from './gen/tiers.js';
+import { ITEM_TEMPLATES, templateOf } from './sim/items.js';
 import { MODES } from './sim/difficulty.js';
 import ECON from './data/economy.json' with { type: 'json' };
 
@@ -179,8 +183,6 @@ const ctx = {
   /** Roll n times: the one code path for the big Roll button, the Roll panel and the keyboard. */
   rollNow: (n = 1) => {
     const r = game.roll(n);
-    for (const it of r.rolled) ui.recent.unshift({ tier: it.tier, title: itemTitle(it) });
-    ui.recent.length = Math.min(ui.recent.length, 6);
     if (r.blocked === 'full') ui.msg = { text: 'Backpack is full — sell or fuse something first.' };
     else if (r.blocked === 'money') ui.msg = { text: 'Not enough money for the next roll.' };
     else if (r.blocked === 'locked') ui.msg = { text: `That roll size unlocks at level ${n >= 100 ? ECON.roll.x100Level : ECON.roll.x10Level}.` };
@@ -254,6 +256,44 @@ document.getElementById('panels').addEventListener('click', (e) => {
 const tooltips = createTooltips({ root: document.getElementById('app') });
 const tipsUI = createTipsUI({ root: document.getElementById('tips'), game, shell });
 const rollDock = createRollDock({ root: document.getElementById('roll-dock'), game, fmt, rollNow: (n) => ctx.rollNow(n), keyLabel: (a) => ctx.keyLabel(a) });
+// ------------------------------------------------------------------ roll reveals (reel + cutscene)
+const revealSettings = () => ({ cutscenes: settings().cutscenes, reels: settings().reels, reduced: prefersReducedMotion(settings()) });
+const fillers = () => ITEM_TEMPLATES.slice(0, 12).map((t, i) => ({ tier: i % 5, icon: t.shape, label: t.name }));
+const reveal = createRevealManager({ getSettings: revealSettings, getLogLuck: () => luckOf(gs()).log10Num(), getTheme: () => activeTheme().base || 'factory', fillers });
+const revealUI = createRevealUI({ root: document.getElementById('reveal'), manager: reveal, getReduced: () => prefersReducedMotion(settings()) });
+// what the player sees land is what the roll panel's "recent" list shows (no spoilers while the reel spins)
+reveal.onLanded((results) => {
+  for (const r of results) ui.recent.unshift({ tier: r.tier, title: r.title });
+  ui.recent.length = Math.min(ui.recent.length, 6);
+  const best = results.reduce((a, b) => (b.tier > a.tier ? b : a), results[0]);
+  announce(results.length === 1 ? `Rolled ${best.label} ${best.title}` : `Rolled ${results.length} items. Best: ${best.label} ${best.title}`);
+  shell.refresh();
+});
+function revealEvents(events) {
+  for (const e of events) {
+    if (e.kind === 'tick') play('tick', { tier: Math.min(40, e.n * 4) });
+    else if (e.kind === 'stop') play('stop');
+    else if (e.kind === 'sting') play(e.level === 'full' ? 'sting3' : e.level === 'short' ? 'sting2' : 'sting1');
+    else if (e.kind === 'cutsceneStart') gfx.reveal.begin({ color: e.spec.color || '#ffffff', reduced: e.spec.reduced });
+    else if (e.kind === 'burst') gfx.reveal.burst(e.count);
+    else if (e.kind === 'cutsceneDone') gfx.reveal.end();
+  }
+  revealUI.handle(events);
+}
+function skipReveal() {
+  reveal.skip();
+  revealEvents(reveal.step(0)); // delivers cutsceneDone, so the camera and lights are restored at once
+  revealUI.update();
+}
+// Esc / Enter skip the animation; Space skips it and rolls again
+window.addEventListener('keydown', (e) => {
+  if (!reveal.active) return;
+  if (e.code === 'Escape' || e.code === 'Enter') {
+    e.preventDefault();
+    e.stopPropagation();
+    skipReveal();
+  } else if (e.code === 'Space') skipReveal();
+}, true);
 const fight = createFightOverlay(document.getElementById('arena-ui'), ctx);
 const touch = createTouchControls({ root: document.getElementById('touch-root'), placement, game, fmt, toast, touchMove, isManual: () => !!(gs()._enc && gs()._enc.manual) });
 
@@ -295,16 +335,24 @@ function syncFightCam() {
 }
 
 const discovered = [];
+let rolled = [];
+let newFlag = false;
 function handleEvents() {
+  rolled = [];
   for (const e of drain(gs())) {
     switch (e.type) {
-      case 'roll':
-        if (e.big) {
-          toast(`${e.title}!`);
-          announce(`Big roll: ${e.title}`);
-          play('bigRoll', { tier: e.tier });
-        } else play('roll', { tier: e.tier });
+      case 'roll': {
+        const ti = tierInfo(e.tier);
+        rolled.push({ uid: e.uid, tier: e.tier, icon: templateOf({ tpl: e.tpl })?.shape || 'gem', label: ti.label, color: ti.color, title: e.title, isNew: newFlag, auto: e.auto });
+        newFlag = false;
+        if (settings().reels === 'off') {
+          if (e.big) {
+            toast(`${e.title}!`);
+            play('bigRoll', { tier: e.tier });
+          } else play('roll', { tier: e.tier });
+        } else if (!e.auto) play('roll', { tier: e.tier });
         break;
+      }
       case 'level':
         toast(`Level ${e.level}!`);
         announce(`Level up! You are now level ${e.level}`);
@@ -361,6 +409,7 @@ function handleEvents() {
       case 'discover': {
         // several discoveries in one frame (a x10 roll) become one toast
         discovered.push(e.name);
+        if (e.section === 'rarities' || e.section === 'items') newFlag = true; // the next roll event is a first-time find
         break;
       }
       case 'unlock': {
@@ -397,6 +446,8 @@ function handleEvents() {
       default:
     }
   }
+  if (rolled.length && settings().reels !== 'off') reveal.push(rolled, { source: rolled.every((r) => r.auto) ? 'auto' : 'manual' });
+  else if (rolled.length) reveal.push(rolled, { source: 'manual' }); // reels off: result is reported at once (and a cutscene may still play)
   if (discovered.length) {
     const text = discovered.length <= 2 ? `New in the Index: ${discovered.join(' and ')}` : `${discovered.length} new Index entries`;
     toast(text, 3000);
@@ -448,6 +499,7 @@ const loop = createLoop({
       game.manualInput = { mx: fx * f + rx * r, mz: fz * f + rz * r, ax: aim.x, az: aim.z, dash: flags.dash, nova: flags.nova, shield: flags.shield };
     } else game.manualInput = null;
     game.step(dt, realDt);
+    if (reveal.active) revealEvents(reveal.step(realDt)); // animations run on real time, never on game speed
     flags.dash = flags.nova = flags.shield = false;
   },
   render: (alpha, dt) => {
@@ -459,6 +511,8 @@ const loop = createLoop({
     syncTheme();
     syncFightCam();
     fight.update(gs());
+    revealUI.update();
+    if (reveal.cutscene && gfx.reveal.active) gfx.reveal.update(cutsceneParams(reveal.cutscene), dt);
     tutorialUI.update(false, dt);
     touch.update();
     uiAcc += dt;
@@ -499,6 +553,9 @@ window.__game = {
   tutorialUI,
   tipsUI,
   tooltips,
+  reveal,
+  revealUI,
+  skipReveal,
 };
 
 if (window.innerWidth >= 900) shell.open('roll'); // phones and tablets start with a clear view of the base
