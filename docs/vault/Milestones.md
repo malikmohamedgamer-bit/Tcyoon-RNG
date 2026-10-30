@@ -1,7 +1,7 @@
 ---
 tags: [milestones]
 date: 2026-10-30
-status: M1-M9 and F1-F8 done; F9 in progress
+status: M1-M9 and F1-F9 done; live deploy blocked
 ---
 # Milestones
 What was built, how it was verified, real numbers, commit. Back to [[00 Start Here]]. Chronology in [[Timeline]]; commands in [[Testing]]; per-system notes are linked from [[Architecture]].
@@ -48,5 +48,5 @@ Unlock rules in data (2x L10, 4x L30, 8x first rebirth, then 16x, 32x ... foreve
 25 files, +1,247. **109 e2e + 296 unit**; flash rate <= 3/s measured in the browser; 25 cutscenes + 40 auto reveals leave GPU audit and DOM unchanged. See [[Slot Animation and Cutscenes]].
 ### F8 `9a6a6de` hosting
 29 files. Staged sub-path site e2e, update banner, workflows, live-smoke spec. See [[Deploy]].
-### F9 `58646bd`, `90d9f52` (in progress)
-UI-only new-player e2e to the first rebirth; soak extended with rolls, reveals, Index, Help. Third 5-minute soak PASS. Final counts so far: **304 unit pass, lint clean**; e2e (without soak) was still running when this note was written, see [[Resume Point]].
+### F9 `58646bd`, `90d9f52`, then docs commit
+UI-only new-player e2e to the first rebirth; soak extended with rolls, reveals, Index, Help. Third 5-minute soak PASS. Final counts: **304 unit pass, lint clean, 114 e2e passed (5.7 min)**; soak PASS ([[Testing]]).

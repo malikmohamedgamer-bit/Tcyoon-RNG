@@ -9,8 +9,8 @@ What was checked, how, and what the result was. Everything marked **PASS** below
 | Check | Command | Result |
 |---|---|---|
 | Lint | `npx eslint .` | no findings |
-| Unit tests | `npm test` | 217 tests, 217 pass, 0 fail |
-| End-to-end | `npx playwright test` | 56 passed (headless Chromium, SwiftShader WebGL, ~1.3 min) |
+| Unit tests | `npm test` | 217 tests, 217 pass, 0 fail (M9; the follow-up final run is 304/304, see F9 below) |
+| End-to-end | `npx playwright test` | 56 passed (M9; headless Chromium, SwiftShader WebGL, ~1.3 min; the follow-up final run is 114 passed, see F9 below) |
 | Combat simulator | `npm run sim:combat -- --quick` | 6/6 checks PASS |
 | Economy simulator | `npm run sim:economy -- --quick` | 8/8 checks PASS (1 simulated day, bot) |
 | Economy simulator, long | `npm run sim:economy -- --days 30` | 8/8 checks PASS, run earlier in the session (see note) |
@@ -227,3 +227,58 @@ Not verified: the Index with a real player's long-term save (only synthetic data
 | Skip at every stage (Esc, Enter, click, Space), item never lost, camera/lights restored | e2e | PASS |
 | 25 cutscenes + 40 auto reveals: GPU audit (geometries, textures, tracked counts) and DOM unchanged | e2e | PASS |
 Not verified: how it *feels* (timing, weight, the sting sounds were never heard), on a real GPU or phone; screen-reader behaviour of the announcements; that the camera push and particle burst look good in all themes (I looked at one cutscene in the Factory theme only).
+
+## F8 — Hosting, versioning, live checks
+| What | How tested | Result |
+|---|---|---|
+| Staged site has no absolute paths, every referenced file exists, bad version / cname refused | `tests/stamp.test.js` | PASS |
+| Staged site served under `/Tcyoon-RNG/` by a server that behaves like Pages (immutable `v/<version>/` folder, 404 page): every request 200, fonts, OG image, a roll works, nothing requested outside the base | `e2e/subpath.spec.js` | PASS |
+| Save moves between two origins (export on one, import on the other) | `e2e/subpath.spec.js` | PASS |
+| "New version available" banner appears when `version.json` changes; update check logic (interval, focus, dev off) | `e2e/subpath.spec.js`, `tests/updates.test.js` | PASS |
+| Live-smoke spec (`e2e/live/smoke.spec.js`) | validated against a local server that mimics the hosted layout | PASS locally; **never run against the real URL** |
+| Workflow files | YAML parsed; run on GitHub for commit `9a6a6de` on `main` (run 41137575634), job results read through the GitHub API: `test` success, `e2e` success (about 4.6 min on the runner), `deploy` **failure**, `smoke-live` skipped | partly verified |
+| Deploy to GitHub Pages | the `deploy` job was refused in 1 s with no steps and no runner (Pages source is probably "Deploy from a branch" and the `github-pages` environment only allows the default branch; inferred, not proven: the job log was not downloadable, 404) | **FAILED / blocked, BUGS.md #43** |
+| Live URL | `curl` from the sandbox: `CONNECT tunnel failed, response 403` (network policy blocks `github.io`) | **not verified** |
+
+Not verified: that the site works at `https://malikmohamedgamer-bit.github.io/Tcyoon-RNG/` (never fetched), the daily scheduled workflow (never ran), a custom domain, the update banner on a real deploy, cache behaviour on real Pages/CDN headers. `main` was created by me from the feature branch (it points at the F8 commit); no PR, no force-push, no history rewrite.
+
+## F9 — New-player run, soak, final numbers
+| What | How tested | Result |
+|---|---|---|
+| A brand-new player follows only what the interface shows (tutorial spotlight, tips, dialogs, status bar) to the first rebirth; browser clock jump = "closed laptop lid" for offline progress; no internal hooks used | `e2e/f9-new-player.spec.js` (3 consecutive runs: 3 passed, 2.1 min) | PASS |
+| That spec never touches `window.__game` or the tutorial-skipping helper | `tests/newplayer-meta.test.js` | PASS |
+| 5-minute random-input soak including rolls (1/10/100), reveals, Index, Help | `SOAK_MINUTES=5 npx playwright test e2e/soak.spec.js` | **PASS** (2 passed, 5.5 min): 1,512 actions; heap 7.0 → 11.2 MB (flattening); geometries/textures/programs 21/2/6 → 69/6/12, flat from sample 13; DOM nodes 240–1,192; reveal overlay at most 134 nodes and empties to < 10 when idle; 0 console errors; no NaN/Infinity/undefined text; frame counter strictly increasing; level 23 / region 18 at the end |
+| Final lint | `npm run lint` | no findings |
+| Final unit tests | `npm test` | 304 tests, 304 pass, 0 fail |
+| Final end-to-end (without the soak file) | `npx playwright test --grep-invert soak` | 114 passed (5.7 min) |
+
+Earlier F9 soak runs: run 1 failed on my own new assertion (reveal DOM 136 > 120); run 2 passed every real assertion (1,540 actions, heap 6.8 → 11.3 MB) and failed only on a same-task DOM count (BUGS.md #42). Both were test-code problems, not game bugs. Not re-run after the final soak: the 30-day economy simulation (the `--quick` runs and CI's Standard and Relaxed runs are on the final sim code).
+
+## Requirements review: the follow-up prompt (6 jobs)
+"Done" = implemented and covered by a test or run listed in this file. Everything judged by taste is marked as my judgement only.
+
+| Job / requirement | Status | Evidence / honest gap |
+|---|---|---|
+| 1. Interactive tutorial in the real game, <= 20-word steps, spotlight, auto-advance | Done | `tests/tutorial.test.js` (word limit), `f1-tutorial`, `f2-tutorial-walk` (all 16 steps with real clicks) |
+| 1. Skippable with "Are you sure?", 3 choices, default focus Keep learning, replay, resume, never traps keyboard/touch | Done | `f1-tutorial`; touch trap not tested on a real phone |
+| 1. Assists, small rewards exactly once, one-time tips + Tips seen + off switch, reduced motion | Done | `tests/tutorial.test.js`, `tests/tips.test.js`, e2e; BUGS #30–32 |
+| 2. First-run Relaxed/Standard with exact README differences tested by simulators | Done | `npm run sim:* -- --difficulty relaxed` pass; honest note: enemy HP -15% does not change the beatable wave |
+| 2. Progressive disclosure + Advanced UI | Done | `tests/disclosure.test.js`, `f3-clarity` |
+| 2. Data-driven tooltips, "Why is my income this?", searchable Help with glossary/rarity table/rebirth example/formulas | Done | `tests/glossary.test.js`, `tests/explain.test.js` (lines add up exactly), `f3-clarity`; screen-reader reading not tested |
+| 2. Blocked actions say why with one-click fix; undo for place/move/sell | Done | `tests/undo.test.js` (8), `f3-clarity` |
+| 2. Friendly numbers, larger text on small screens | Done | unit + `f5-design` (160% text) |
+| 2. UI-only new-player e2e to first rebirth | Done | `f9-new-player` |
+| 3. Speed starts 1x, faster speeds unlocked by data rules (endless), locked options shown with requirement, sim-only, slow never locked | Done | `tests/speed.test.js`, `f4-speed` |
+| 4. Index: silhouettes + hints, details, search/filter, completion %, rewards once, virtualised, tested | Done | `tests/index.test.js` (30,000 entries < 1 s), `f6-index` (20,000 → ~15 rows) |
+| 4. Redesign: design brief first, five distinct themes, code-drawn icons, no emoji, shipped fonts, hierarchy, responsive, accessible, before/after screenshots at three sizes in every theme, review loop | Done (judgement partly mine) | `docs/design.md`, `docs/design-review.md`, `f5-design` measures contrast/targets/overflow; whether it "no longer looks AI-made" is **my opinion only**; weak spots listed in `docs/design-review.md` (3D scene untouched, Sci-Fi/Space similar, dense panels) |
+| 5. Slot reel decided before animation, cosmetic only, tick sounds; x10/x100 multi-reel + summary; auto-roll short; cutscenes by tier (formula for endless); first-time Index flourish; skippable; settings; reduced motion; <= 3 flashes/s; captions; screen-reader announce; pure state machines; dispose 3D; soak with many rolls | Done | `tests/reveal.test.js` (15), `f7-reveal` (12), soak; sounds never heard, feel unjudged |
+| 6. Verify sub-path works | Done | `subpath.spec.js` |
+| 6. Merge feature branch into main | **Partial** | `main` created from the F8 commit via the GitHub tools; later commits are on the feature branch only; no PR (nothing to compare at that moment) |
+| 6. Enable Pages with source GitHub Actions | **Not done** | no tool for repository settings; exact clicks in README "One-time setup" |
+| 6. CI job smoke-testing the LIVE URL after each deploy + daily workflow | Written, **never run live** | `pages.yml` `smoke-live` was skipped (deploy failed); `smoke-daily.yml` never ran |
+| 6. Versioning, update notice, stale-cache prevention | Done locally | `tests/stamp.test.js`, `tests/updates.test.js`, `subpath.spec.js`; not seen on real Pages/CDN |
+| 6. Saves explained, Export, gentle reminders, local save imports into hosted version | Done | `subpath.spec.js` cross-origin import |
+| 6. 404 page, social tags, code-drawn favicon, README on deploying/custom domains, honest static-hosting docs | Done | files + README "Hosting" |
+| 6. Report live URL only after fetching it | **Not possible** | the sandbox cannot reach `github.io`; no live URL is claimed |
+| Process: 9 milestones each with lint, unit, e2e, screenshots, CHANGELOG + VERIFICATION, commit, push | Done | commits `3f2ab60` … `90d9f52`; F9 docs finished in the final commit |
+| Process: bugs in BUGS.md with proof; old tests changed only for intended UI change, and said so | Done | BUGS #30–43; changed tests listed in CHANGELOG F3/F5/F6/F7 |

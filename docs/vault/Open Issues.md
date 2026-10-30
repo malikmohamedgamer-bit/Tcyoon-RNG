@@ -24,7 +24,7 @@ Real GPUs/frame rates; phones; Firefox and Safari; screen readers; audible sound
 * `#26` regression test was not run against the unfixed code.
 
 ## Remaining work (see [[Resume Point]])
-VERIFICATION.md F8 and F9 sections and the follow-up requirements-review table; CHANGELOG F9; BUGS #42 proof line; final summary.
+Only the final summary to the user. VERIFICATION.md (F8, F9, requirements review), CHANGELOG F9 and the BUGS #42 proof were written after the soak passed.
 
 ## Soak result for the record
 The final F9 5-minute soak **passed** (1,512 actions, heap 7.0 to 11.2 MB flat, 0 errors). Full e2e **114 passed**, unit **304/304**, lint clean. Details in [[Testing]].
