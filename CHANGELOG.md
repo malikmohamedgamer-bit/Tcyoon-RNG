@@ -73,3 +73,9 @@ All notable changes, by milestone. Dates are build dates.
 - `ui/a11y.js`: ARIA live announcements throttled to one per 1.5 s (latest wins, urgent ones bypass).
 - Fixes found while testing (BUGS.md 24-26): collapsible Settings sections re-collapsed on every refresh; Escape did not close an open panel; placement and main both handled Escape.
 - New e2e: `e2e/m8-customization-a11y.spec.js` (16 tests).
+
+## M9 — Tests, soak, bug fixes, docs, requirements review
+- `e2e/soak.spec.js` (`npm run test:soak`): 5-minute random-input soak (console errors, JS heap after gc, GPU resources, DOM nodes, NaN/Infinity text, frame loop alive) and a long-numbers soak (tower-sized money/prestige currencies, every panel x every number format, save/export/reload). The default `npx playwright test` skips it.
+- **The long-numbers soak found a real freeze** (BUGS.md #29): with tower-sized XP multipliers the level search looped forever. Levels are now capped at 10^12; regression tests in `tests/leveling.test.js` and `tests/longnumbers.test.js` (217 unit tests).
+- README (setup, controls, every rule and formula, add-by-data guides, tests, simulators, Pages deploy), VERIFICATION.md (what was checked, results, what could not be verified, requirements review), BUGS.md up to #29.
+- Final run: lint clean, 217 unit tests, 56 e2e tests, both simulators (`--quick`) pass; 30-day economy simulation passes 8/8 (run before the final level-cap change).
