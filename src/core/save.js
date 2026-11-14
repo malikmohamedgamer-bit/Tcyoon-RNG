@@ -190,7 +190,7 @@ export function encodeExport(obj) {
 export function decodeExport(text) {
   const t = String(text || '').trim();
   const parts = t.split('.');
-  if (parts.length !== 3 || parts[0] !== 'TRNG1') throw new Error('not a Tcyoon RNG export');
+  if (parts.length !== 3 || parts[0] !== 'TRNG1') throw new Error('not a Rollforge Tycoon export');
   let json;
   try {
     const bin = atob(parts[1]);

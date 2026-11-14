@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3A1C05"/><stop offset="1" stop-color="#0E0702"/></linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.4" r="0.62"><stop offset="0" stop-color="#FF8A1F" stop-opacity="0.5"/><stop offset="1" stop-color="#FF8A1F" stop-opacity="0"/></radialGradient>
+    <linearGradient id="em" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFE7C7"/><stop offset="1" stop-color="#FF8A1F"/></linearGradient>
+    <linearGradient id="ac" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#FFE27A"/></linearGradient>
+    <linearGradient id="ink" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3A1C05"/><stop offset="1" stop-color="#0E0702"/></linearGradient>
+    <linearGradient id="sheen" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF" stop-opacity="0.16"/><stop offset="0.45" stop-color="#FFFFFF" stop-opacity="0"/></linearGradient>
+    <filter id="shadow" x="-25%" y="-25%" width="150%" height="150%"><feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#000000" flood-opacity="0.55"/></filter>
+  </defs>
+  <rect x="0" y="0" width="512" height="512" rx="0" fill="url(#bg)"/>
+  <rect x="0" y="0" width="512" height="512" rx="0" fill="url(#glow)"/>
+  <g filter="url(#shadow)" transform="translate(71.68 71.68) scale(0.72)"><g transform="translate(256 256) scale(0.86) translate(-272 -230)">
+      <g transform="rotate(-14 248 268)">
+        <rect x="128" y="148" width="240" height="240" rx="52" fill="url(#em)"/>
+        <circle cx="186" cy="206" r="26" fill="url(#ink)"/>
+        <circle cx="310" cy="206" r="26" fill="url(#ink)"/>
+        <circle cx="248" cy="268" r="26" fill="url(#ink)"/>
+        <circle cx="186" cy="330" r="26" fill="url(#ink)"/>
+        <circle cx="310" cy="330" r="26" fill="url(#ink)"/>
+      </g>
+      <path fill="url(#ac)" d="M388 64l14 40 40 14-40 14-14 40-14-40-40-14 40-14z"/>
+  </g></g>
+  <rect x="0" y="0" width="512" height="512" rx="0" fill="url(#sheen)"/>
+</svg>
