@@ -1,12 +1,21 @@
 ---
-tags: [timeline, history]
+tags:
+  - timeline
+  - history
+  - project/tcyoon-rng
+  - type/log
+  - status/complete-up-to-f9-in-progress-at-the-end
 date: 2026-10-30
 status: complete up to F9 (in progress at the end)
+project: tcyoon-rng
+created: 2026-10-30
+updated: 2026-10-30
 ---
 # Timeline
 Everything happened on **2026-10-30** (UTC times from the transcript and `git log`). Branch `claude/confident-wozniak-8yxhum`. Index: [[00 Start Here]]. Details per milestone: [[Milestones]]. Bugs: [[Bugs]].
 
 ## Part 1: the original game (prompt: [[Original Prompt]])
+
 | Time | What happened | Commit |
 |---|---|---|
 | 13:19 | Original prompt arrives. Environment checked: empty repo on the feature branch, Node 22.22, npm 10.9, Playwright 1.63 with Chromium, npm works through the proxy. | |
@@ -26,6 +35,7 @@ Everything happened on **2026-10-30** (UTC times from the transcript and `git lo
 | 16:05 | Final summary of part 1: all nine milestones pushed, no PR opened. | |
 
 ## Part 2: follow-up project (prompt: [[Follow-up Prompts]], section 1)
+
 | Time | What happened | Commit |
 |---|---|---|
 | 20:19 | Follow-up prompt arrives (six jobs, nine milestones F1-F9). Starting state confirmed: lint clean, 217 unit tests. Baseline "before" screenshots at phone/tablet/desktop in five themes. | |
@@ -45,3 +55,10 @@ Everything happened on **2026-10-30** (UTC times from the transcript and `git lo
 | 23:01 | Vault requested ([[Follow-up Prompts]], section 2). Resume Point written. | `32b2bfc`, `eeaa469` |
 
 Not prompts: the repeated "Stop hook feedback" messages (resolved each time by committing and pushing) and the monitor/background-task notifications.
+
+<!-- related:start -->
+## Related
+
+- [[Decisions|Decisions]]
+- [[Open Issues|Open Issues]]
+<!-- related:end -->

@@ -1,7 +1,14 @@
 ---
-tags: [architecture]
+tags:
+  - architecture
+  - project/tcyoon-rng
+  - type/note
+  - status/current-as-of-f9
 date: 2026-10-30
 status: current as of F9
+project: tcyoon-rng
+created: 2026-10-30
+updated: 2026-10-30
 ---
 # Architecture
 Back to [[00 Start Here]]. Formulas: [[Formulas]].
@@ -19,14 +26,14 @@ Back to [[00 Start Here]]. Formulas: [[Formulas]].
 All tuning and content are JSON in `src/data/` (22 files): tiers, items, weapons, mutations, economy, rebirth, shop, quests, rewards, refiners, themes, enemies, bosses, and the follow-up files tutorial, tips, difficulty, speed, disclosure, glossary, help, index, cutscenes. README has "Adding content by data only" guides for an item, mutation, refiner, weapon, boss, prestige layer.
 
 ## Key patterns
-* **Fixed-step loop** `update(dt, realDt)`; speed scales `dt`, the step grows above 4x, combat is sub-stepped <= 0.1 s ([[Game Speed]]).
-* **Seeded RNG everywhere** (sfc32, save/restore, `fork`): rolls, fuse, mutations, waves, bosses, rotating shop, reel fillers use separate forks.
-* **Ledgers for exactly-once**: `rewards.levelClaimed`, quest/achievement claims, `tutorial.claimed`, Index rewards.
-* **Layered Big numbers** with saturation.
-* **Save**: key `tcyoon-rng:save`, `{version, savedAt, data}`, v2 current, additive fields (tutorial, difficulty, tips, ui, index, settings) with sanitizers and legacy backfill. Corrupt save is copied to a backup key. Export `TRNG1.<base64>.<hash>`.
-* **Event hook**: `state._onEvent` feeds tips, Index and toasts without the sim knowing about the UI.
-* **Disposal**: `Resources` tracks geometries/textures/programs; `gpuAudit()` is used by e2e and soaks.
-* **Undo** history is in memory only; **speed unlock** rules are shared by speed and disclosure (`sim/unlock.js`).
+- **Fixed-step loop** `update(dt, realDt)`; speed scales `dt`, the step grows above 4x, combat is sub-stepped <= 0.1 s ([[Game Speed]]).
+- **Seeded RNG everywhere** (sfc32, save/restore, `fork`): rolls, fuse, mutations, waves, bosses, rotating shop, reel fillers use separate forks.
+- **Ledgers for exactly-once**: `rewards.levelClaimed`, quest/achievement claims, `tutorial.claimed`, Index rewards.
+- **Layered Big numbers** with saturation.
+- **Save**: key `tcyoon-rng:save`, `{version, savedAt, data}`, v2 current, additive fields (tutorial, difficulty, tips, ui, index, settings) with sanitizers and legacy backfill. Corrupt save is copied to a backup key. Export `TRNG1.<base64>.<hash>`.
+- **Event hook**: `state._onEvent` feeds tips, Index and toasts without the sim knowing about the UI.
+- **Disposal**: `Resources` tracks geometries/textures/programs; `gpuAudit()` is used by e2e and soaks.
+- **Undo** history is in memory only; **speed unlock** rules are shared by speed and disclosure (`sim/unlock.js`).
 
 ## Testing seams
 `window.__game` (state, `debug.grantMoney`/`advance`, `gpuAudit`, `reveal`, `version`, `updates`, `skipReveal`). Tests: [[Testing]].

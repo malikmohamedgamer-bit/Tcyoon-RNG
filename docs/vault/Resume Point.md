@@ -1,7 +1,15 @@
 ---
-tags: [resume, status]
+tags:
+  - resume
+  - status
+  - project/tcyoon-rng
+  - type/note
+  - status/nearly-finished
 date: 2026-10-30
 status: nearly finished
+project: tcyoon-rng
+created: 2026-10-30
+updated: 2026-10-30
 ---
 # Resume Point
 Back to [[00 Start Here]].
