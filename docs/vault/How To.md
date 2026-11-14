@@ -1,12 +1,20 @@
 ---
-tags: [howto]
+tags:
+  - howto
+  - project/tcyoon-rng
+  - type/note
+  - status/current
 date: 2026-10-30
 status: current
+project: tcyoon-rng
+created: 2026-10-30
+updated: 2026-10-30
 ---
 # How to
 Short recipes. Details in README. Back to [[00 Start Here]]. Testing: [[Testing]]. Hosting: [[Deploy]].
 
 ## Run and check
+
 ```bash
 npm install
 npm run dev                      # http://localhost:5173
@@ -19,9 +27,9 @@ npm run sim:combat -- --quick
 If browsers are missing: `npx playwright install chromium` (in the Claude sandbox Chromium is pre-installed; do not reinstall Playwright).
 
 ## Add content by data only
-* **Item:** add to `src/data/items.json` (template: type, shape, icon, base stats). **Mutation:** `mutations.json` (chance, min tier, group, effects, types). **Refiner:** `refiners.json`. **Weapon:** `weapons.json`. **Boss:** `bosses.json`. **Prestige layer:** hand-made layers in `rebirth.json`; layers beyond are generated from the same constants.
-* **Tutorial step / tip:** `tutorial.json` (one sentence, at most 20 words; a test enforces it), `tips.json`. **Speed rule:** `speed.json`. **Glossary term:** `glossary.json` (a test checks every tooltip id used in the UI resolves). **Cutscene thresholds:** `cutscenes.json`. **Index rewards:** `index.json`.
-* Any icon id used in data must resolve in `src/ui/icons.js` (`tests/icons.test.js`).
+- **Item:** add to `src/data/items.json` (template: type, shape, icon, base stats). **Mutation:** `mutations.json` (chance, min tier, group, effects, types). **Refiner:** `refiners.json`. **Weapon:** `weapons.json`. **Boss:** `bosses.json`. **Prestige layer:** hand-made layers in `rebirth.json`; layers beyond are generated from the same constants.
+- **Tutorial step / tip:** `tutorial.json` (one sentence, at most 20 words; a test enforces it), `tips.json`. **Speed rule:** `speed.json`. **Glossary term:** `glossary.json` (a test checks every tooltip id used in the UI resolves). **Cutscene thresholds:** `cutscenes.json`. **Index rewards:** `index.json`.
+- Any icon id used in data must resolve in `src/ui/icons.js` (`tests/icons.test.js`).
 
 ## Change a theme or font
 Tokens in `src/ui/style.css`, per-theme construction in `themes.css`. Fonts: `node scripts/vendor-fonts.js` (also run by `npm run vendor`) regenerates `fonts.css`; files live in `vendor/fonts`. Design rules: `docs/design.md`.
@@ -37,3 +45,9 @@ Settings, Save data: export gives `TRNG1.<base64>.<hash>`; import verifies the h
 
 ## Resume work after a context reset
 Read [[Resume Point]], then `git log --oneline | head`, `git status`, and `.scratch/*.out` for background runs.
+
+<!-- related:start -->
+## Related
+
+- [[Open Issues|Open Issues]]
+<!-- related:end -->

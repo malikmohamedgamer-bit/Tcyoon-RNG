@@ -1,9 +1,18 @@
 ---
-tags: [prompt]
+tags:
+  - prompt
+  - project/tcyoon-rng
+  - type/prompt
+  - status/verbatim
 date: 2026-10-30
 status: verbatim
+aliases:
+  - "Original prompt (first message of the session)"
+project: tcyoon-rng
+created: 2026-10-30
+updated: 2026-10-30
 ---
-# Original prompt (first message of the session)
+# Original Prompt
 Received 2026-10-30T13:19:19.086Z (transcript line 2). Verbatim, unedited. Next: [[Follow-up Prompts]]. Index: [[00 Start Here]].
 
 ~~~~text

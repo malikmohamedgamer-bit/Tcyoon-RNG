@@ -1,9 +1,18 @@
 ---
-tags: [prompt]
+tags:
+  - prompt
+  - project/tcyoon-rng
+  - type/prompt
+  - status/verbatim
 date: 2026-10-30
 status: verbatim
+aliases:
+  - "Follow-up prompts, in order"
+project: tcyoon-rng
+created: 2026-10-30
+updated: 2026-10-30
 ---
-# Follow-up prompts, in order
+# Follow-up Prompts
 Previous: [[Original Prompt]]. Index: [[00 Start Here]]. Genuine human messages only; hook and monitor notifications are not prompts (see [[Timeline]]).
 
 ## 1. Project continuation (tutorial, clarity, speed, Index, redesign, reveals, hosting), 2026-10-30 20:19 UTC
@@ -218,5 +227,5 @@ Keep messages short.
 ~~~~
 
 ## Interruptions that were not prompts
-* `[Request interrupted by user for tool use]` (23:00 UTC): I had been waiting in a long shell loop for test results; the user stopped that tool call. Nothing was changed by it.
-* Stop-hook feedback, repeated ("uncommitted changes ... commit and push"): automated; each time resolved by committing and pushing.
+- `[Request interrupted by user for tool use]` (23:00 UTC): I had been waiting in a long shell loop for test results; the user stopped that tool call. Nothing was changed by it.
+- Stop-hook feedback, repeated ("uncommitted changes ... commit and push"): automated; each time resolved by committing and pushing.
