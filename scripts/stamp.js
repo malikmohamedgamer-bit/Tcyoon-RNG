@@ -1,7 +1,7 @@
 // Stages the static site for deployment. No build step and no bundling: files are copied, and every deploy lives in its own
 // folder (v/<version>/) that is never overwritten, so a browser that cached an older index.html always finds a complete,
 // consistent set of files (or a 404, which index.html recovers from by reloading). Root files: index.html (rewritten to point
-// at the versioned folder), 404.html, version.json, assets, .nojekyll.
+// at the versioned folder), 404.html, version.json, manifest.webmanifest, game.json, assets, .nojekyll.
 // Usage: node scripts/stamp.js --version 1.0.0-abc1234 --out _site [--site-url https://user.github.io/repo/] [--cname game.example.com]
 import { cpSync, mkdirSync, readFileSync, writeFileSync, rmSync, existsSync } from 'node:fs';
 import { resolve, join } from 'node:path';
@@ -26,10 +26,12 @@ let html = readFileSync('index.html', 'utf8');
 html = html.replaceAll('./src/', `./v/${version}/src/`).replaceAll('./vendor/', `./v/${version}/vendor/`);
 if (siteUrl) {
   const base = siteUrl.endsWith('/') ? siteUrl : siteUrl + '/';
-  html = html.replace('content="./assets/og.png"', `content="${base}assets/og.png"`).replace('</head>', `  <meta property="og:url" content="${base}">\n  <link rel="canonical" href="${base}">\n</head>`);
+  html = html.replaceAll('content="./assets/banner.jpg"', `content="${base}assets/banner.jpg"`).replace('</head>', `  <meta property="og:url" content="${base}">\n  <link rel="canonical" href="${base}">\n</head>`);
 }
 writeFileSync(join(out, 'index.html'), html);
 writeFileSync(join(out, '404.html'), readFileSync('404.html', 'utf8'));
+// Game Hub: the install manifest and the hub listing live at the site root
+for (const f of ['manifest.webmanifest', 'game.json']) writeFileSync(join(out, f), readFileSync(f, 'utf8'));
 writeFileSync(join(out, 'version.json'), JSON.stringify({ version, built: new Date().toISOString() }) + '\n');
 writeFileSync(join(out, '.nojekyll'), '');
 const cname = arg('cname', '');

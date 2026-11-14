@@ -26,6 +26,10 @@ export function createServer() {
   return http.createServer(async (req, res) => {
     try {
       let p = decodeURIComponent(new URL(req.url, 'http://x').pathname);
+      if (p === '/hub-sdk.js') { // on GitHub Pages the Game Hub serves this at the site root
+        res.writeHead(200, { 'content-type': 'text/javascript; charset=utf-8', 'cache-control': 'no-store' }).end('// Local stand-in for the Game Hub SDK, which GitHub Pages serves at the site root (malikmohamedgamer-bit.github.io/hub-sdk.js).\n');
+        return;
+      }
       if (base) {
         if (p !== base && !p.startsWith(base + '/')) throw new Error('outside the base path'); // like GitHub Pages: nothing exists outside /<repo>/
         p = p.slice(base.length) || '/';

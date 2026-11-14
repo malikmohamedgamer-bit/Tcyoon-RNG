@@ -18,14 +18,16 @@ test('the game boots from a sub-path with every request succeeding, no console e
   // every game file came from the versioned folder under the sub-path, nothing from the domain root
   expect(urls.filter((u) => u.includes('/src/') || u.includes('/vendor/')).every((u) => u.startsWith(SUB + 'v/e2e-1.0/'))).toBe(true);
   expect(urls.some((u) => /vendor\/fonts\/.*\.woff2/.test(u))).toBe(true);
-  expect(urls.every((u) => u.startsWith('http://localhost:5198/Tcyoon-RNG/') || u.startsWith('data:'))).toBe(true);
+  // the one root file: the Game Hub SDK, which the hub serves at the domain root on GitHub Pages
+  expect(urls.every((u) => u.startsWith('http://localhost:5198/Tcyoon-RNG/') || u.startsWith('data:') || u === 'http://localhost:5198/hub-sdk.js')).toBe(true);
   expect(await page.evaluate(() => window.__game.version)).toBe('e2e-1.0');
   // fonts really loaded from there
   await page.evaluate(() => document.fonts.ready);
   expect(await page.evaluate(() => [...document.fonts].some((f) => f.status === 'loaded' && f.family.includes('Atkinson')))).toBe(true);
   // social tags point at the published address
-  expect(await page.locator('meta[property="og:image"]').getAttribute('content')).toBe(SUB + 'assets/og.png');
-  const og = await page.request.get(SUB + 'assets/og.png');
+  expect(await page.locator('meta[property="og:image"]').getAttribute('content')).toBe(SUB + 'assets/banner.jpg');
+  expect(await page.locator('meta[name="twitter:image"]').getAttribute('content')).toBe(SUB + 'assets/banner.jpg');
+  const og = await page.request.get(SUB + 'assets/banner.jpg');
   expect(og.status()).toBe(200);
 });
 

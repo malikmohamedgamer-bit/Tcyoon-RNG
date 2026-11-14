@@ -20,9 +20,12 @@ test('the staged site: versioned folder, rewritten index.html, 404, version.json
   const html = readFileSync(join(out, 'index.html'), 'utf8');
   assert.ok(html.includes('./v/1.2.3-abc1234/src/main.js') && html.includes('./v/1.2.3-abc1234/src/ui/style.css') && html.includes('./v/1.2.3-abc1234/vendor/three/three.module.min.js'));
   assert.ok(!html.includes('"./src/') && !html.includes('"./vendor/'), 'no unversioned file reference is left');
-  assert.ok(html.includes('content="https://example.github.io/repo/assets/og.png"') && html.includes('rel="canonical" href="https://example.github.io/repo/"'));
+  assert.ok(html.includes('content="https://example.github.io/repo/assets/banner.jpg"') && html.includes('rel="canonical" href="https://example.github.io/repo/"'));
+  assert.ok(!html.includes('content="./assets/banner.jpg"'), 'every social image tag is absolute');
   assert.equal(JSON.parse(readFileSync(join(out, 'version.json'), 'utf8')).version, '1.2.3-abc1234');
-  assert.ok(existsSync(join(out, '404.html')) && existsSync(join(out, '.nojekyll')) && existsSync(join(out, 'assets/og.png')));
+  assert.ok(existsSync(join(out, '404.html')) && existsSync(join(out, '.nojekyll')) && existsSync(join(out, 'assets/banner.jpg')));
+  // Game Hub: install manifest and hub listing at the site root
+  assert.ok(existsSync(join(out, 'manifest.webmanifest')) && existsSync(join(out, 'game.json')));
 });
 
 test('no absolute path anywhere in the shipped site (it must work from /<repo>/): html, css and js', () => {
@@ -30,7 +33,9 @@ test('no absolute path anywhere in the shipped site (it must work from /<repo>/)
   for (const f of walk(out).filter((p) => /\.(html|css|js)$/.test(p) && !p.includes('three.module.min.js'))) {
     const src = readFileSync(f, 'utf8');
     for (const m of src.matchAll(/(?:src|href)=["'](\/[^/"'][^"']*)["']|url\(\s*["']?(\/[^/"')][^"')]*)|(?:import|fetch)\s*\(\s*["'](\/[^/"'][^"']*)["']/g)) {
-      assert.fail(`${f.replace(out, '')}: absolute path ${m[1] || m[2] || m[3]}`);
+      const abs = m[1] || m[2] || m[3];
+      if (abs === '/hub-sdk.js') continue; // the one deliberate exception: the Game Hub serves its SDK at the domain root
+      assert.fail(`${f.replace(out, '')}: absolute path ${abs}`);
     }
   }
 });
